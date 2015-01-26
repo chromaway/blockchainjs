@@ -1,0 +1,45 @@
+{
+  "name": "blockchainjs",
+  "version": "0.0.1",
+  "description": "Bitcoin blockchain for wallets.",
+  "author": "Fomichev Kirill <fanatid@ya.ru>",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:chromaway/blockchainjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chromaway/blockchainjs/issues"
+  },
+  "keywords": [
+    "bitcoin",
+    "blockchain",
+    "verified",
+    "mainnet",
+    "testnet3"
+  ],
+  "files": [
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "coveralls": "^2.11.2",
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^3.3.0",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-uglify": "^0.7.0",
+    "grunt-jscs": "^1.2.0",
+    "grunt-mocha-istanbul": "^2.3.0",
+    "grunt-mocha-test": "^0.12.6",
+    "istanbul": "^0.3.5",
+    "jscs": "^1.10.0",
+    "jscs-jsdoc": "^0.4.0",
+    "jshint-stylish": "^1.0.0",
+    "mocha": "^2.1.0"
+  },
+  "license": "MIT"
+}
