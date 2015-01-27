@@ -64,11 +64,11 @@ function ElectrumJS(opts) {
     }
 
     var deferred = self._requests[response.id]
-    if (_.isUndefined(deferred)) {
+    if (typeof deferred === 'undefined') {
       return
     }
 
-    if (_.isUndefined(response.error)) {
+    if (typeof response.error === 'undefined') {
       deferred.resolve(response.result)
 
     } else {
@@ -112,7 +112,7 @@ ElectrumJS.prototype.supportVerificationMethods = function () {
  * @return {Promise}
  */
 ElectrumJS.prototype._request = function (method, params) {
-  if (_.isUndefined(params)) { params = [] }
+  if (typeof params === 'undefined') { params = [] }
 
   yatc.verify('String', method)
   yatc.verify('[*]', params)

@@ -97,6 +97,12 @@ yatc.extend({
     typeOf: 'Object',
     validate: isElectrumUnspent
   },
+  Network: {
+    typeOf: 'Object',
+    validate: function (obj) {
+      return obj instanceof require('./network').Network
+    }
+  },
   SHA256Hex: {
     typeOf: 'String',
     validate: function (obj) {
