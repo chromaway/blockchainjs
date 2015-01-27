@@ -85,7 +85,7 @@ Network.prototype.getCurrentHeight = function () {
  * @return {Buffer}
  */
 Network.prototype.getCurrentBlockHash = function () {
-  return this._currentBlockHash
+  return new Buffer(this._currentBlockHash)
 }
 
 /**
@@ -142,9 +142,15 @@ Network.prototype.sendTx = function () {
 }
 
 /**
+ * @typedef {Object} Network~HistoryObject
+ * @property {string} txId
+ * @property {number} height
+ */
+
+/**
  * @abstract
  * @param {string} address
- * @return {Promise<Array.<{txId: string, height: number}>>}
+ * @return {Promise<Network~HistoryObject[]>}
  */
 Network.prototype.getHistory = function () {
   return Promise.reject(new errors.NotImplementedError('Network.getHistory'))
