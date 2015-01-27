@@ -110,10 +110,10 @@ function makeSerial(fn) {
     var ctx = this
     var args = Array.prototype.slice.call(arguments)
 
-    var promise = new Promise(queue.push.bind(queue))
+    var promise = new Promise(function (resolve) { queue.push(resolve) })
 
     if (queue.length === 1) {
-      queue.shift()[0]()
+      queue.shift()()
     }
 
     return promise
@@ -121,7 +121,7 @@ function makeSerial(fn) {
       .catch(function () {})
       .then(function () {
         if (queue.length > 0) {
-          queue.shift()[0]()
+          queue.shift()()
         }
 
       })

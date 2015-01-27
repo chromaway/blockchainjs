@@ -15,6 +15,7 @@ var isBitcoinHeader = yatc.create([
 
 var isElectrumHeader = yatc.create([
   '{',
+    'block_height:    PositiveNumber|ZeroNumber,',
     'version:         UnsignedInt32,',
     'prev_block_hash: SHA256Hex,',
     'merkle_root:     SHA256Hex,',
@@ -26,7 +27,7 @@ var isElectrumHeader = yatc.create([
 
 var isElectrumHistoryEntry = yatc.create([
   '{',
-    'tx_hash: SHA256Hex',
+    'tx_hash: SHA256Hex,',
     'height:  PositiveNumber|ZeroNumber',
   '}'
 ].join('')).is

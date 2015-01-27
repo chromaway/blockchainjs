@@ -4,4 +4,4 @@ before_install:
 node_js:
   - "0.10"
   - "0.11"
-script: "grunt jshint jscs"
+script: "grunt jshint jscs test build coveralls"

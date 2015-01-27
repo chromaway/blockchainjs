@@ -12,7 +12,7 @@ module.exports = function (grunt) {
         }
       },
       test: {
-        src: ['test/*.js', 'build/blockchainjs.test.js'],
+        src: ['test/**/*.js', 'build/blockchainjs.test.js'],
         dest: 'build/blockchainjs.test.js'
       }
     },
@@ -22,14 +22,14 @@ module.exports = function (grunt) {
       }
     },
     jshint: {
-      src: ['Gruntfile.js', 'src/*.js', 'test/*.js'],
+      src: ['Gruntfile.js', 'src/*.js', 'test/**/*.js'],
       options: {
         jshintrc: true,
         reporter: require('jshint-stylish')
       }
     },
     jscs: {
-      src: ['Gruntfile.js', 'src/*.js', 'test/*.js'],
+      src: ['Gruntfile.js', 'src/*.js', 'test/**/*.js'],
       options: {
         config: '.jscsrc'
       }
@@ -40,24 +40,27 @@ module.exports = function (grunt) {
       coverage: {
         src: 'test',
         options: {
-          mask: '*.js',
-          reporter: 'spec'
+          mask: '**/*.js',
+          reporter: 'spec',
+          timeout: 60000
         }
       },
       coveralls: {
         src: 'test',
         options: {
           coverage: true,
-          mask: '*.js',
-          reporter: 'spec'
+          mask: '**/*.js',
+          reporter: 'spec',
+          timeout: 60000
         }
       }
     },
     mochaTest: {
       test: {
-        src: ['test/*.js'],
+        src: ['test/**/*.js'],
         options: {
-          reporter: 'spec'
+          reporter: 'spec',
+          timeout: 60000
         }
       }
     },

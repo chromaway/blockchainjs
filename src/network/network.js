@@ -59,7 +59,6 @@ Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
   yatc.verify('PositiveNumber', newHeight)
 
   var self = this
-
   return self.getHeader(newHeight)
     .then(function (header) {
       yatc.verify('BitcoinHeader', header)

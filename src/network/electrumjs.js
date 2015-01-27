@@ -3,7 +3,7 @@ var inherits = require('util').inherits
 var _ = require('lodash')
 var socket = require('socket.io-client')
 
-var Network = require('./Network')
+var Network = require('./network')
 var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
@@ -117,11 +117,12 @@ ElectrumJS.prototype._request = function (method, params) {
   yatc.verify('String', method)
   yatc.verify('[*]', params)
 
+  var self = this
   return new Promise(function (resolve, reject) {
-    var request = {id: this._requestId++, method: method, params: params}
-    this._requests[request.id] = {resolve: resolve, reject: reject}
+    var request = {id: self._requestId++, method: method, params: params}
+    self._requests[request.id] = {resolve: resolve, reject: reject}
 
-    this._socket.send(JSON.stringify(request))
+    self._socket.send(JSON.stringify(request))
   })
 }
 
@@ -135,7 +136,7 @@ ElectrumJS.prototype.getHeader = function (height) {
 
   return this._request('blockchain.block.get_header', [height])
     .then(function (response) {
-      if (yatc.is('{height: ZeroNumber}', response)) {
+      if (yatc.is('{block_height: ZeroNumber, ...}', response)) {
         response.prev_block_hash = util.zfill('', 64)
       }
 
@@ -218,7 +219,7 @@ ElectrumJS.prototype.sendTx = function (txHex) {
 
   return this._request('blockchain.transaction.broadcast', [txHex])
     .then(function (responseTxId) {
-      var txId = util.hashEncode(util.sha256x2(txHex))
+      var txId = util.hashEncode(util.sha256x2(new Buffer(txHex, 'hex')))
       if (txId === responseTxId) {
         return txId
       }
