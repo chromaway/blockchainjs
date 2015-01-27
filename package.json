@@ -24,8 +24,11 @@
     "README.md"
   ],
   "dependencies": {
+    "bs58check": "^1.0.4",
     "errno": "^0.1.1",
     "es6-promise": "^2.0.1",
+    "lodash": "^3.0.0",
+    "socket.io-client": "^1.3.2",
     "yatc": "^0.1.0"
   },
   "devDependencies": {

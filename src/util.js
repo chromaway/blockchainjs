@@ -7,7 +7,7 @@ var yatc = require('./yatc')
  * @param {Buffer} buffer
  * @return {Buffer}
  */
-function hash256(buffer) {
+function sha256x2(buffer) {
   buffer = crypto.createHash('sha256').update(buffer).digest()
   buffer = crypto.createHash('sha256').update(buffer).digest()
   return buffer
@@ -84,7 +84,7 @@ function header2buffer(header) {
  * @return {BitcoinHeader}
  */
 function buffer2header(buffer) {
-  yatc.verify('RawBitcoinHeader', buffer)
+  yatc.verify('BitcoinRawHeader', buffer)
 
   return {
     version: buffer.readUInt32LE(0),
@@ -147,7 +147,7 @@ function zfill(obj, size) {
 
 
 module.exports = {
-  hash256: hash256,
+  sha256x2: sha256x2,
   reverse: reverse,
   hashEncode: hashEncode,
   hashDecode: hashDecode,
