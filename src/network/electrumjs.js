@@ -140,6 +140,10 @@ ElectrumJS.prototype.getHeader = function (height) {
         response.prev_block_hash = util.zfill('', 64)
       }
 
+      if (response.block_height !== height) {
+        throw new errors.GetHeaderError()
+      }
+
       yatc.verify('ElectrumHeader', response)
 
       return {

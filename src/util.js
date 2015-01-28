@@ -130,6 +130,28 @@ function makeSerial(fn) {
 
 
 /**
+ * @param {function} nodeFunction
+ */
+function denodeify(nodeFunction) {
+  return function () {
+    var context = this
+    var args = Array.prototype.slice.call(arguments)
+
+    return new Promise(function (resolve, reject) {
+      args.push(function (error, result) {
+        if (error !== null) {
+          return reject(error)
+        }
+
+        resolve(result)
+      })
+
+      nodeFunction.apply(context, args)
+    })
+  }
+}
+
+/**
  * @param {*} obj
  * @param {number} size
  * @return {string}
@@ -156,5 +178,6 @@ module.exports = {
 
   makeSerial: makeSerial,
 
+  denodeify: denodeify,
   zfill: zfill
 }

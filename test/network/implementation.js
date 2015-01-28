@@ -32,10 +32,12 @@ function implementationTest(opts) {
       expect(network).to.be.instanceof(opts.class)
     })
 
+    it('isConnected', function () {
+      expect(network.isConnected()).to.be.true
+    })
+
     it('wait newHeight event', function (done) {
-      if (network.getCurrentHeight() !== -1) {
-        done()
-      }
+      expect(network.getCurrentHeight()).to.equal(-1)
 
       network.once('newHeight', function () {
         var currentHeight = network.getCurrentHeight()

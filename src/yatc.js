@@ -13,6 +13,37 @@ var isBitcoinHeader = yatc.create([
   '}'
 ].join('')).is
 
+var isChainHeader = yatc.create([
+  '{',
+    'height:              PositiveNumber|ZeroNumber,',
+    'version:             UnsignedInt32,',
+    'previous_block_hash: SHA256Hex,',
+    'merkle_root:         SHA256Hex,',
+    'time:                DateString,',
+    'bits:                UnsignedInt32Hex,',
+    'nonce:               UnsignedInt32,',
+    '...',
+  '}'
+].join('')).is
+
+var isChainHistoryEntry = yatc.create([
+  '{',
+    'hash:          SHA256Hex,',
+    'block_height:  PositiveNumber|ZeroNumber',
+    '...',
+  '}'
+].join('')).is
+
+var isChainUnspent = yatc.create([
+  '{',
+    'transaction_hash: SHA256Hex,',
+    'output_index:     PositiveNumber|ZeroNumber,',
+    'value:            PositiveNumber|ZeroNumber,',
+    'confirmations:    PositiveNumber|ZeroNumber,',
+    '...',
+  '}'
+].join('')).is
+
 var isElectrumHeader = yatc.create([
   '{',
     'block_height:    PositiveNumber|ZeroNumber,',
@@ -81,6 +112,24 @@ yatc.extend({
       return obj.length === 80 && Buffer.isBuffer(obj)
     }
   },
+  ChainHeader: {
+    typeOf: 'Object',
+    validate: isChainHeader
+  },
+  ChainHistoryEntry: {
+    typeOf: 'Object',
+    validate: isChainHistoryEntry
+  },
+  ChainUnspent: {
+    typeOf: 'Object',
+    validate: isChainUnspent
+  },
+  DateString: {
+    typeOf: 'String',
+    validate: function (obj) {
+      return !isNaN(Date.parse(obj))
+    }
+  },
   ElectrumHeader: {
     typeOf: 'Object',
     validate: isElectrumHeader
@@ -112,6 +161,13 @@ yatc.extend({
   UnsignedInt32: {
     typeOf: 'Number',
     validate: function (obj) {
+      return obj >= 0 && obj <= 4294967295
+    }
+  },
+  UnsignedInt32Hex: {
+    typeOf: 'String',
+    validate: function (obj) {
+      obj = parseInt(obj, 16)
       return obj >= 0 && obj <= 4294967295
     }
   },

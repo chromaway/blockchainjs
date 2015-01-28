@@ -34,11 +34,16 @@ var yatc = require('../yatc')
  * @extends events.EventEmitter
  */
 function Network() {
-  events.EventEmitter.call(this)
+  var self = this
+  events.EventEmitter.call(self)
 
-  this._setCurrentHeightQueue = null
-  this._currentHeight = -1
-  this._currentBlockHash = new Buffer(util.zfill('', 64), 'hex')
+  self._setCurrentHeightQueue = null
+  self._currentHeight = -1
+  self._currentBlockHash = new Buffer(util.zfill('', 64), 'hex')
+
+  self._isConnected = false
+  self.on('connect', function () { self._isConnected = true })
+  self.on('disconnect', function () { self._isConnected = false })
 }
 
 inherits(Network, events.EventEmitter)
@@ -48,6 +53,13 @@ inherits(Network, events.EventEmitter)
  */
 Network.prototype.supportVerificationMethods = function () {
   return false
+}
+
+/**
+ * @return {boolean}
+ */
+Network.prototype.isConnected = function () {
+  return this._isConnected
 }
 
 /**

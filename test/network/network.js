@@ -32,6 +32,10 @@ describe('network.Network', function () {
     expect(network.supportVerificationMethods()).to.be.false
   })
 
+  it('isConnected', function () {
+    expect(network.isConnected()).to.be.false
+  })
+
   it('getCurrentHeight', function () {
     expect(network.getCurrentHeight()).to.equal(-1)
   })
