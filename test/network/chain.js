@@ -2,6 +2,5 @@ var implementationTest = require('./implementation.js')
 
 
 implementationTest({
-  class:    require('../../src').network.Chain,
-  describe: describe
+  class:    require('../../src').network.Chain
 })

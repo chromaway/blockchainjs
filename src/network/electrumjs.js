@@ -53,7 +53,6 @@ function ElectrumJS(opts) {
       var isArgs = yatc.is('(PositiveNumber)', response.params)
       if (isMethod && isArgs) {
         return self._setCurrentHeight(response.params[0])
-          .catch(function (error) { self.emit('error', error) })
       }
 
       isMethod = response.method === 'blockchain.address.subscribe'
@@ -82,7 +81,7 @@ function ElectrumJS(opts) {
   self.on('connect', function () {
     self._request('blockchain.numblocks.subscribe')
       .then(function (height) {
-        yatc.verify('Number', height)
+        yatc.verify('PositiveNumber', height)
         return self._setCurrentHeight(height)
 
       }).catch(function (error) {

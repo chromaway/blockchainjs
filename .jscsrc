@@ -12,7 +12,7 @@
   ],
   "requireBlocksOnNewline": 1,
   "requireOperatorBeforeLineBreak": true,
-  "requireCamelCaseOrUpperCaseIdentifiers": true,
+  "requireCamelCaseOrUpperCaseIdentifiers": "ignoreProperties",
   "maximumLineLength": {
     "value": 120,
     "allowUrlComments": true,

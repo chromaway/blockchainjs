@@ -319,6 +319,7 @@ Chain.prototype.getUnspent = function (address) {
  * @method subscribeAddress
  * @see {@link Network#subscribeAddress}
  */
+// makeSerial not needed, becase function syncronous
 Chain.prototype.subscribeAddress = function (address) {
   yatc.verify('BitcoinAddress', address)
 

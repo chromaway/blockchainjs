@@ -22,27 +22,25 @@ module.exports = function (grunt) {
       }
     },
     jshint: {
-      src: ['Gruntfile.js', 'src/*.js', 'test/**/*.js'],
+      src: ['Gruntfile.js', 'src/**/*.js', 'test/**/*.js'],
       options: {
         jshintrc: true,
         reporter: require('jshint-stylish')
       }
     },
     jscs: {
-      src: ['Gruntfile.js', 'src/*.js', 'test/**/*.js'],
+      src: ['Gruntfile.js', 'src/**/*.js', 'test/**/*.js'],
       options: {
         config: '.jscsrc'
       }
     },
-// jscs:disable requireCamelCaseOrUpperCaseIdentifiers
     mocha_istanbul: {
-// jscs:enable requireCamelCaseOrUpperCaseIdentifiers
       coverage: {
         src: 'test',
         options: {
           mask: '**/*.js',
           reporter: 'spec',
-          timeout: 60000
+          timeout: 10000
         }
       },
       coveralls: {
@@ -51,7 +49,7 @@ module.exports = function (grunt) {
           coverage: true,
           mask: '**/*.js',
           reporter: 'spec',
-          timeout: 60000
+          timeout: 10000
         }
       }
     },
@@ -60,7 +58,7 @@ module.exports = function (grunt) {
         src: ['test/**/*.js'],
         options: {
           reporter: 'spec',
-          timeout: 60000
+          timeout: 10000
         }
       }
     },

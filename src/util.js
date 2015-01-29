@@ -1,5 +1,7 @@
 var crypto = require('crypto')
 
+var _ = require('lodash')
+
 var yatc = require('./yatc')
 
 
@@ -108,7 +110,7 @@ function makeSerial(fn) {
 
   return function () {
     var ctx = this
-    var args = Array.prototype.slice.call(arguments)
+    var args = _.slice(arguments)
 
     var promise = new Promise(function (resolve) { queue.push(resolve) })
 
@@ -135,7 +137,7 @@ function makeSerial(fn) {
 function denodeify(nodeFunction) {
   return function () {
     var context = this
-    var args = Array.prototype.slice.call(arguments)
+    var args = _.slice(arguments)
 
     return new Promise(function (resolve, reject) {
       args.push(function (error, result) {
