@@ -1,5 +1,6 @@
 var implementationTest = require('./implementation.js')
 
+
 implementationTest({
-  class:    require('../../src').network.ElectrumJS
+  class: require('../../src').network.ElectrumJS
 })

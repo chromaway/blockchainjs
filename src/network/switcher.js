@@ -26,7 +26,7 @@ function Switcher(networks, opts) {
   yatc.verify('Array{length: PositiveNumber, ...}', networks)
   yatc.verify('{crosscheck: PositiveNumber}', opts)
   if (opts.crosscheck > networks.length) {
-    throw new TypeError('opts.crosscheck can\'t be greater than networks.lengt')
+    throw new TypeError('opts.crosscheck can\'t be greater than networks.length')
   }
 
   var self = this
@@ -74,6 +74,9 @@ function Switcher(networks, opts) {
 
     connectedCount += network.isConnected()
   })
+  if (connectedCount >= self._crosscheck && !self.isConnected()) {
+    self.emit('connect')
+  }
 
   // netHeight event
   var newHeights = {}
@@ -90,11 +93,13 @@ function Switcher(networks, opts) {
       return
     }
 
-    var currentIndices = self._getCurrentNetworkIndices()
-    if (_.difference(currentIndices, newHeights[height]).length === 0) {
-      self._setCurrentHeight(height)
-      delete newHeights[height]
-    }
+    self._getCurrentNetworkIndices()
+      .then(function (currentIndices) {
+        if (_.difference(currentIndices, newHeights[height]).length === 0) {
+          self._setCurrentHeight(height)
+          delete newHeights[height]
+        }
+      })
   }
   self._networks.forEach(function (network, index) {
     network.on('newHeight', _.partial(onNewHeight, index))
@@ -125,7 +130,7 @@ inherits(Switcher, Network)
  * @return {Promise<number[]>}
  */
 Switcher.prototype._getCurrentNetworkIndices = function (opts) {
-  opts = _.exnted({preferSPV: false}, opts)
+  opts = _.extend({preferSPV: false}, opts)
 
   yatc.verify('{preferSPV: Boolean}', opts)
 
@@ -137,15 +142,14 @@ Switcher.prototype._getCurrentNetworkIndices = function (opts) {
   if (!opts.preferSPV) {
     return self._connectPromise
       .then(function () {
-        return _.chain(self._networks)
-          .map(function (network, index) {
-            if (network.isConnected()) {
-              return index
-            }
-          })
-          .filter()
-          .slice(0, self._crosscheck)
-          .value()
+        var indices = []
+        self._networks.forEach(function (network, index) {
+          if (network.isConnected()) {
+            indices.push(index)
+          }
+        })
+
+        return indices.slice(0, self._crosscheck)
       })
   }
 
@@ -202,19 +206,16 @@ Switcher.prototype._callMethod = function (methodName, args, opts) {
       })
 
       return Promise.all(promises)
-
     })
     .then(function (results) {
-      var isEqual = results.slice(1).every(function (current, index) {
-        return _.isEqual(current, results[index - 1])
+      results.slice(1).forEach(function (current, index) {
+        if (!_.isEqual(current, results[index])) {
+          var msg = 'Responses for ' + methodName + ' not equals'
+          throw new errors.NotEqualResponseError(msg)
+        }
       })
 
-      if (!isEqual) {
-        throw new errors.NotEqualResponseError('Responses for ' + methodName + ' not equals')
-      }
-
       return results[0]
-
     })
 }
 

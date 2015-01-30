@@ -10,14 +10,18 @@ var blockchainjs = require('../../src')
 
 function implementationTest(opts) {
   opts = _.extend({
-    'describe': describe
+    describe:       describe,
+    description:    'network.' + opts.class.name,
+    getNetworkOpts: _.constant({testnet: true})
   }, opts)
 
-  opts.describe('network.' + opts.class.name, function () {
+  opts.describe(opts.description, function () {
     var network
 
     beforeEach(function (done) {
-      network = new opts.class({testnet: true})
+      var args = [null].concat(opts.getNetworkOpts())
+      var Network = Function.prototype.bind.apply(opts.class, args)
+      network = new Network()
       network.on('error', function (error) { throw error })
       network.once('connect', done)
     })

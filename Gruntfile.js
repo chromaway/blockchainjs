@@ -12,7 +12,7 @@ module.exports = function (grunt) {
         }
       },
       test: {
-        src: ['test/**/*.js', 'build/blockchainjs.test.js'],
+        src: ['test/**/*.js'],
         dest: 'build/blockchainjs.test.js'
       }
     },
@@ -40,7 +40,7 @@ module.exports = function (grunt) {
         options: {
           mask: '**/*.js',
           reporter: 'spec',
-          timeout: 10000
+          timeout: 20000
         }
       },
       coveralls: {
@@ -49,7 +49,7 @@ module.exports = function (grunt) {
           coverage: true,
           mask: '**/*.js',
           reporter: 'spec',
-          timeout: 10000
+          timeout: 20000
         }
       }
     },
@@ -58,7 +58,7 @@ module.exports = function (grunt) {
         src: ['test/**/*.js'],
         options: {
           reporter: 'spec',
-          timeout: 10000
+          timeout: 20000
         }
       }
     },
