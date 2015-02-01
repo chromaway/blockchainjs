@@ -243,9 +243,14 @@ ElectrumJS.prototype.getHistory = function (address) {
     .then(function (entries) {
       yatc.verify('[ElectrumHistoryEntry]', entries)
 
-      return entries.map(function (entry) {
-        return {txId: entry.tx_hash, height: entry.height}
-      })
+      return _.chain(entries)
+        .map(function (entry) {
+          return {txId: entry.tx_hash, height: entry.height}
+        })
+        .sortBy(function (entry) {
+          return [entry.height === 0 ? Infinity : entry.height, entry.txId]
+        })
+        .value()
     })
 }
 
@@ -261,14 +266,19 @@ ElectrumJS.prototype.getUnspent = function (address) {
     .then(function (unspent) {
       yatc.verify('[ElectrumUnspent]', unspent)
 
-      return unspent.map(function (entry) {
-        return {
-          txId: entry.tx_hash,
-          outIndex: entry.tx_pos,
-          value: entry.value,
-          height: entry.height
-        }
-      })
+      return _.chain(unspent)
+        .map(function (entry) {
+          return {
+            txId: entry.tx_hash,
+            outIndex: entry.tx_pos,
+            value: entry.value,
+            height: entry.height
+          }
+        })
+        .sortBy(function (entry) {
+          return [entry.height === 0 ? Infinity : entry.height, entry.txId]
+        })
+        .value()
     })
 }
 

@@ -267,7 +267,7 @@ Chain.prototype.getHistory = function (address) {
           return {txId: entry.hash, height: entry.block_height}
         })
         .sortBy(function (entry) {
-          return entry.height === 0 ? Infinity : entry.height
+          return [entry.height === 0 ? Infinity : entry.height, entry.txId]
         })
         .value()
     })
@@ -313,7 +313,7 @@ Chain.prototype.getUnspent = function (address) {
           }
         })
         .sortBy(function (entry) {
-          return entry.height === 0 ? Infinity : entry.height
+          return [entry.height === 0 ? Infinity : entry.height, entry.txId]
         })
         .value()
     })
