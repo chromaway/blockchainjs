@@ -148,6 +148,11 @@ Chain.prototype._request = function (path, data) {
     json: true
   }
 
+  // by default, /addresses/{address}/transaction return only 50 records!
+  if (requestOpts.uri.indexOf('/transactions?api') !== -1) {
+    requestOpts.uri += '&limit=10000'
+  }
+
   if (!_.isUndefined(data)) {
     requestOpts.method = 'POST'
     requestOpts.json = data
