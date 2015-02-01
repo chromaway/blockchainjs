@@ -21,7 +21,7 @@ function ElectrumJS(opts) {
   opts = _.extend({
     testnet: false,
     url: 'ws://devel.hz.udoidio.info:' + (!!opts.testnet ? '8784' : '8783')
-  })
+  }, opts)
 
   yatc.verify('{testnet: Boolean, url: String}', opts)
 
