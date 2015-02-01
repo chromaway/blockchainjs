@@ -264,6 +264,10 @@ Chain.prototype.getHistory = function (address) {
 
       return _.chain(response)
         .map(function (entry) {
+          if (entry.block_height === null) {
+            entry.block_height = 0
+          }
+
           return {txId: entry.hash, height: entry.block_height}
         })
         .sortBy(function (entry) {
