@@ -264,14 +264,10 @@ Chain.prototype.getHistory = function (address) {
 
       return _.chain(response)
         .map(function (entry) {
-          if (entry.block_height === null) {
-            entry.block_height = 0
-          }
-
           return {txId: entry.hash, height: entry.block_height}
         })
         .sortBy(function (entry) {
-          return [entry.height === 0 ? Infinity : entry.height, entry.txId]
+          return [entry.height === null ? Infinity : entry.height, entry.txId]
         })
         .value()
     })
@@ -313,11 +309,11 @@ Chain.prototype.getUnspent = function (address) {
             txId: entry.transaction_hash,
             outIndex: entry.output_index,
             value: entry.value,
-            height: currentHeight - entry.confirmations + 1
+            height: (currentHeight - entry.confirmations + 1) || null // 0 to null
           }
         })
         .sortBy(function (entry) {
-          return [entry.height === 0 ? Infinity : entry.height, entry.txId]
+          return [entry.height === null ? Infinity : entry.height, entry.txId]
         })
         .value()
     })

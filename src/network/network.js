@@ -156,10 +156,12 @@ Network.prototype.sendTx = function () {
 /**
  * @typedef {Object} Network~HistoryObject
  * @property {string} txId
- * @property {number} height
+ * @property {?number} height null for unconfirmed transactions
  */
 
 /**
+ * Records sorted by height, txId
+ *
  * @abstract
  * @param {string} address
  * @return {Promise<Network~HistoryObject[]>}
@@ -173,10 +175,12 @@ Network.prototype.getHistory = function () {
  * @property {string} txId
  * @property {number} outIndex
  * @property {number} value
- * @property {number} height
+ * @property {?number} height null for unconfirmed transactions
  */
 
 /**
+ * Records sorted by height, txId
+ *
  * @abstract
  * @param {string} address
  * @return {Promise<Network~UnspentObject[]>}

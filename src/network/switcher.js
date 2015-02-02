@@ -3,52 +3,97 @@ var inherits = require('util').inherits
 var _ = require('lodash')
 
 var Network = require('./network')
-var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
 
 /**
- * Manager provides Network interface and use available primary network
- *  or use several networks at the same time for data checking
+ * @event Switcher#switchNetwork
+ * @param {Network} newNetwork
+ * @param {?Network} prevNetwork
+ */
+
+/**
+ * Switcher provides Network interface and use
+ *  connected network with longest chain selected by priority
  *
  * @class Switcher
  * @extends Network
  *
  * @param {Network[]} networks Array of Network instances sorted by priority
  * @param {Object} [opts]
- * @param {number} [opts.crosscheck=1] Networks count used at the same time
+ * @param {boolean} [opts.spv=false] value of supportVerificationMethods
  */
 function Switcher(networks, opts) {
-  opts = _.extend({crosscheck: 1}, opts)
+  opts = _.extend({spv: false}, opts)
 
   yatc.verify('[Network]', networks)
-  yatc.verify('Array{length: PositiveNumber, ...}', networks)
-  yatc.verify('{crosscheck: PositiveNumber}', opts)
-  if (opts.crosscheck > networks.length) {
-    throw new TypeError('opts.crosscheck can\'t be greater than networks.length')
-  }
+  yatc.verify('{spv: Boolean}', opts)
 
   var self = this
   Network.call(self)
 
   self._networks = networks
-  self._crosscheck = opts.crosscheck
+  self._opts = opts
 
-  // _connectPromise for _getCurrentIndices & subscribeAddress
-  function updateConnectPromise() {
-    self._connectPromise = new Promise(function (resolve) {
-      self.once('connect', resolve)
-    })
-  }
-  self.on('disconnect', updateConnectPromise)
-  updateConnectPromise()
-
-  // supportVerificationMethods
-  var spvNetworks = self._networks.filter(function (network) {
-    return network.supportVerificationMethods()
+  // resolve function for this._currentNetwork
+  var updateCurrentNetworkResolve
+  // for switchNetwork event
+  var prevNetwork = null
+  // remember resolve function
+  self._currentNetwork = new Promise(function (resolve) {
+    updateCurrentNetworkResolve = resolve
   })
-  self._supportVerificationMethods = spvNetworks.length >= self._crosscheck
+  // save new current network to this._currentNetwork
+  var updateCurrentNetwork = util.makeSerial(function () {
+    // select new current network
+    var network = _.chain(self._networks)
+      .filter(function (network) {
+        return network.isConnected()
+      })
+      .filter(function (network) {
+        return !self._opts.spv || network.supportVerificationMethods()
+      })
+      .sortBy(function (network, index) {
+        return [network.getCurrentHeight(), self._networks.length - index]
+      })
+      .last()
+      .value()
+
+    // current network not set yet? (resolve function isn't null?)
+    if (updateCurrentNetworkResolve !== null) {
+      // set current network if new network is not undefined
+      if (typeof network !== 'undefined') {
+        updateCurrentNetworkResolve(network)
+        updateCurrentNetworkResolve = null
+        self.emit('switchNetwork', network, prevNetwork)
+      }
+
+      return Promise.resolve()
+    }
+
+    // compare current network with new network
+    return self._currentNetwork
+      .then(function (currentNetwork) {
+        // nothing change, pass
+        if (currentNetwork === network) {
+          return
+        }
+
+        // set new network as current
+        if (typeof network !== 'undefined') {
+          self._currentNetwork = Promise.resolve(network)
+          return self.emit('switchNetwork', network, currentNetwork)
+        }
+
+        // new network is undefined, save resolve function
+        self._currentNetwork = new Promise(function (resolve) {
+          updateCurrentNetworkResolve = resolve
+          prevNetwork = currentNetwork
+        })
+      })
+  })
+  updateCurrentNetwork()
 
   // error events
   self._networks.forEach(function (network) {
@@ -58,133 +103,61 @@ function Switcher(networks, opts) {
   // connect & disconnect events
   var connectedCount = 0
   self._networks.forEach(function (network) {
+    network.on('connect', updateCurrentNetwork)
     network.on('connect', function () {
       connectedCount += 1
-      if (connectedCount >= self._crosscheck && !self.isConnected()) {
+      if (connectedCount === 1) {
         self.emit('connect')
       }
     })
 
+    network.on('disconnect', updateCurrentNetwork)
     network.on('disconnect', function () {
+      console.log('disconnect', network.constructor.name)
       connectedCount -= 1
-      if (connectedCount < self._crosscheck && self.isConnected()) {
+      if (connectedCount === 0) {
         self.emit('disconnect')
       }
     })
-
-    connectedCount += network.isConnected()
   })
-  if (connectedCount >= self._crosscheck && !self.isConnected()) {
+  var isConnected = self._networks.some(function (network) {
+    return network.isConnected()
+  })
+  if (isConnected) {
     self.emit('connect')
   }
 
-  // netHeight event
-  var newHeights = {}
-  function onNewHeight(networkIndex, height) {
-    if (typeof newHeights[height] === 'undefined') {
-      newHeights[height] = []
+  // newHeight event
+  self._networks.forEach(function (network) {
+    network.on('newHeight', updateCurrentNetwork)
+  })
+
+  // check height on switchNetwork event
+  var setCurrentHeight = self._setCurrentHeight.bind(self)
+  self.on('switchNetwork', function (newNetwork, prevNetwork) {
+    if (prevNetwork !== null) {
+      prevNetwork.removeListener('newHeight', setCurrentHeight)
     }
 
-    if (newHeights[height].indexOf(networkIndex) === -1) {
-      newHeights[height].push(networkIndex)
-    }
+    newNetwork.on('newHeight', setCurrentHeight)
 
-    if (!self.isConnected()) {
-      return
-    }
-
-    self._getCurrentNetworkIndices()
-      .then(function (currentIndices) {
-        if (_.difference(currentIndices, newHeights[height]).length === 0) {
-          self._setCurrentHeight(height)
-          delete newHeights[height]
-        }
-      })
-  }
-  self._networks.forEach(function (network, index) {
-    network.on('newHeight', _.partial(onNewHeight, index))
-    if (network.getCurrentHeight() !== -1) {
-      onNewHeight(index, network.getCurrentHeight())
+    if (self.getCurrentHeight() !== newNetwork.getCurrentHeight()) {
+      self._setCurrentHeight(newNetwork.getCurrentHeight())
     }
   })
 
   // touchAddress event
   self._subscribedAddresses = []
-  function onTouchAddress(address) {
-    if (self._subscribedAddresses.indexOf(address) !== -1) {
-      self.emit('touchAddress', address)
-    }
-  }
   self._networks.forEach(function (network) {
-    network.on('touchAddress', onTouchAddress)
-  })
-}
-
-inherits(Switcher, Network)
-
-/**
- * Return indices for this._networks that must be used now
- *
- * @param {Object} [opts]
- * @param {boolean} [opts.preferSPV=false] Select only networks with SPV support
- * @return {Promise<number[]>}
- */
-Switcher.prototype._getCurrentNetworkIndices = function (opts) {
-  opts = _.extend({preferSPV: false}, opts)
-
-  yatc.verify('{preferSPV: Boolean}', opts)
-
-  var self = this
-  if (opts.preferSPV && !self.supportVerificationMethods()) {
-    throw new TypeError('Prefer can\'t be true when supportVerificationMethods is false')
-  }
-
-  if (!opts.preferSPV) {
-    return self._connectPromise
-      .then(function () {
-        var indices = []
-        self._networks.forEach(function (network, index) {
-          if (network.isConnected()) {
-            indices.push(index)
-          }
-        })
-
-        return indices.slice(0, self._crosscheck)
-      })
-  }
-
-  return new Promise(function (resolve) {
-    var isResolved = false
-    var indices = {}
-
-    function updateIndices(network, index) {
-      if (isResolved) {
-        return
-      }
-
-      var updateFn = _.partial(updateIndices, network, index)
-
-      if (!network.isConnected()) {
-        delete indices[index]
-        return network.once('connect', updateFn)
-      }
-
-      indices[index] = true
-      if (_.keys(indices).length === self._crosscheck) {
-        isResolved = true
-        resolve(_.keys(indices))
-      }
-
-      network.once('disconnect', _.partial(updateIndices, network, index))
-    }
-
-    self._networks.forEach(function (network, index) {
-      if (network.supportVerificationMethods()) {
-        updateIndices(network, index)
+    network.on('touchAddress', function (address) {
+      if (self._subscribedAddresses.indexOf(address) !== -1) {
+        self.emit('touchAddress', address)
       }
     })
   })
 }
+
+inherits(Switcher, Network)
 
 /**
  * Call method `methodName` with arguments as `args` for all current networks
@@ -192,30 +165,14 @@ Switcher.prototype._getCurrentNetworkIndices = function (opts) {
  *
  * @param {string} methodName Network method name
  * @param {*[]} args Arguments for network method
- * @param {Object} [opts] Options for _getCurrentNetworkIndices
  * @return {Promise}
  */
-Switcher.prototype._callMethod = function (methodName, args, opts) {
+Switcher.prototype._callMethod = function (methodName, args) {
   var self = this
 
-  return self._getCurrentNetworkIndices(opts)
-    .then(function (currentIndices) {
-      var promises = currentIndices.map(function (index) {
-        var network = self._networks[index]
-        return network[methodName].apply(network, args)
-      })
-
-      return Promise.all(promises)
-    })
-    .then(function (results) {
-      results.slice(1).forEach(function (current, index) {
-        if (!_.isEqual(current, results[index])) {
-          var msg = 'Responses for ' + methodName + ' not equals'
-          throw new errors.NotEqualResponseError(msg)
-        }
-      })
-
-      return results[0]
+  return self._currentNetwork
+    .then(function (network) {
+      return network[methodName].apply(network, args)
     })
 }
 
@@ -223,7 +180,7 @@ Switcher.prototype._callMethod = function (methodName, args, opts) {
  * @return {boolean}
  */
 Switcher.prototype.supportVerificationMethods = function () {
-  return this._supportVerificationMethods
+  return this._opts.spv
 }
 
 /**
@@ -245,7 +202,7 @@ Switcher.prototype.getChunk = function () {
     Network.prototype.getChunk.call(this)
   }
 
-  return this._callMethod('getChunk', _.slice(arguments), {preferSPV: true})
+  return this._callMethod('getChunk', _.slice(arguments))
 }
 
 /**
@@ -267,7 +224,7 @@ Switcher.prototype.getMerkle = function () {
     Network.prototype.getMerkle.call(this)
   }
 
-  return this._callMethod('getMerkle', _.slice(arguments), {preferSPV: true})
+  return this._callMethod('getMerkle', _.slice(arguments))
 }
 
 /**
@@ -275,32 +232,8 @@ Switcher.prototype.getMerkle = function () {
  * @method sendTx
  * @see {@link Network#sendTx}
  */
-Switcher.prototype.sendTx = function (txHex) {
-  var self = this
-
-  return self._getCurrentNetworkIndices()
-    .then(function (currentIndices) {
-      return new Promise(function (resolve, reject) {
-        function sendTx(index) {
-          if (index >= currentIndices.length) {
-            return reject(new Error('Can\'t send transaction.'))
-          }
-
-          var network = self._networks[currentIndices[index]]
-          if (!network.isConnected()) {
-            return sendTx(index + 1)
-          }
-
-          network.sendTx(txHex)
-            .then(resolve, function (error) {
-              self.emit('error', error)
-              sendTx(index + 1)
-            })
-        }
-
-        sendTx(0)
-      })
-    })
+Switcher.prototype.sendTx = function () {
+  return this._callMethod('sendTx', _.slice(arguments))
 }
 
 /**
@@ -333,31 +266,28 @@ Switcher.prototype.subscribeAddress = util.makeSerial(function (address) {
     return Promise.resolve()
   }
 
-  return self._connectPromise
-    .then(function () {
-      return new Promise(function (resolve, reject) {
-        var fulfilled = 0
-        function onFulfilled() {
-          fulfilled += 1
-          if (fulfilled === self._crosscheck) {
-            self._subscribedAddresses.push(address)
-            resolve()
-          }
-        }
+  return new Promise(function (resolve, reject) {
+    var fulfilled = 0
+    function onFulfilled() {
+      fulfilled += 1
+      if (fulfilled === 1) {
+        self._subscribedAddresses.push(address)
+        resolve()
+      }
+    }
 
-        var rejected = 0
-        function onRejected(error) {
-          rejected += 1
-          if (self._networks.length - rejected < self._crosscheck) {
-            reject(error)
-          }
-        }
+    var rejected = 0
+    function onRejected(error) {
+      rejected += 1
+      if (rejected === self._networks.length) {
+        reject(error)
+      }
+    }
 
-        self._networks.forEach(function (network) {
-          network.subscribeAddress(address).then(onFulfilled, onRejected)
-        })
-      })
+    self._networks.forEach(function (network) {
+      network.subscribeAddress(address).then(onFulfilled, onRejected)
     })
+  })
 })
 
 

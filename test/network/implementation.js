@@ -141,7 +141,7 @@ function implementationTest(opts) {
       }).then(done, done)
     })
 
-    it('sendTx', function (done) {
+    it.skip('sendTx', function (done) {
       var hdnode = bitcoin.HDNode.fromSeedHex('00000000000000000000000000000000', bitcoin.networks.testnet)
       // address is mhW9PYb5jsjpsS5x6dcLrZj7gPvw9mMb9c
       var address = hdnode.pubKey.getAddress(bitcoin.networks.testnet).toBase58Check()

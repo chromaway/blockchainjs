@@ -11,7 +11,7 @@ implementationTest({
   description:    'network.Switcher: One source, crosscheck = 1',
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})
-    return [[electrumNetwork], {crosscheck: 1}]
+    return [[electrumNetwork]]
   }
 })
 
@@ -22,7 +22,7 @@ implementationTest({
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})
     var chainNetwork = new blockchainjs.network.Chain({testnet: true})
-    return [[electrumNetwork, chainNetwork], {crosscheck: 2}]
+    return [[electrumNetwork, chainNetwork]]
   }
 })
 
@@ -32,18 +32,16 @@ implementationTest({
   description:    'network.Switcher: Two sources (first doesn\'t work), crosscheck = 1',
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})
+    var chainNetwork = new blockchainjs.network.Chain({testnet: true})
     // not connected
     electrumNetwork.isConnected = function () { return false }
     // not emit `connect` & `disconnect`
     electrumNetwork.emit = function (eventName) {
       if (eventName !== 'connect' && eventName !== 'disconnect') {
-        this.getPrototypeOf().emit.apply(this, _.slice(arguments))
+        Object.getPrototypeOf(this).emit.apply(this, _.slice(arguments))
       }
     }
-    // not support spv
-    electrumNetwork.supportVerificationMethods = function () { return false }
 
-    var chainNetwork = new blockchainjs.network.Chain({testnet: true})
-    return [[electrumNetwork, chainNetwork], {crosscheck: 1}]
+    return [[electrumNetwork, chainNetwork]]
   }
 })

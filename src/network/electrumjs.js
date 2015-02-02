@@ -245,10 +245,10 @@ ElectrumJS.prototype.getHistory = function (address) {
 
       return _.chain(entries)
         .map(function (entry) {
-          return {txId: entry.tx_hash, height: entry.height}
+          return {txId: entry.tx_hash, height: entry.height || null}
         })
         .sortBy(function (entry) {
-          return [entry.height === 0 ? Infinity : entry.height, entry.txId]
+          return [entry.height === null ? Infinity : entry.height, entry.txId]
         })
         .value()
     })
@@ -272,11 +272,11 @@ ElectrumJS.prototype.getUnspent = function (address) {
             txId: entry.tx_hash,
             outIndex: entry.tx_pos,
             value: entry.value,
-            height: entry.height
+            height: entry.height || null
           }
         })
         .sortBy(function (entry) {
-          return [entry.height === 0 ? Infinity : entry.height, entry.txId]
+          return [entry.height === null ? Infinity : entry.height, entry.txId]
         })
         .value()
     })

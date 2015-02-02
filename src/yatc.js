@@ -29,7 +29,7 @@ var isChainHeader = yatc.create([
 var isChainHistoryEntry = yatc.create([
   '{',
     'hash:          SHA256Hex,',
-    'block_height:  PositiveNumber|ZeroNumber|Null',
+    'block_height:  PositiveNumber|Null|ZeroNumber',
     '...',
   '}'
 ].join('')).is
