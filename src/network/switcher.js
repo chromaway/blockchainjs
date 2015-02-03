@@ -113,7 +113,6 @@ function Switcher(networks, opts) {
 
     network.on('disconnect', updateCurrentNetwork)
     network.on('disconnect', function () {
-      console.log('disconnect', network.constructor.name)
       connectedCount -= 1
       if (connectedCount === 0) {
         self.emit('disconnect')
@@ -172,7 +171,19 @@ Switcher.prototype._callMethod = function (methodName, args) {
 
   return self._currentNetwork
     .then(function (network) {
-      return network[methodName].apply(network, args)
+      function onRejected(error) {
+        return self._currentNetwork
+          .then(function (newNetwork) {
+            // re-throw if error not related with network
+            if (newNetwork === network) {
+              throw error
+            }
+
+            return self._callMethod(methodName, args)
+          })
+      }
+
+      return network[methodName].apply(network, args).catch(onRejected)
     })
 }
 

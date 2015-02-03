@@ -34,9 +34,7 @@ function ElectrumJS(opts) {
 
   self._socket = socket(opts.url, {forceNew: true})
   self._socket.on('connect_error', function (error) { self.emit('error', error) })
-  self._socket.on('reconnect_error', function (error) { self.emit('error', error) })
   self._socket.on('connect', function () { self.emit('connect') })
-  self._socket.on('reconnect', function () { self.emit('connect') })
   self._socket.on('disconnect', function () { self.emit('disconnect') })
 
   self._socket.on('message', function (response) {
@@ -92,6 +90,16 @@ function ElectrumJS(opts) {
     var addresses = self._subscribedAddresses
     self._subscribedAddresses = []
     addresses.forEach(self.subscribeAddress.bind(self))
+  })
+
+  self.on('disconnect', function () {
+    var error = new errors.ElectrumJSError('Network unreachable')
+    _.forEach(self._requests, function (deferred) {
+      deferred.reject(error)
+    })
+
+    self._requestId = 0
+    self._requests = {}
   })
 }
 
