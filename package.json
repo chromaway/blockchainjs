@@ -1,6 +1,6 @@
 {
   "name": "blockchainjs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Bitcoin blockchain for wallets.",
   "author": "Fomichev Kirill <fanatid@ya.ru>",
   "main": "src/index.js",
