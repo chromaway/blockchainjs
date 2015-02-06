@@ -30,6 +30,8 @@ var yatc = require('../yatc')
  */
 
 /**
+ * Abstract class for communication with remote service
+ *
  * @class Network
  * @extends events.EventEmitter
  */
@@ -37,7 +39,6 @@ function Network() {
   var self = this
   events.EventEmitter.call(self)
 
-  self._setCurrentHeightQueue = null
   self._currentHeight = -1
   self._currentBlockHash = new Buffer(util.zfill('', 64), 'hex')
 
@@ -49,20 +50,8 @@ function Network() {
 inherits(Network, events.EventEmitter)
 
 /**
- * @return {boolean}
- */
-Network.prototype.supportVerificationMethods = function () {
-  return false
-}
-
-/**
- * @return {boolean}
- */
-Network.prototype.isConnected = function () {
-  return this._isConnected
-}
-
-/**
+ * Set current height and current blockhash by new height
+ *
  * @private
  * @param {number} newHeight
  * @return {Promise}
@@ -87,6 +76,43 @@ Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
 })
 
 /**
+ * Return `true` if remote service support
+ *   simple payment verification methods (getChunk and getMerkle)
+ *
+ * @return {boolean}
+ */
+Network.prototype.supportVerificationMethods = function () {
+  return false
+}
+
+/**
+ * Connect to a remote service
+ *
+ * @abstract
+ */
+Network.prototype.connect = function () {
+  throw new errors.NotImplementedError('Network.connect')
+}
+
+/**
+ * Disconnect from the remote service
+ *
+ * @abstract
+ */
+Network.prototype.disconnect = function () {
+  throw new errors.NotImplementedError('Network.disconnect')
+}
+
+/**
+ * Return `true` if network connected to a remote service
+ *
+ * @return {boolean}
+ */
+Network.prototype.isConnected = function () {
+  return this._isConnected
+}
+
+/**
  * @return {number}
  */
 Network.prototype.getCurrentHeight = function () {
@@ -101,6 +127,38 @@ Network.prototype.getCurrentBlockHash = function () {
 }
 
 /**
+ * Force sync height with remote service
+ *
+ * @abstract
+ * @return {Promise}
+ */
+Network.prototype.refresh = function () {
+  return Promise.reject(new errors.NotImplementedError('Network.refresh'))
+}
+
+/**
+ * Return number of current active requests
+ *
+ * @abstract
+ * @return {number}
+ */
+Network.prototype.getCurrentActiveRequests = function () {
+  throw new errors.NotImplementedError('Network.getCurrentActiveRequests')
+}
+
+/**
+ * Return elapsed time from last response in milliseconds
+ *
+ * @abstract
+ * @return {number}
+ */
+Network.prototype.getTimeFromLastResponse = function () {
+  throw new errors.NotImplementedError('Network.getTimeFromLastRequest')
+}
+
+/**
+ * Return bitcoin header for given `height`
+ *
  * @abstract
  * @param {number} height
  * @return {Promise<BitcoinHeader>}
@@ -110,6 +168,8 @@ Network.prototype.getHeader = function () {
 }
 
 /**
+ * Return hex string of 2016 headers for given `index`
+ *
  * @abstract
  * @param {number} index
  * @return {Promise<string>}
@@ -119,6 +179,8 @@ Network.prototype.getChunk = function () {
 }
 
 /**
+ * Return bitcoin transaction in hex for given `txId`
+ *
  * @abstract
  * @param {string} txId
  * @return {Promise<string>}
@@ -135,6 +197,8 @@ Network.prototype.getTx = function () {
  */
 
 /**
+ * Return merkle root and transaction index in block for given `txId`
+ *
  * @abstract
  * @param {string} txId
  * @param {number} [height]
@@ -145,6 +209,8 @@ Network.prototype.getMerkle = function () {
 }
 
 /**
+ * Send transaction in hex
+ *
  * @abstract
  * @param {string} txHex
  * @return {Promise<string>}
@@ -160,7 +226,7 @@ Network.prototype.sendTx = function () {
  */
 
 /**
- * Records sorted by height, txId
+ * Return array of Objects containing txId, height and sorted by height, txId
  *
  * @abstract
  * @param {string} address
@@ -179,7 +245,8 @@ Network.prototype.getHistory = function () {
  */
 
 /**
- * Records sorted by height, txId
+ * Return array of Objects containing txId, outIndex, value, height
+ *   and sorted by height, txId
  *
  * @abstract
  * @param {string} address
@@ -190,6 +257,8 @@ Network.prototype.getUnspent = function () {
 }
 
 /**
+ * Subscribe given `address` for `touchAddress` events
+ *
  * @abstract
  * @param {string} address
  * @return {Promise}
