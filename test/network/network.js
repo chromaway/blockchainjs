@@ -5,6 +5,11 @@ var expect = require('chai').expect
 var blockchainjs = require('../../src')
 
 var notImplementedMethods = [
+  'connect',
+  'disconnect',
+  'refresh',
+  'getCurrentActiveRequests',
+  'getTimeFromLastResponse',
   'getHeader',
   'getChunk',
   'getTx',
@@ -47,7 +52,21 @@ describe('network.Network', function () {
 
   notImplementedMethods.forEach(function (method) {
     it(method, function (done) {
-      network[method]()
+      function getPromise() {
+        try {
+          var promise = network[method]()
+          if (!(promise instanceof Promise)) {
+            promise = Promise.resolve(promise)
+          }
+          return promise
+
+        } catch (error) {
+          return Promise.reject(error)
+
+        }
+      }
+
+      getPromise()
         .catch(function (e) { return e })
         .then(function (result) {
           expect(result).to.be.instanceof(blockchainjs.errors.NotImplementedError)

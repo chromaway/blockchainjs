@@ -153,7 +153,7 @@ Network.prototype.getCurrentActiveRequests = function () {
  * @return {number}
  */
 Network.prototype.getTimeFromLastResponse = function () {
-  throw new errors.NotImplementedError('Network.getTimeFromLastRequest')
+  throw new errors.NotImplementedError('Network.getTimeFromLastResponse')
 }
 
 /**

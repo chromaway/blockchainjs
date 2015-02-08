@@ -24,9 +24,11 @@ function implementationTest(opts) {
       network = new Network()
       network.on('error', function (error) { throw error })
       network.once('connect', done)
+      network.connect()
     })
 
     afterEach(function () {
+      network.disconnect()
       network.removeAllListeners()
       network = undefined
     })
@@ -48,6 +50,44 @@ function implementationTest(opts) {
         expect(currentHeight).to.be.at.least(0)
         done()
       })
+      network.refresh()
+    })
+
+    it('disconnect/connect', function (done) {
+      network.once('disconnect', function () {
+        network.once('connect', done)
+        network.connect()
+      })
+      network.disconnect()
+    })
+
+    it('refresh', function (done) {
+      expect(network.getCurrentHeight()).to.equal(-1)
+
+      network.once('newHeight', function () {
+        var height = network.getCurrentHeight()
+        expect(height).to.be.at.least(0)
+
+        network.refresh()
+          .then(function () {
+            expect(network.getCurrentHeight()).to.equal(height)
+          })
+          .then(done, done)
+      })
+      network.refresh()
+    })
+
+    it('getCurrentActiveRequests', function () {
+      network.refresh()
+      expect(network.getCurrentActiveRequests()).to.equal(1)
+    })
+
+    it('getTimeFromLastResponse', function (done) {
+      network.once('newHeight', function () {
+        expect(network.getTimeFromLastResponse()).to.be.below(50)
+        done()
+      })
+      network.refresh()
     })
 
     it('getHeader 0', function (done) {

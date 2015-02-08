@@ -1,7 +1,6 @@
 var inherits = require('util').inherits
 
 var _ = require('lodash')
-var request = require('request')
 var WebSockets = require('ws')
 
 var Network = require('./network')
@@ -9,7 +8,7 @@ var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
-request = util.denodeify(request)
+var request = util.denodeify(require('request'))
 
 
 /**
@@ -39,63 +38,8 @@ function Chain(opts) {
   self._apiKeyId = opts.apiKeyId
   self._requestTimeout = opts.requestTimeout
 
-  function initNotify() {
-    if (typeof self._ws !== 'undefined') {
-      self._ws.onopen = undefined
-      self._ws.onmessage = undefined
-      self._ws.onerror = undefined
-      self._ws.onclose = undefined
-      delete self._ws
-    }
-
-    self._ws = new WebSockets('wss://ws.chain.com/v2/notifications')
-
-    self._ws.onopen = function () {
-      self._attemptCount = 0
-      self.emit('connect')
-    }
-
-    self._ws.onclose = function () {
-      attemptInitNotify()
-      self.emit('disconnect')
-    }
-
-    self._ws.onerror = function (error) {
-      if (!self.isConnected()) {
-        attemptInitNotify()
-      }
-      self.emit('error', error)
-    }
-
-    self._ws.onmessage = function (message) {
-      try {
-        var payload = JSON.parse(message.data).payload
-
-        if (payload.type === 'new-block') {
-          yatc.verify('PositiveNumber', payload.block.height)
-          return self._setCurrentHeight(payload.block.height)
-        }
-
-        if (payload.type === 'address') {
-          yatc.verify('{confirmations: Number, address: BitcoinAddress, ...}', payload)
-          if (payload.confirmations < 2) {
-            return self.emit('touchAddress', payload.address)
-          }
-        }
-
-      } catch (error) {
-        self.emit('error', error)
-
-      }
-    }
-  }
-
-  self._attemptCount = 0
-  function attemptInitNotify() {
-    setTimeout(initNotify, 15000 * Math.pow(2, self._attemptCount))
-    self._attemptCount += 1
-  }
-
+  self._activeRequests = 0
+  self._lastResponse = Date.now()
 
   self._subscribedAddressesQueue = {}
   self._subscribedAddresses = {}
@@ -103,17 +47,6 @@ function Chain(opts) {
   self.on('connect', function () {
     var req = {type: 'new-block', block_chain: self._blockChain}
     self._ws.send(JSON.stringify(req))
-
-    self._request('/blocks/latest')
-      .then(function (response) {
-        if (self.getCurrentHeight() !== response.height) {
-          return self._setCurrentHeight(response.height)
-        }
-
-      }, function (error) {
-        self.emit('error', error)
-
-      })
 
     _.chain([])
       .concat(_.keys(self._subscribedAddressesQueue))
@@ -123,12 +56,85 @@ function Chain(opts) {
     self._subscribedAddressesQueue = {}
     self._subscribedAddresses = {}
   })
-
-
-  initNotify()
 }
 
 inherits(Chain, Network)
+
+/**
+ * @memberof Chain.prototype
+ * @method connect
+ * @see {@link Network#connect}
+ */
+Chain.prototype.connect = function () {
+  var self = this
+  if (self.isConnected()) {
+    return
+  }
+
+  var attemptCount = 0
+  function attemptReconnect() {
+    setTimeout(self.connect.bind(self), 15000 * Math.pow(2, attemptCount))
+    attemptCount = Math.min(attemptCount + 1, 3)
+  }
+
+  self._ws = new WebSockets('wss://ws.chain.com/v2/notifications')
+
+  self._ws.onopen = function () {
+    attemptCount = 0
+    self.emit('connect')
+  }
+
+  self._ws.onclose = function () {
+    attemptReconnect()
+    self.emit('disconnect')
+  }
+
+  self._ws.onerror = function (error) {
+    if (!self.isConnected()) {
+      attemptReconnect()
+    }
+    self.emit('error', error)
+  }
+
+  self._ws.onmessage = function (message) {
+    try {
+      var payload = JSON.parse(message.data).payload
+
+      self._lastResponse = Date.now()
+
+      if (payload.type === 'new-block') {
+        yatc.verify('PositiveNumber', payload.block.height)
+        return self._setCurrentHeight(payload.block.height)
+      }
+
+      if (payload.type === 'address') {
+        yatc.verify('{confirmations: Number, address: BitcoinAddress, ...}', payload)
+        if (payload.confirmations < 2) {
+          return self.emit('touchAddress', payload.address)
+        }
+      }
+
+    } catch (error) {
+      self.emit('error', error)
+
+    }
+  }
+}
+
+/**
+ * @memberof Chain.prototype
+ * @method disconnect
+ * @see {@link Network#disconnect}
+ */
+Chain.prototype.disconnect = function () {
+  this._ws.onopen = null
+  this._ws.onmessage = null
+  this._ws.onerror = null
+  this._ws.onclose = null
+  this._ws.close()
+  this._ws = null
+  this.emit('disconnect')
+}
 
 /**
  * @private
@@ -158,24 +164,69 @@ Chain.prototype._request = function (path, data) {
     requestOpts.json = data
   }
 
-  var promise = Promise.resolve()
   if (!self.isConnected()) {
-    promise = new Promise(function (resolve) {
-      self.once('connect', resolve)
-    })
+    return Promise.reject(new errors.NotConnectedError(requestOpts.uri))
   }
 
-  return promise
-    .then(function () {
-      return request(requestOpts)
-
-    }).then(function (response) {
+  self._activeRequests += 1
+  return request(requestOpts)
+    .then(function (response) {
       if (response.statusCode !== 200) {
         throw new errors.ChainRequestError(response.statusMessage)
       }
 
       return response.body
     })
+    .then(function (result) {
+      self._lastResponse = Date.now()
+      self._activeRequests -= 1
+      return result
+
+    }, function (error) {
+      self._activeRequests -= 1
+      throw error
+
+    })
+}
+
+/**
+ * @memberof Chain.prototype
+ * @method refresh
+ * @see {@link Network#refresh}
+ */
+Chain.prototype.refresh = function () {
+  var self = this
+
+  return self._request('/blocks/latest')
+    .then(function (response) {
+      yatc.verify('{height: PositiveNumber|ZeroNumber, ...}', response)
+
+      if (self.getCurrentHeight() !== response.height) {
+        return self._setCurrentHeight(response.height)
+      }
+    })
+}
+
+/**
+ * @memberof Chain.prototype
+ * @method getCurrentActiveRequests
+ * @see {@link Network#getCurrentActiveRequests}
+ */
+Chain.prototype.getCurrentActiveRequests = function () {
+  if (!this.isConnected()) {
+    return 0
+  }
+
+  return this._activeRequests
+}
+
+/**
+ * @memberof Chain.prototype
+ * @method getTimeFromLastResponse
+ * @see {@link Network#getTimeFromLastResponse}
+ */
+Chain.prototype.getTimeFromLastResponse = function () {
+  return Date.now() - this._lastResponse
 }
 
 /**
@@ -324,8 +375,7 @@ Chain.prototype.getUnspent = function (address) {
  * @method subscribeAddress
  * @see {@link Network#subscribeAddress}
  */
-// makeSerial not needed, becase function syncronous
-Chain.prototype.subscribeAddress = function (address) {
+Chain.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)
 
   if (this.isConnected()) {
@@ -339,7 +389,7 @@ Chain.prototype.subscribeAddress = function (address) {
   }
 
   return Promise.resolve()
-}
+})
 
 
 module.exports = Chain

@@ -125,6 +125,10 @@ ElectrumJS.prototype._request = function (method, params) {
   yatc.verify('[*]', params)
 
   var self = this
+  if (!self.isConnected()) {
+    return Promise.reject(new errors.NotConnectedError(method))
+  }
+
   return new Promise(function (resolve, reject) {
     var request = {id: self._requestId++, method: method, params: params}
     self._requests[request.id] = {resolve: resolve, reject: reject}
