@@ -39,9 +39,10 @@ function ChainWebSocket() {
   events.EventEmitter.call(this)
 
   this._ws = null
-  this._isConnected = false
-  this._hearbeatTimeout = null
   this._autoReconnect = true
+  this._isConnected = false
+  this._connectTimeout = null
+  this._idleTimeout = null
 }
 
 inherits(ChainWebSocket, events.EventEmitter)
@@ -49,16 +50,15 @@ inherits(ChainWebSocket, events.EventEmitter)
 /**
  * @private
  */
-ChainWebSocket.prototype._setHeartbeatTimeout = function () {
+ChainWebSocket.prototype._setIdleTimeout = function () {
   var self = this
 
-  function onTimeout() {
-    if (self._isConnected) {
+  self._idleTimeout = setTimeout(function () {
+    if (self._ws !== null && self._isConnected) {
       self._ws.close()
     }
-  }
 
-  self._hearbeatTimeout = setTimeout(onTimeout, 25000)
+  }, 25000)
 }
 
 /**
@@ -73,7 +73,8 @@ ChainWebSocket.prototype._clearWebSocket = function () {
 
   this._isConnected = false
 
-  clearTimeout(this._hearbeatTimeout)
+  clearTimeout(this._connectTimeout)
+  clearTimeout(this._idleTimeout)
 
   if (this._autoReconnect) {
     setTimeout(this.open.bind(this), 10000)
@@ -101,8 +102,8 @@ ChainWebSocket.prototype.open = function () {
     }
 
     self._ws.onmessage = function (message) {
-      clearTimeout(self._hearbeatTimeout)
-      self._setHeartbeatTimeout()
+      clearTimeout(self._idleTimeout)
+      self._setIdleTimeout()
 
       var payload
       try {
@@ -116,7 +117,8 @@ ChainWebSocket.prototype.open = function () {
       self.emit('message', payload)
     }
 
-    self._setHeartbeatTimeout()
+    clearTimeout(self._connectTimeout)
+    self._setIdleTimeout()
 
     self.emit('connect')
   }
@@ -128,6 +130,14 @@ ChainWebSocket.prototype.open = function () {
 
     self.emit('error', error)
   }
+
+  self._connectTimeout = setTimeout(function () {
+    if (!self._isConnected) {
+      self._clearWebSocket()
+      self.emit('error', new Error('Chain.com connection timeout'))
+    }
+
+  }, 2000)
 }
 
 /**
@@ -160,13 +170,13 @@ ChainWebSocket.prototype.close = function () {
  * @param {Object} [opts]
  * @param {boolean} [opts.testnet=false]
  * @param {string} [opts.apiKeyId=DEMO-4a5e1e4]
- * @param {number} [opts.requestTimeout=15000]
+ * @param {number} [opts.requestTimeout=10000]
  */
 function Chain(opts) {
   opts = _.extend({
     testnet: false,
     apiKeyId: 'DEMO-4a5e1e4',
-    requestTimeout: 15000,
+    requestTimeout: 10000,
   }, opts)
 
   yatc.verify('{testnet: Boolean, apiKeyId: String, requestTimeout: PositiveNumber}', opts)
@@ -186,6 +196,8 @@ function Chain(opts) {
 
   self.on('connect', function () {
     self._ws.send({type: 'new-block', block_chain: self._blockChain})
+    self.refresh()
+      .catch(function (error) { self.emit('error', error) })
 
     _.chain([])
       .concat(_.keys(self._subscribedAddressesQueue))
@@ -224,20 +236,6 @@ function Chain(opts) {
 }
 
 inherits(Chain, Network)
-
-/**
- * @memberof Chain.prototype
- * @method connect
- * @see {@link Network#connect}
- */
-Chain.prototype.connect = function () { this._ws.open() }
-
-/**
- * @memberof Chain.prototype
- * @method disconnect
- * @see {@link Network#disconnect}
- */
-Chain.prototype.disconnect = function () { this._ws.close() }
 
 /**
  * @private
@@ -294,6 +292,20 @@ Chain.prototype._request = function (path, data) {
 
 /**
  * @memberof Chain.prototype
+ * @method connect
+ * @see {@link Network#connect}
+ */
+Chain.prototype.connect = function () { this._ws.open() }
+
+/**
+ * @memberof Chain.prototype
+ * @method disconnect
+ * @see {@link Network#disconnect}
+ */
+Chain.prototype.disconnect = function () { this._ws.close() }
+
+/**
+ * @memberof Chain.prototype
  * @method refresh
  * @see {@link Network#refresh}
  */
@@ -316,10 +328,6 @@ Chain.prototype.refresh = function () {
  * @see {@link Network#getCurrentActiveRequests}
  */
 Chain.prototype.getCurrentActiveRequests = function () {
-  if (!this.isConnected()) {
-    return 0
-  }
-
   return this._activeRequests
 }
 

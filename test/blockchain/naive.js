@@ -13,13 +13,14 @@ describe('blockchain.Naive', function () {
     network.once('connect', done)
     blockchain = new blockchainjs.blockchain.Naive(network)
     blockchain.on('error', function (error) { throw error })
+    network.connect()
   })
 
   afterEach(function () {
     network.removeAllListeners()
-    network = undefined
+    network = null
     blockchain.removeAllListeners()
-    blockchain = undefined
+    blockchain = null
   })
 
   it('inherits Blockchain', function () {

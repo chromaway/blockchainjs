@@ -27,10 +27,19 @@ function implementationTest(opts) {
       network.connect()
     })
 
-    afterEach(function () {
-      network.disconnect()
-      network.removeAllListeners()
-      network = undefined
+    afterEach(function (done) {
+      function tryClearNetwork() {
+        if (network.getCurrentActiveRequests() > 0) {
+          return setTimeout(tryClearNetwork, 25)
+        }
+
+        network.disconnect()
+        network.removeAllListeners()
+        network = null
+        done()
+      }
+
+      tryClearNetwork()
     })
 
     it('inherits Network', function () {
@@ -50,7 +59,6 @@ function implementationTest(opts) {
         expect(currentHeight).to.be.at.least(0)
         done()
       })
-      network.refresh()
     })
 
     it('disconnect/connect', function (done) {
@@ -74,11 +82,13 @@ function implementationTest(opts) {
           })
           .then(done, done)
       })
-      network.refresh()
     })
 
     it('getCurrentActiveRequests', function () {
-      network.refresh()
+      if (network instanceof blockchainjs.network.Switcher) {
+        return
+      }
+
       expect(network.getCurrentActiveRequests()).to.equal(1)
     })
 
@@ -87,7 +97,6 @@ function implementationTest(opts) {
         expect(network.getTimeFromLastResponse()).to.be.below(50)
         done()
       })
-      network.refresh()
     })
 
     it('getHeader 0', function (done) {

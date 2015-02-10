@@ -7,7 +7,6 @@ var implementationTest = require('./implementation.js')
 
 implementationTest({
   class:          blockchainjs.network.Switcher,
-  describe:       describe,
   description:    'network.Switcher: One source',
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})
@@ -17,7 +16,6 @@ implementationTest({
 
 implementationTest({
   class:          blockchainjs.network.Switcher,
-  describe:       describe,
   description:    'network.Switcher: Two sources',
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})
@@ -28,7 +26,6 @@ implementationTest({
 
 implementationTest({
   class:          blockchainjs.network.Switcher,
-  describe:       describe,
   description:    'network.Switcher: Two sources (first doesn\'t work)',
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})

@@ -31,18 +31,30 @@ function ElectrumJS(opts) {
   self._requestId = 0
   self._requests = {}
   self._subscribedAddresses = []
+  self._lastResponse = Date.now()
 
-  self._socket = socket(opts.url, {forceNew: true})
+  self._socket = socket(opts.url, {
+    autoConnect: false,
+    forceNew: true,
+    reconnectionDelay: 10000,
+    reconnectionDelayMax: 10000,
+    randomizationFactor: 0
+  })
+
   self._socket.on('connect_error', function (error) { self.emit('error', error) })
+  self._socket.on('error', function (error) { self.emit('error', error) })
+
   self._socket.on('connect', function () { self.emit('connect') })
   self._socket.on('disconnect', function () { self.emit('disconnect') })
 
   self._socket.on('message', function (response) {
+    self._lastResponse = Date.now()
+
     try {
       response = JSON.parse(response)
 
     } catch (error) {
-      return
+      return self.emit('error', error)
 
     }
 
@@ -77,15 +89,8 @@ function ElectrumJS(opts) {
   })
 
   self.on('connect', function () {
-    self._request('blockchain.numblocks.subscribe')
-      .then(function (height) {
-        yatc.verify('PositiveNumber', height)
-        return self._setCurrentHeight(height)
-
-      }).catch(function (error) {
-        self.emit('error', error)
-
-      })
+    self.refresh()
+      .catch(function (error) { self.emit('error', error) })
 
     var addresses = self._subscribedAddresses
     self._subscribedAddresses = []
@@ -106,20 +111,15 @@ function ElectrumJS(opts) {
 inherits(ElectrumJS, Network)
 
 /**
- * @return {boolean}
- */
-ElectrumJS.prototype.supportVerificationMethods = function () {
-  return true
-}
-
-/**
  * @private
  * @param {string} method
  * @param {Array.<*>} [params=[]]
  * @return {Promise}
  */
 ElectrumJS.prototype._request = function (method, params) {
-  if (typeof params === 'undefined') { params = [] }
+  if (typeof params === 'undefined') {
+    params = []
+  }
 
   yatc.verify('String', method)
   yatc.verify('[*]', params)
@@ -135,6 +135,62 @@ ElectrumJS.prototype._request = function (method, params) {
 
     self._socket.send(JSON.stringify(request))
   })
+}
+
+/**
+ * @return {boolean}
+ */
+ElectrumJS.prototype.supportVerificationMethods = function () {
+  return true
+}
+
+/**
+ * @memberof ElectrumJS.prototype
+ * @method connect
+ * @see {@link Network#connect}
+ */
+ElectrumJS.prototype.connect = function () { this._socket.connect() }
+
+/**
+ * @memberof ElectrumJS.prototype
+ * @method disconnect
+ * @see {@link Network#disconnect}
+ */
+ElectrumJS.prototype.disconnect = function () { this._socket.disconnect() }
+
+/**
+ * @memberof ElectrumJS.prototype
+ * @method refresh
+ * @see {@link Network#refresh}
+ */
+ElectrumJS.prototype.refresh = function () {
+  var self = this
+  return self._request('blockchain.numblocks.subscribe')
+    .then(function (height) {
+      yatc.verify('PositiveNumber', height)
+
+      if (self.getCurrentHeight() !== height) {
+        return self._setCurrentHeight(height)
+      }
+    })
+}
+
+/**
+ * @memberof ElectrumJS.prototype
+ * @method getCurrentActiveRequests
+ * @see {@link Network#getCurrentActiveRequests}
+ */
+ElectrumJS.prototype.getCurrentActiveRequests = function () {
+  return _.keys(this._requests).length
+}
+
+/**
+ * @memberof ElectrumJS.prototype
+ * @method getTimeFromLastResponse
+ * @see {@link Network#getTimeFromLastResponse}
+ */
+ElectrumJS.prototype.getTimeFromLastResponse = function () {
+  return Date.now() - this._lastResponse
 }
 
 /**

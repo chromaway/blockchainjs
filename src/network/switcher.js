@@ -37,12 +37,12 @@ function Switcher(networks, opts) {
   self._opts = opts
 
   // resolve function for this._currentNetwork
-  var updateCurrentNetworkResolve
+  var currentNetworkResolve
   // for switchNetwork event
   var prevNetwork = null
   // remember resolve function
   self._currentNetwork = new Promise(function (resolve) {
-    updateCurrentNetworkResolve = resolve
+    currentNetworkResolve = resolve
   })
   // save new current network to this._currentNetwork
   var updateCurrentNetwork = util.makeSerial(function () {
@@ -61,11 +61,11 @@ function Switcher(networks, opts) {
       .value()
 
     // current network not set yet? (resolve function isn't null?)
-    if (updateCurrentNetworkResolve !== null) {
+    if (currentNetworkResolve !== null) {
       // set current network if new network is not undefined
       if (typeof network !== 'undefined') {
-        updateCurrentNetworkResolve(network)
-        updateCurrentNetworkResolve = null
+        currentNetworkResolve(network)
+        currentNetworkResolve = null
         self.emit('switchNetwork', network, prevNetwork)
       }
 
@@ -88,9 +88,10 @@ function Switcher(networks, opts) {
 
         // new network is undefined, save resolve function
         self._currentNetwork = new Promise(function (resolve) {
-          updateCurrentNetworkResolve = resolve
+          currentNetworkResolve = resolve
           prevNetwork = currentNetwork
         })
+        self.emit('switchNetwork', null, currentNetwork)
       })
   })
   updateCurrentNetwork()
@@ -131,6 +132,7 @@ function Switcher(networks, opts) {
     network.on('newHeight', updateCurrentNetwork)
   })
 
+  self._lastNetworkValue = self._networks[0]
   // check height on switchNetwork event
   var setCurrentHeight = self._setCurrentHeight.bind(self)
   self.on('switchNetwork', function (newNetwork, prevNetwork) {
@@ -138,10 +140,14 @@ function Switcher(networks, opts) {
       prevNetwork.removeListener('newHeight', setCurrentHeight)
     }
 
-    newNetwork.on('newHeight', setCurrentHeight)
+    if (newNetwork !== null) {
+      self._lastNetworkValue = newNetwork
 
-    if (self.getCurrentHeight() !== newNetwork.getCurrentHeight()) {
-      self._setCurrentHeight(newNetwork.getCurrentHeight())
+      newNetwork.on('newHeight', setCurrentHeight)
+
+      if (self.getCurrentHeight() !== newNetwork.getCurrentHeight()) {
+        self._setCurrentHeight(newNetwork.getCurrentHeight())
+      }
     }
   })
 
@@ -192,6 +198,59 @@ Switcher.prototype._callMethod = function (methodName, args) {
  */
 Switcher.prototype.supportVerificationMethods = function () {
   return this._opts.spv
+}
+
+/**
+ * @memberof Switcher.prototype
+ * @method connect
+ * @see {@link Network#connect}
+ */
+Switcher.prototype.connect = function () {
+  _.invoke(this._networks, 'connect')
+}
+
+/**
+ * @memberof Switcher.prototype
+ * @method disconnect
+ * @see {@link Network#disconnect}
+ */
+Switcher.prototype.disconnect = function () {
+  _.invoke(this._networks, 'disconnect')
+}
+
+/**
+ * @memberof Switcher.prototype
+ * @method refresh
+ * @see {@link Network#refresh}
+ */
+Switcher.prototype.refresh = function () {
+  var promises = this._networks.map(function (network) {
+    if (!network.isConnected()) {
+      return
+    }
+
+    return network.refresh()
+  })
+
+  return Promise.all(promises)
+}
+
+/**
+ * @memberof Switcher.prototype
+ * @method getCurrentActiveRequests
+ * @see {@link Network#getCurrentActiveRequests}
+ */
+Switcher.prototype.getCurrentActiveRequests = function () {
+  return this._lastNetworkValue.getCurrentActiveRequests()
+}
+
+/**
+ * @memberof Switcher.prototype
+ * @method getTimeFromLastResponse
+ * @see {@link Network#getTimeFromLastResponse}
+ */
+Switcher.prototype.getTimeFromLastResponse = function () {
+  return this._lastNetworkValue.getTimeFromLastResponse()
 }
 
 /**
