@@ -6,6 +6,7 @@ var createError = require('errno').create
  *  +-- BlockchainJSError
  *       +-- NetworkError
  *       |    +-- ChainRequestError
+ *       |    +-- ConnectionTimeout
  *       |    +-- ElectrumJSError
  *       |    +-- GetTxError
  *       |    +-- NotConnectedError
@@ -17,6 +18,7 @@ var BlockchainJSError = createError('BlockchainJSError', Error)
 
 var NetworkError = createError('NetworkError', BlockchainJSError)
 var ChainRequestError = createError('ChainRequestError', NetworkError)
+var ConnectionTimeout = createError('ConnectionTimeout', NetworkError)
 var ElectrumJSError = createError('ElectrumJSError', NetworkError)
 var GetHeaderError = createError('GetHeaderError', NetworkError)
 var GetTxError = createError('GetTxError', NetworkError)
@@ -31,6 +33,7 @@ module.exports = {
 
   NetworkError: NetworkError,
   ChainRequestError: ChainRequestError,
+  ConnectionTimeout: ConnectionTimeout,
   ElectrumJSError: ElectrumJSError,
   GetHeaderError: GetHeaderError,
   GetTxError: GetTxError,

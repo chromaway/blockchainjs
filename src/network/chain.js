@@ -2,7 +2,7 @@ var events = require('events')
 var inherits = require('util').inherits
 
 var _ = require('lodash')
-var WebSockets = require('ws')
+var WS = require('ws')
 
 var Network = require('./network')
 var errors = require('../errors')
@@ -89,9 +89,14 @@ ChainWebSocket.prototype.open = function () {
     return
   }
 
+  if (WS === null) {
+    var errMsg = 'WebSocket not available'
+    return self.emit('error', new errors.NotImplementedError(errMsg))
+  }
+
   self._autoReconnect = true
 
-  self._ws = new WebSockets('wss://ws.chain.com/v2/notifications')
+  self._ws = new WS('wss://ws.chain.com/v2/notifications')
 
   self._ws.onopen = function () {
     self._isConnected = true
@@ -134,7 +139,8 @@ ChainWebSocket.prototype.open = function () {
   self._connectTimeout = setTimeout(function () {
     if (!self._isConnected) {
       self._clearWebSocket()
-      self.emit('error', new Error('Chain.com connection timeout'))
+      var errMsg = 'Chain: WebSocket connection timeout'
+      self.emit('error', new errors.ConnectionTimeout(errMsg))
     }
 
   }, 2000)
@@ -145,7 +151,7 @@ ChainWebSocket.prototype.open = function () {
  */
 ChainWebSocket.prototype.send = function (data) {
   if (!this._isConnected) {
-    throw new Error('WebSocket not connected')
+    throw new errors.NotConnectedError('Chain: WebSocket not connected')
   }
 
   this._ws.send(JSON.stringify(data))
