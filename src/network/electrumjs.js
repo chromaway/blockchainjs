@@ -1,7 +1,8 @@
 var inherits = require('util').inherits
 
 var _ = require('lodash')
-var socket = require('socket.io-client')
+var io = require('socket.io-client')
+var ws = require('ws')
 
 var Network = require('./network')
 var errors = require('../errors')
@@ -10,6 +11,8 @@ var yatc = require('../yatc')
 
 
 /**
+ * [ElectrumJS api]{@link https://github.com/fanatid/electrumjs-server}
+ *
  * @class ElectrumJS
  * @extends Network
  *
@@ -33,12 +36,15 @@ function ElectrumJS(opts) {
   self._subscribedAddresses = []
   self._lastResponse = Date.now()
 
-  self._socket = socket(opts.url, {
+  self._socket = io(opts.url, {
     autoConnect: false,
     forceNew: true,
     reconnectionDelay: 10000,
     reconnectionDelayMax: 10000,
-    randomizationFactor: 0
+    randomizationFactor: 0,
+    forceJSONP: false,
+    jsonp: true,
+    transports: ws !== null ? ['websocket', 'polling'] : ['polling']
   })
 
   self._socket.on('connect_error', function (error) { self.emit('error', error) })
