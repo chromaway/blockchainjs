@@ -50,8 +50,17 @@ function ElectrumJS(opts) {
   self._socket.on('connect_error', function (error) { self.emit('error', error) })
   self._socket.on('error', function (error) { self.emit('error', error) })
 
-  self._socket.on('connect', function () { self.emit('connect') })
-  self._socket.on('disconnect', function () { self.emit('disconnect') })
+  self._socket.on('connect', function () {
+    if (!self.isConnected()) {
+      self.emit('connect')
+    }
+  })
+  self._socket.on('disconnect', function () {
+    // prevent double event from socket on close/disconnect
+    if (self.isConnected()) {
+      self.emit('disconnect')
+    }
+  })
 
   self._socket.on('message', function (response) {
     self._lastResponse = Date.now()
