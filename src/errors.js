@@ -9,6 +9,7 @@ var createError = require('errno').create
  *       |    +-- ConnectionTimeout
  *       |    +-- ElectrumJSError
  *       |    +-- GetTxError
+ *       |    +-- IdleTimeout
  *       |    +-- NotConnectedError
  *       |    +-- SendTxError
  *       +-- NotImplementedError
@@ -22,6 +23,7 @@ var ConnectionTimeout = createError('ConnectionTimeout', NetworkError)
 var ElectrumJSError = createError('ElectrumJSError', NetworkError)
 var GetHeaderError = createError('GetHeaderError', NetworkError)
 var GetTxError = createError('GetTxError', NetworkError)
+var IdleTimeout = createError('IdleTimeout', NetworkError)
 var NotConnectedError = createError('NotConnectedError', NetworkError)
 var SendTxError = createError('SendTxError', NetworkError)
 
@@ -37,6 +39,7 @@ module.exports = {
   ElectrumJSError: ElectrumJSError,
   GetHeaderError: GetHeaderError,
   GetTxError: GetTxError,
+  IdleTimeout: IdleTimeout,
   NotConnectedError: NotConnectedError,
   SendTxError: SendTxError,
 

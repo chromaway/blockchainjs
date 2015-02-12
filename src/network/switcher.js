@@ -108,7 +108,7 @@ function Switcher(networks, opts) {
     network.on('connect', function () {
       connectedCount += 1
       if (connectedCount === 1) {
-        self.emit('connect')
+        self._setReadyState(Network.OPEN)
       }
     })
 
@@ -116,7 +116,7 @@ function Switcher(networks, opts) {
     network.on('disconnect', function () {
       connectedCount -= 1
       if (connectedCount === 0) {
-        self.emit('disconnect')
+        self._setReadyState(Network.CLOSED)
       }
     })
   })
@@ -124,7 +124,7 @@ function Switcher(networks, opts) {
     return network.isConnected()
   })
   if (isConnected) {
-    self.emit('connect')
+    self._setReadyState(Network.OPEN)
   }
 
   // newHeight event
@@ -165,6 +165,26 @@ function Switcher(networks, opts) {
 inherits(Switcher, Network)
 
 /**
+ * @memberof Switcher.prototype
+ * @method _doOpen
+ * @see {@link Network#_doOpen}
+ */
+Switcher.prototype._doOpen = function () {
+  this._setReadyState(this.CONNECTING)
+  _.invoke(this._networks, 'connect')
+}
+
+/**
+ * @memberof Switcher.prototype
+ * @method _doClose
+ * @see {@link Network#_doClose}
+ */
+Switcher.prototype._doClose = function () {
+  this._setReadyState(this.CLOSING)
+  _.invoke(this._networks, 'disconnect')
+}
+
+/**
  * Call method `methodName` with arguments as `args` for all current networks
  *   and check results for equality
  *
@@ -198,24 +218,6 @@ Switcher.prototype._callMethod = function (methodName, args) {
  */
 Switcher.prototype.supportVerificationMethods = function () {
   return this._opts.spv
-}
-
-/**
- * @memberof Switcher.prototype
- * @method connect
- * @see {@link Network#connect}
- */
-Switcher.prototype.connect = function () {
-  _.invoke(this._networks, 'connect')
-}
-
-/**
- * @memberof Switcher.prototype
- * @method disconnect
- * @see {@link Network#disconnect}
- */
-Switcher.prototype.disconnect = function () {
-  _.invoke(this._networks, 'disconnect')
 }
 
 /**

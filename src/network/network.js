@@ -1,15 +1,13 @@
 var events = require('events')
 var inherits = require('util').inherits
+var timers = require('timers')
+
+var _ = require('lodash')
 
 var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
-
-/**
- * @event Network#error
- * @param {Error} error
- */
 
 /**
  * @event Network#connect
@@ -20,8 +18,17 @@ var yatc = require('../yatc')
  */
 
 /**
+ * @event Network#error
+ * @param {Error} error
+ */
+
+/**
  * @event Network#newHeight
  * @param {number} height
+ */
+
+/**
+ * @event Network#newReadyState
  */
 
 /**
@@ -42,12 +49,67 @@ function Network() {
   self._currentHeight = -1
   self._currentBlockHash = new Buffer(util.zfill('', 64), 'hex')
 
-  self._isConnected = false
-  self.on('connect', function () { self._isConnected = true })
-  self.on('disconnect', function () { self._isConnected = false })
+  var prevReadyState = self.CLOSED
+  self._desiredReadyState = null
+  self.readyState = self.CLOSED
+  self.on('newReadyState', function () {
+    // setImmediate because emit/_doOpen/_doClose may emit `newReadyState`
+    if (prevReadyState === self.CONNECTING && self.readyState === self.OPEN) {
+      timers.setImmediate(self.emit.bind(self), 'connect')
+    }
+
+    if (prevReadyState === self.OPEN && (self.readyState === self.CLOSING || self.readyState === self.CLOSED)) {
+      timers.setImmediate(self.emit.bind(self), 'disconnect')
+    }
+
+    if (self.readyState === self.OPEN) {
+      if (self._desiredReadyState === self.CLOSED) {
+        timers.setImmediate(self._doClose.bind(self))
+      }
+      self._desiredReadyState = null
+    }
+
+    if (self.readyState === self.CLOSED) {
+      if (self._desiredReadyState === self.OPEN) {
+        timers.setImmediate(self._doOpen.bind(self))
+      }
+      self._desiredReadyState = null
+    }
+
+    prevReadyState = this.readyState
+  })
 }
 
 inherits(Network, events.EventEmitter)
+
+/**
+ * Ready States
+ */
+_.forEach(['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'], function (state, index) {
+  var descriptor = {enumerable: true, value: index}
+  Object.defineProperty(Network.prototype, state, descriptor)
+  Object.defineProperty(Network, state, descriptor)
+})
+
+/**
+ * Connected to remote service
+ *
+ * @abstract
+ * @private
+ */
+Network.prototype._doOpen = function () {
+  throw new errors.NotImplementedError('Network._doOpen')
+}
+
+/**
+ * Disconnected from remote service
+ *
+ * @abstract
+ * @private
+ */
+Network.prototype._doClose = function () {
+  throw new errors.NotImplementedError('Network._doClose')
+}
 
 /**
  * Set current height and current blockhash by new height
@@ -76,6 +138,50 @@ Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
 })
 
 /**
+ * Set readyState and emit `newReadyState` if state changed
+ *
+ * @private
+ * @param {number} newReadyState
+ */
+Network.prototype._setReadyState = function (newReadyState) {
+  if (this.readyState === newReadyState) {
+    return
+  }
+
+  this.emit('newReadyState', this.readyState = newReadyState)
+}
+
+/**
+ * @private
+ * @param {number} desiredState
+ */
+Network.prototype._updateDesiredReadyState = function (desiredState) {
+  if (desiredState === this.OPEN) {
+    // wait CLOSED state and call _doOpen in `newReadyState` handler
+    if (this.readyState === this.CLOSING) {
+      return this._desiredReadyState = this.OPEN
+    }
+
+    this._desiredReadyState = null
+    if (this.readyState === this.CLOSED) {
+      return this._doOpen()
+    }
+  }
+
+  if (desiredState === this.CLOSED) {
+    // wait OPEN state and call _doClose in `newReadyState` handler
+    if (this.readyState === this.CONNECTING) {
+      return this._desiredReadyState = this.CLOSED
+    }
+
+    this._desiredReadyState = null
+    if (this.readyState === this.OPEN) {
+      return this._doClose()
+    }
+  }
+}
+
+/**
  * Return `true` if remote service support
  *   simple payment verification methods (getChunk and getMerkle)
  *
@@ -86,21 +192,17 @@ Network.prototype.supportVerificationMethods = function () {
 }
 
 /**
- * Connect to a remote service
- *
- * @abstract
+ * Update desiredState
  */
 Network.prototype.connect = function () {
-  throw new errors.NotImplementedError('Network.connect')
+  this._updateDesiredReadyState(this.OPEN)
 }
 
 /**
- * Disconnect from the remote service
- *
- * @abstract
+ * Update desiredState
  */
 Network.prototype.disconnect = function () {
-  throw new errors.NotImplementedError('Network.disconnect')
+  this._updateDesiredReadyState(this.CLOSED)
 }
 
 /**
@@ -109,7 +211,7 @@ Network.prototype.disconnect = function () {
  * @return {boolean}
  */
 Network.prototype.isConnected = function () {
-  return this._isConnected
+  return this.readyState === Network.OPEN
 }
 
 /**

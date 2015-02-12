@@ -5,8 +5,8 @@ var expect = require('chai').expect
 var blockchainjs = require('../../src')
 
 var notImplementedMethods = [
-  'connect',
-  'disconnect',
+  '_doOpen',
+  '_doClose',
   'refresh',
   'getCurrentActiveRequests',
   'getTimeFromLastResponse',

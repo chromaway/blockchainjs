@@ -8,6 +8,12 @@ var _ = require('lodash')
 var blockchainjs = require('../../src')
 
 
+/**
+ * @param {Object} [opts]
+ * @param {function} [opts.describe]
+ * @param {string} [opts.description]
+ * @param {function} [opts.getNetworkOpts]
+ */
 function implementationTest(opts) {
   opts = _.extend({
     describe:       describe,
@@ -22,7 +28,13 @@ function implementationTest(opts) {
       var args = [null].concat(opts.getNetworkOpts())
       var Network = Function.prototype.bind.apply(opts.class, args)
       network = new Network()
-      network.on('error', function (error) { throw error })
+      network.on('error', function (error) {
+        if (error.message === 'Network unreachable') {
+          return
+        }
+
+        throw error
+      })
       network.once('connect', done)
       network.connect()
     })
@@ -33,10 +45,20 @@ function implementationTest(opts) {
           return setTimeout(tryClearNetwork, 25)
         }
 
+        function onNewReadyState() {
+          if (network.readyState !== network.CLOSED) {
+            return
+          }
+
+          // not good
+          // network.removeAllListeners()
+          network.removeListener('newReadyState', onNewReadyState)
+          network = null
+          done()
+        }
+
+        network.on('newReadyState', onNewReadyState)
         network.disconnect()
-        network.removeAllListeners()
-        network = null
-        done()
       }
 
       tryClearNetwork()
@@ -93,6 +115,11 @@ function implementationTest(opts) {
     })
 
     it('getTimeFromLastResponse', function (done) {
+      if (network.getCurrentHeight() !== -1) {
+        expect(network.getTimeFromLastResponse()).to.be.below(50)
+        return done()
+      }
+
       network.once('newHeight', function () {
         expect(network.getTimeFromLastResponse()).to.be.below(50)
         done()

@@ -33,8 +33,9 @@ function ElectrumJS(opts) {
 
   self._requestId = 0
   self._requests = {}
-  self._subscribedAddresses = []
   self._lastResponse = Date.now()
+
+  self._subscribedAddresses = []
 
   self._socket = io(opts.url, {
     autoConnect: false,
@@ -47,19 +48,37 @@ function ElectrumJS(opts) {
     transports: ws !== null ? ['websocket', 'polling'] : ['polling']
   })
 
-  self._socket.on('connect_error', function (error) { self.emit('error', error) })
-  self._socket.on('error', function (error) { self.emit('error', error) })
-
   self._socket.on('connect', function () {
-    if (!self.isConnected()) {
-      self.emit('connect')
-    }
+    self._setReadyState(self.OPEN)
   })
-  self._socket.on('disconnect', function () {
-    // prevent double event from socket on close/disconnect
-    if (self.isConnected()) {
-      self.emit('disconnect')
+
+  self._socket.on('connect_error', function () {
+    self._setReadyState(self.CLOSED)
+    self.emit('error', new errors.ConnectionTimeout('ElectrumJS'))
+  })
+
+  self._socket.on('connect_timeout', function () {
+    self._setReadyState(self.CLOSED)
+    self.emit('error', new errors.ConnectionTimeout('ElectrumJS'))
+  })
+
+  self._socket.on('disconnect', function (reason) {
+    // ignore disconnect event with `forced close` as a reason
+    if (reason === 'forced close') {
+      return
     }
+
+    self._setReadyState(self.CLOSED)
+  })
+
+  self._socket.on('error', function (error) {
+    // catch in connect_error
+    // https://github.com/Automattic/socket.io-client/blob/52b80047ba3cf71a7e5c4cb0834097bad7cbc06f/lib/manager.js#L243
+    if (error === 'timeout') {
+      return
+    }
+
+    self.emit('error', error)
   })
 
   self._socket.on('message', function (response) {
@@ -126,6 +145,26 @@ function ElectrumJS(opts) {
 inherits(ElectrumJS, Network)
 
 /**
+ * @memberof ElectrumJS.prototype
+ * @method _doOpen
+ * @see {@link Network#_doOpen}
+ */
+ElectrumJS.prototype._doOpen = function () {
+  this._setReadyState(this.CONNECTING)
+  this._socket.connect()
+}
+
+/**
+ * @memberof ElectrumJS.prototype
+ * @method _doClose
+ * @see {@link Network#_doClose}
+ */
+ElectrumJS.prototype._doClose = function () {
+  this._setReadyState(this.CLOSING)
+  this._socket.disconnect()
+}
+
+/**
  * @private
  * @param {string} method
  * @param {Array.<*>} [params=[]]
@@ -158,20 +197,6 @@ ElectrumJS.prototype._request = function (method, params) {
 ElectrumJS.prototype.supportVerificationMethods = function () {
   return true
 }
-
-/**
- * @memberof ElectrumJS.prototype
- * @method connect
- * @see {@link Network#connect}
- */
-ElectrumJS.prototype.connect = function () { this._socket.connect() }
-
-/**
- * @memberof ElectrumJS.prototype
- * @method disconnect
- * @see {@link Network#disconnect}
- */
-ElectrumJS.prototype.disconnect = function () { this._socket.disconnect() }
 
 /**
  * @memberof ElectrumJS.prototype

@@ -1,4 +1,3 @@
-var events = require('events')
 var inherits = require('util').inherits
 
 var _ = require('lodash')
@@ -10,161 +9,6 @@ var util = require('../util')
 var yatc = require('../yatc')
 
 var request = util.denodeify(require('request'))
-
-
-/**
- * @event ChainWebSocket#connect
- */
-
-/**
- * @event ChainWebSocket#message
- * @param {Object} payload
- */
-
-/**
- * @event ChainWebSocket#disconnect
- */
-
-/**
- * @event ChainWebSocket#error
- * @param {Error} error
- */
-
-/**
- * WebSocket for chain.com
- *
- * @class
- */
-function ChainWebSocket() {
-  events.EventEmitter.call(this)
-
-  this._ws = null
-  this._autoReconnect = true
-  this._isConnected = false
-  this._connectTimeout = null
-  this._idleTimeout = null
-}
-
-inherits(ChainWebSocket, events.EventEmitter)
-
-/**
- * @private
- */
-ChainWebSocket.prototype._setIdleTimeout = function () {
-  var self = this
-
-  self._idleTimeout = setTimeout(function () {
-    if (self._ws !== null && self._isConnected) {
-      self._ws.close()
-    }
-
-  }, 25000)
-}
-
-/**
- * @private
- */
-ChainWebSocket.prototype._clearWebSocket = function () {
-  this._ws.onopen = null
-  this._ws.onmessage = null
-  this._ws.onerror = null
-  this._ws.onclose = null
-  this._ws = null
-
-  this._isConnected = false
-
-  clearTimeout(this._connectTimeout)
-  clearTimeout(this._idleTimeout)
-
-  if (this._autoReconnect) {
-    setTimeout(this.open.bind(this), 10000)
-  }
-}
-
-/**
- */
-ChainWebSocket.prototype.open = function () {
-  var self = this
-  if (self._ws !== null) {
-    return
-  }
-
-  if (WS === null) {
-    var errMsg = 'WebSocket not available'
-    return self.emit('error', new errors.NotImplementedError(errMsg))
-  }
-
-  self._autoReconnect = true
-
-  self._ws = new WS('wss://ws.chain.com/v2/notifications')
-
-  self._ws.onopen = function () {
-    self._isConnected = true
-
-    self._ws.onclose = function () {
-      self._clearWebSocket()
-      self.emit('disconnect')
-    }
-
-    self._ws.onmessage = function (message) {
-      clearTimeout(self._idleTimeout)
-      self._setIdleTimeout()
-
-      var payload
-      try {
-        payload = JSON.parse(message.data).payload
-
-      } catch (error) {
-        self.emit('error', error)
-
-      }
-
-      self.emit('message', payload)
-    }
-
-    clearTimeout(self._connectTimeout)
-    self._setIdleTimeout()
-
-    self.emit('connect')
-  }
-
-  self._ws.onerror = function (error) {
-    if (!self._isConnected) {
-      self._clearWebSocket()
-    }
-
-    self.emit('error', error)
-  }
-
-  self._connectTimeout = setTimeout(function () {
-    if (!self._isConnected) {
-      self._clearWebSocket()
-      var errMsg = 'Chain: WebSocket connection timeout'
-      self.emit('error', new errors.ConnectionTimeout(errMsg))
-    }
-
-  }, 2000)
-}
-
-/**
- * @param {Object} data
- */
-ChainWebSocket.prototype.send = function (data) {
-  if (!this._isConnected) {
-    throw new errors.NotConnectedError('Chain: WebSocket not connected')
-  }
-
-  this._ws.send(JSON.stringify(data))
-}
-
-/**
- */
-ChainWebSocket.prototype.close = function () {
-  if (this._isConnected) {
-    this._autoReconnect = false
-    this._ws.close()
-  }
-}
 
 
 /**
@@ -194,14 +38,21 @@ function Chain(opts) {
   self._apiKeyId = opts.apiKeyId
   self._requestTimeout = opts.requestTimeout
 
-  self._activeRequests = 0
+  self._ws = null
+  self._autoReconnect = true
+  self._connectTimeout = null
+  self._idleTimeout = null
+
+  self._requestId = 0
+  self._requests = {}
   self._lastResponse = Date.now()
 
   self._subscribedAddressesQueue = {}
   self._subscribedAddresses = {}
 
   self.on('connect', function () {
-    self._ws.send({type: 'new-block', block_chain: self._blockChain})
+    var req = {type: 'new-block', block_chain: self._blockChain}
+    self._ws.send(JSON.stringify(req))
     self.refresh()
       .catch(function (error) { self.emit('error', error) })
 
@@ -214,14 +65,57 @@ function Chain(opts) {
     self._subscribedAddresses = {}
   })
 
-  self._ws = new ChainWebSocket()
-  self._ws.on('connect', function () { self.emit('connect') })
-  self._ws.on('disconnect', function () { self.emit('disconnect') })
-  self._ws.on('error', function (error) { self.emit('error', error) })
-  self._ws.on('message', function (payload) {
+  self.on('disconnect', function () {
+    var error = new errors.ChainRequestError('Network unreachable')
+    _.forEach(self._requests, function (deferred) {
+      deferred.reject(error)
+    })
+
+    self._requestId = 0
+    self._requests = {}
+  })
+}
+
+inherits(Chain, Network)
+
+/**
+ * @memberof Chain.prototype
+ * @method _doOpen
+ * @see {@link Network#_doOpen}
+ */
+Chain.prototype._doOpen = function () {
+  var self = this
+  if (WS === null) {
+    var errMsg = 'WebSocket not available'
+    return self.emit('error', new errors.NotImplementedError(errMsg))
+  }
+
+  self._setReadyState(self.CONNECTING)
+
+  self._autoReconnect = true
+
+  self._ws = new WS('wss://ws.chain.com/v2/notifications')
+
+  self._ws.onopen = function () {
+    clearTimeout(self._connectTimeout)
+    self._updateIdleTimeout()
+
+    self._setReadyState(self.OPEN)
+  }
+
+  self._ws.onclose = self._doClose.bind(self)
+
+  self._ws.onmessage = function (message) {
+    if (self.readyState !== self.OPEN) {
+      return
+    }
+
     self._lastResponse = Date.now()
+    self._updateIdleTimeout()
 
     try {
+      var payload = JSON.parse(message.data).payload
+
       if (payload.type === 'new-block') {
         yatc.verify('PositiveNumber', payload.block.height)
         return self._setCurrentHeight(payload.block.height)
@@ -238,10 +132,70 @@ function Chain(opts) {
       self.emit('error', error)
 
     }
-  })
+  }
+
+  self._ws.onerror = function (error) {
+    // error before onopen
+    // readyState: WebSocket -- CLOSED, ws -- CONNECTING
+    if (self.readyState === self.CONNECTING) {
+      self._doClose()
+    }
+
+    self.emit('error', error)
+  }
+
+  self._connectTimeout = setTimeout(function () {
+    var savedReadyState = self.readyState
+
+    self._ws.close()
+    self._doClose()
+
+    if (savedReadyState === self.CONNECTING) {
+      var errMsg = 'Chain: WebSocket connection timeout'
+      self.emit('error', new errors.ConnectionTimeout(errMsg))
+    }
+
+  }, 2000)
 }
 
-inherits(Chain, Network)
+/**
+ * @memberof Chain.prototype
+ * @method _doClose
+ * @see {@link Network#_doClose}
+ */
+Chain.prototype._doClose = function () {
+  this._setReadyState(this.CLOSING)
+
+  if (this._autoReconnect) {
+    setTimeout(function () {
+      if (this._autoReconnect) {
+        this.connect()
+      }
+
+    }.bind(this), 10000)
+  }
+
+  clearTimeout(this._connectTimeout)
+  clearTimeout(this._idleTimeout)
+
+  this._setReadyState(this.CLOSED)
+}
+
+/**
+ * @private
+ */
+Chain.prototype._updateIdleTimeout = function () {
+  var self = this
+
+  clearTimeout(self._idleTimeout)
+  self._idleTimeout = setTimeout(function () {
+    if (self.readyState === self.OPEN) {
+      self._ws.close()
+      self.emit('error', new errors.IdleTimeout('Chain: WebSocket'))
+    }
+
+  }, 25000)
+}
 
 /**
  * @private
@@ -275,25 +229,30 @@ Chain.prototype._request = function (path, data) {
     return Promise.reject(new errors.NotConnectedError(requestOpts.uri))
   }
 
-  self._activeRequests += 1
-  return request(requestOpts)
-    .then(function (response) {
-      if (response.statusCode !== 200) {
-        throw new errors.ChainRequestError(response.statusMessage)
-      }
+  return new Promise(function (resolve, reject) {
+    var requestId = self._requestId++
+    self._requests[requestId] = {resolve: resolve, reject: reject}
 
-      return response.body
-    })
-    .then(function (result) {
-      self._lastResponse = Date.now()
-      self._activeRequests -= 1
-      return result
+    request(requestOpts)
+      .then(function (response) {
+        if (response.statusCode !== 200) {
+          throw new errors.ChainRequestError(response.statusMessage)
+        }
 
-    }, function (error) {
-      self._activeRequests -= 1
-      throw error
+        return response.body
 
-    })
+      })
+      .then(function (result) {
+        self._lastResponse = Date.now()
+        delete self._requests[requestId]
+        resolve(result)
+
+      }, function (error) {
+        delete self._requests[requestId]
+        reject(error)
+
+      })
+  })
 }
 
 /**
@@ -301,14 +260,20 @@ Chain.prototype._request = function (path, data) {
  * @method connect
  * @see {@link Network#connect}
  */
-Chain.prototype.connect = function () { this._ws.open() }
+Chain.prototype.connect = function () {
+  this._autoReconnect = true
+  Network.prototype.connect.call(this)
+}
 
 /**
  * @memberof Chain.prototype
  * @method disconnect
  * @see {@link Network#disconnect}
  */
-Chain.prototype.disconnect = function () { this._ws.close() }
+Chain.prototype.disconnect = function () {
+  this._autoReconnect = false
+  Network.prototype.disconnect.call(this)
+}
 
 /**
  * @memberof Chain.prototype
@@ -334,7 +299,7 @@ Chain.prototype.refresh = function () {
  * @see {@link Network#getCurrentActiveRequests}
  */
 Chain.prototype.getCurrentActiveRequests = function () {
-  return this._activeRequests
+  return _.keys(this._requests).length
 }
 
 /**
@@ -451,12 +416,18 @@ Chain.prototype.getUnspent = function (address) {
 
   var self = this
 
-  var promise = Promise.resolve()
-  if (!self.isConnected() || self.getCurrentHeight() === -1) {
-    promise = new Promise(function (resolve) {
+  var promise = new Promise(function (resolve) {
+    if (!self.isConnected()) {
+      self.once('connect', function () { self.refresh().then(resolve, resolve) })
+
+    } else if (self.getCurrentHeight() === -1) {
       self.once('newHeight', resolve)
-    })
-  }
+
+    } else {
+      resolve()
+
+    }
+  })
 
   return promise
     .then(function () {
@@ -496,7 +467,8 @@ Chain.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)
 
   if (this.isConnected()) {
-    this._ws.send({type: 'address', address: address, block_chain: this._blockChain})
+    var req = {type: 'address', address: address, block_chain: this._blockChain}
+    this._ws.send(JSON.stringify(req))
     this._subscribedAddresses[address] = true
 
   } else {
