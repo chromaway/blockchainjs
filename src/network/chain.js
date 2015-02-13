@@ -166,6 +166,13 @@ Chain.prototype._doOpen = function () {
 Chain.prototype._doClose = function () {
   this._setReadyState(this.CLOSING)
 
+  this._ws.onopen = null
+  this._ws.onclose = null
+  this._ws.onmessage = null
+  this._ws.onerror = null
+  try { this._ws.close() } catch (e) {}
+  this._ws = null
+
   if (this._autoReconnect) {
     setTimeout(function () {
       if (this._autoReconnect) {

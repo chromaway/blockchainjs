@@ -49,35 +49,8 @@ function Network() {
   self._currentHeight = -1
   self._currentBlockHash = new Buffer(util.zfill('', 64), 'hex')
 
-  var prevReadyState = self.CLOSED
   self._desiredReadyState = null
   self.readyState = self.CLOSED
-  self.on('newReadyState', function () {
-    // setImmediate because emit/_doOpen/_doClose may emit `newReadyState`
-    if (prevReadyState === self.CONNECTING && self.readyState === self.OPEN) {
-      timers.setImmediate(self.emit.bind(self), 'connect')
-    }
-
-    if (prevReadyState === self.OPEN && (self.readyState === self.CLOSING || self.readyState === self.CLOSED)) {
-      timers.setImmediate(self.emit.bind(self), 'disconnect')
-    }
-
-    if (self.readyState === self.OPEN) {
-      if (self._desiredReadyState === self.CLOSED) {
-        timers.setImmediate(self._doClose.bind(self))
-      }
-      self._desiredReadyState = null
-    }
-
-    if (self.readyState === self.CLOSED) {
-      if (self._desiredReadyState === self.OPEN) {
-        timers.setImmediate(self._doOpen.bind(self))
-      }
-      self._desiredReadyState = null
-    }
-
-    prevReadyState = this.readyState
-  })
 }
 
 inherits(Network, events.EventEmitter)
@@ -146,6 +119,29 @@ Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
 Network.prototype._setReadyState = function (newReadyState) {
   if (this.readyState === newReadyState) {
     return
+  }
+
+  // setImmediate because emit/_doOpen/_doClose may emit `newReadyState`
+  if (this.readyState === this.CONNECTING && newReadyState === this.OPEN) {
+    timers.setImmediate(this.emit.bind(this), 'connect')
+  }
+
+  if (this.readyState === this.OPEN && (newReadyState === this.CLOSING || newReadyState === this.CLOSED)) {
+    timers.setImmediate(this.emit.bind(this), 'disconnect')
+  }
+
+  if (newReadyState === this.OPEN) {
+    if (this._desiredReadyState === this.CLOSED) {
+      timers.setImmediate(this._doClose.bind(this))
+    }
+    this._desiredReadyState = null
+  }
+
+  if (newReadyState === this.CLOSED) {
+    if (this._desiredReadyState === this.OPEN) {
+      timers.setImmediate(this._doOpen.bind(this))
+    }
+    this._desiredReadyState = null
   }
 
   this.emit('newReadyState', this.readyState = newReadyState)

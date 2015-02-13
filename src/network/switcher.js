@@ -214,6 +214,13 @@ Switcher.prototype._callMethod = function (methodName, args) {
 }
 
 /**
+ * @return {Network[]}
+ */
+Switcher.prototype.getNetworks = function () {
+  return this._networks
+}
+
+/**
  * @return {boolean}
  */
 Switcher.prototype.supportVerificationMethods = function () {
