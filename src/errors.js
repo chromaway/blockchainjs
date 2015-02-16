@@ -8,6 +8,7 @@ var createError = require('errno').create
  *       |    +-- ChainRequestError
  *       |    +-- ConnectionTimeout
  *       |    +-- ElectrumJSError
+ *       |    +-- GetHeaderError
  *       |    +-- GetTxError
  *       |    +-- IdleTimeout
  *       |    +-- NotConnectedError

@@ -54,12 +54,12 @@ function ElectrumJS(opts) {
 
   self._socket.on('connect_error', function () {
     self._setReadyState(self.CLOSED)
-    self.emit('error', new errors.ConnectionTimeout('ElectrumJS'))
+    self.emit('error', new errors.ConnectionTimeout('ElectrumJS: connect_error'))
   })
 
   self._socket.on('connect_timeout', function () {
     self._setReadyState(self.CLOSED)
-    self.emit('error', new errors.ConnectionTimeout('ElectrumJS'))
+    self.emit('error', new errors.ConnectionTimeout('ElectrumJS: connect_timeout'))
   })
 
   self._socket.on('disconnect', function (reason) {
@@ -150,6 +150,10 @@ inherits(ElectrumJS, Network)
  * @see {@link Network#_doOpen}
  */
 ElectrumJS.prototype._doOpen = function () {
+  if (this.readyState !== this.CLOSED) {
+    return
+  }
+
   this._setReadyState(this.CONNECTING)
   this._socket.connect()
 }
@@ -160,6 +164,10 @@ ElectrumJS.prototype._doOpen = function () {
  * @see {@link Network#_doClose}
  */
 ElectrumJS.prototype._doClose = function () {
+  if (this.readyState === this.CLOSING || this.readyState === this.CLOSED) {
+    return
+  }
+
   this._setReadyState(this.CLOSING)
   this._socket.disconnect()
 }
@@ -248,7 +256,8 @@ ElectrumJS.prototype.getHeader = function (height) {
       }
 
       if (response.block_height !== height) {
-        throw new errors.GetHeaderError()
+        var errMsg = 'Chain: requested - ' + height + ', got - ' + response.block_height
+        throw new errors.GetHeaderError(errMsg)
       }
 
       yatc.verify('ElectrumHeader', response)

@@ -90,6 +90,10 @@ Chain.prototype._doOpen = function () {
     return self.emit('error', new errors.NotImplementedError(errMsg))
   }
 
+  if (self.readyState !== self.CLOSED) {
+    return
+  }
+
   self._setReadyState(self.CONNECTING)
 
   self._autoReconnect = true
@@ -164,6 +168,10 @@ Chain.prototype._doOpen = function () {
  * @see {@link Network#_doClose}
  */
 Chain.prototype._doClose = function () {
+  if (this.readyState === this.CLOSING || this.readyState === this.CLOSED) {
+    return
+  }
+
   this._setReadyState(this.CLOSING)
 
   this._ws.onopen = null
@@ -198,7 +206,7 @@ Chain.prototype._updateIdleTimeout = function () {
   self._idleTimeout = setTimeout(function () {
     if (self.readyState === self.OPEN) {
       self._ws.close()
-      self.emit('error', new errors.IdleTimeout('Chain: WebSocket'))
+      self.emit('error', new errors.IdleTimeout('Chain: WebSocket timeout'))
     }
 
   }, 25000)
@@ -333,7 +341,8 @@ Chain.prototype.getHeader = function (height) {
       }
 
       if (response.height !== height) {
-        throw new errors.GetHeaderError()
+        var errMsg = 'Chain: requested - ' + height + ', got - ' + response.height
+        throw new errors.GetHeaderError(errMsg)
       }
 
       yatc.verify('ChainHeader', response)
