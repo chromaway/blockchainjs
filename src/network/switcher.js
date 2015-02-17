@@ -3,6 +3,7 @@ var inherits = require('util').inherits
 var _ = require('lodash')
 
 var Network = require('./network')
+var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
@@ -152,10 +153,10 @@ function Switcher(networks, opts) {
   })
 
   // touchAddress event
-  self._subscribedAddresses = []
+  self._subscribedAddresses = new Set()
   self._networks.forEach(function (network) {
     network.on('touchAddress', function (address) {
-      if (self._subscribedAddresses.indexOf(address) !== -1) {
+      if (self._subscribedAddresses.has(address)) {
         self.emit('touchAddress', address)
       }
     })
@@ -341,30 +342,26 @@ Switcher.prototype.getUnspent = function () {
 Switcher.prototype.subscribeAddress = util.makeSerial(function (address) {
   var self = this
 
-  if (self._subscribedAddresses.indexOf(address) !== -1) {
+  if (self._subscribedAddresses.has(address)) {
     return Promise.resolve()
   }
 
-  return new Promise(function (resolve, reject) {
-    var fulfilled = 0
-    function onFulfilled() {
-      fulfilled += 1
-      if (fulfilled === 1) {
-        self._subscribedAddresses.push(address)
-        resolve()
-      }
-    }
+  self._subscribedAddresses.add(address)
 
+  return new Promise(function (resolve, reject) {
     var rejected = 0
     function onRejected(error) {
+      self.emit('error', error)
+
       rejected += 1
       if (rejected === self._networks.length) {
-        reject(error)
+        var errMsg = 'Switcher: Can\'t subscribe on address ' + address
+        reject(new errors.NetworkError(errMsg))
       }
     }
 
     self._networks.forEach(function (network) {
-      network.subscribeAddress(address).then(onFulfilled, onRejected)
+      network.subscribeAddress(address).then(resolve, onRejected)
     })
   })
 })

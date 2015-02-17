@@ -47,8 +47,7 @@ function Chain(opts) {
   self._requests = {}
   self._lastResponse = Date.now()
 
-  self._subscribedAddressesQueue = {}
-  self._subscribedAddresses = {}
+  self._subscribedAddresses = new Set()
 
   self.on('connect', function () {
     var req = {type: 'new-block', block_chain: self._blockChain}
@@ -56,13 +55,14 @@ function Chain(opts) {
     self.refresh()
       .catch(function (error) { self.emit('error', error) })
 
-    _.chain([])
-      .concat(_.keys(self._subscribedAddressesQueue))
-      .concat(_.keys(self._subscribedAddresses))
-      .forEach(self.subscribeAddress.bind(self))
+    var addresses = []
+    self._subscribedAddresses.forEach(function (addr) { addresses.push(addr) })
+    self._subscribedAddresses.clear()
 
-    self._subscribedAddressesQueue = {}
-    self._subscribedAddresses = {}
+    addresses.forEach(function (addr) {
+      self.subscribeAddress(addr)
+        .catch(function (error) { self.emit('error', error) })
+    })
   })
 
   self.on('disconnect', function () {
@@ -127,7 +127,7 @@ Chain.prototype._doOpen = function () {
 
       if (payload.type === 'address') {
         yatc.verify('{confirmations: Number, address: BitcoinAddress, ...}', payload)
-        if (payload.confirmations < 2) {
+        if (payload.confirmations < 2 && self._subscribedAddresses.has(payload.address)) {
           return self.emit('touchAddress', payload.address)
         }
       }
@@ -482,14 +482,17 @@ Chain.prototype.getUnspent = function (address) {
 Chain.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)
 
-  if (this.isConnected()) {
-    var req = {type: 'address', address: address, block_chain: this._blockChain}
-    this._ws.send(JSON.stringify(req))
-    this._subscribedAddresses[address] = true
+  if (!this._subscribedAddresses.has(address)) {
+    this._subscribedAddresses.add(address)
 
-  } else {
-    this._subscribedAddressesQueue[address] = true
-
+    if (this.isConnected()) {
+      var req = {
+        type: 'address',
+        address: address,
+        block_chain: this._blockChain
+      }
+      this._ws.send(JSON.stringify(req))
+    }
   }
 
   return Promise.resolve()

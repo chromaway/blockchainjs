@@ -2,7 +2,7 @@ var inherits = require('util').inherits
 
 var _ = require('lodash')
 var io = require('socket.io-client')
-var ws = require('ws')
+// var ws = require('ws')
 
 var Network = require('./network')
 var errors = require('../errors')
@@ -35,7 +35,7 @@ function ElectrumJS(opts) {
   self._requests = {}
   self._lastResponse = Date.now()
 
-  self._subscribedAddresses = []
+  self._subscribedAddresses = new Set()
 
   self._socket = io(opts.url, {
     autoConnect: false,
@@ -45,7 +45,8 @@ function ElectrumJS(opts) {
     randomizationFactor: 0,
     forceJSONP: false,
     jsonp: true,
-    transports: false ? ['websocket', 'polling'] : ['polling']
+    transports: ['polling']
+    // transports: ws !== null ? ['websocket', 'polling'] : ['polling']
   })
 
   self._socket.on('connect', function () {
@@ -101,7 +102,7 @@ function ElectrumJS(opts) {
 
       isMethod = response.method === 'blockchain.address.subscribe'
       isArgs = yatc.is('(BitcoinAddress, String)', response.params)
-      if (isMethod && isArgs) {
+      if (isMethod && isArgs && self._subscribedAddresses.has(response.params[0])) {
         return self.emit('touchAddress', response.params[0])
       }
     }
@@ -126,9 +127,14 @@ function ElectrumJS(opts) {
     self.refresh()
       .catch(function (error) { self.emit('error', error) })
 
-    var addresses = self._subscribedAddresses
-    self._subscribedAddresses = []
-    addresses.forEach(self.subscribeAddress.bind(self))
+    var addresses = []
+    self._subscribedAddresses.forEach(function (addr) { addresses.push(addr) })
+    self._subscribedAddresses.clear()
+
+    addresses.forEach(function (addr) {
+      self.subscribeAddress(addr)
+        .catch(function (error) { self.emit('error', error) })
+    })
   })
 
   self.on('disconnect', function () {
@@ -408,12 +414,15 @@ ElectrumJS.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)
 
   var self = this
-  if (self._subscribedAddresses.indexOf(address) !== -1) {
-    return Promise.resolve()
+  if (!self._subscribedAddresses.has(address)) {
+    self._subscribedAddresses.add(address)
+
+    if (self.isConnected()) {
+      return self._request('blockchain.address.subscribe', [address])
+    }
   }
 
-  return self._request('blockchain.address.subscribe', [address])
-    .then(function () { self._subscribedAddresses.push(address) })
+  return Promise.resolve()
 })
 
 

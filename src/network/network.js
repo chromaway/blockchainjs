@@ -122,8 +122,6 @@ Network.prototype._setReadyState = function (newReadyState) {
   }
 
   // setImmediate because emit/_doOpen/_doClose may emit `newReadyState`
-  // this.readyState === this.CONNECTING && 
-  // note: might jump to connected from other state
   if (newReadyState === this.OPEN) {
     timers.setImmediate(this.emit.bind(this), 'connect')
   }

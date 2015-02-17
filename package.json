@@ -24,10 +24,10 @@
     "README.md"
   ],
   "dependencies": {
+    "babel": "4.0.2",
     "browser-request": "0.3.3",
     "bs58check": "1.0.4",
     "errno": "0.1.1",
-    "es6-promise": "2.0.1",
     "lodash": "3.0.0",
     "lru-cache": "2.5.0",
     "request": "2.51.0",

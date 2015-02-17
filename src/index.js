@@ -1,4 +1,4 @@
-require('es6-promise').polyfill()
+require('babel/polyfill')
 
 module.exports = {
   blockchain: require('./blockchain'),
