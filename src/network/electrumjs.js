@@ -45,7 +45,7 @@ function ElectrumJS(opts) {
     randomizationFactor: 0,
     forceJSONP: false,
     jsonp: true,
-    transports: ws !== null ? ['websocket', 'polling'] : ['polling']
+    transports: false ? ['websocket', 'polling'] : ['polling']
   })
 
   self._socket.on('connect', function () {
