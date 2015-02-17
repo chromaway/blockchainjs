@@ -22,20 +22,18 @@ function NaiveBlockchain(network, opts) {
   yatc.verify('{headerCacheSize: Number, txCacheSize: Number}', opts)
 
   var self = this
-  Blockchain.call(self)
+  Blockchain.call(self, network)
 
   self._headerCache = LRU({max: opts.headerCacheSize})
   self._txCache = LRU({max: opts.txCacheSize})
 
-  self._network = network
-
-  self._network.on('newHeight', function (newHeight) {
-    self._currentHeight = self._network.getCurrentHeight()
-    self._currentBlockHash = self._network.getCurrentBlockHash()
+  self.network.on('newHeight', function (newHeight) {
+    self._currentHeight = self.network.getCurrentHeight()
+    self._currentBlockHash = self.network.getCurrentBlockHash()
     self.emit('newHeight', newHeight)
   })
 
-  self._network.on('touchAddress', function (address) {
+  self.network.on('touchAddress', function (address) {
     self.emit('touchAddress', address)
   })
 }
@@ -55,7 +53,7 @@ NaiveBlockchain.prototype.getHeader = function (height) {
     return Promise.resolve(header)
   }
 
-  return self._network.getHeader(height)
+  return self.network.getHeader(height)
     .then(function (header) {
       self._headerCache.set(height, header)
       return header
@@ -75,7 +73,7 @@ NaiveBlockchain.prototype.getTx = function (txId) {
     return Promise.resolve(txHex)
   }
 
-  return self._network.getTx(txId)
+  return self.network.getTx(txId)
     .then(function (txHex) {
       self._txCache.set(txId, txHex)
       return txHex
@@ -88,7 +86,7 @@ NaiveBlockchain.prototype.getTx = function (txId) {
  * @see {@link Blockchain#sendTx}
  */
 NaiveBlockchain.prototype.sendTx = function (txHex) {
-  return this._network.sendTx(txHex)
+  return this.network.sendTx(txHex)
 }
 
 /**
@@ -97,7 +95,7 @@ NaiveBlockchain.prototype.sendTx = function (txHex) {
  * @see {@link Blockchain#getHistory}
  */
 NaiveBlockchain.prototype.getHistory = function (address) {
-  return this._network.getHistory(address)
+  return this.network.getHistory(address)
 }
 
 /**
@@ -106,7 +104,7 @@ NaiveBlockchain.prototype.getHistory = function (address) {
  * @see {@link Blockchain#getUnspent}
  */
 NaiveBlockchain.prototype.getUnspent = function (address) {
-  return this._network.getUnspent(address)
+  return this.network.getUnspent(address)
 }
 
 /**
@@ -115,7 +113,7 @@ NaiveBlockchain.prototype.getUnspent = function (address) {
  * @see {@link Blockchain#subscribeAddress}
  */
 NaiveBlockchain.prototype.subscribeAddress = function (address) {
-  return this._network.subscribeAddress(address)
+  return this.network.subscribeAddress(address)
 }
 
 

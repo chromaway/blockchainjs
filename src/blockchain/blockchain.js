@@ -3,6 +3,7 @@ var inherits = require('util').inherits
 
 var errors = require('../errors')
 var util = require('../util')
+var yatc = require('../yatc')
 
 
 /**
@@ -23,9 +24,14 @@ var util = require('../util')
 /**
  * @class Blockchain
  * @extends events.EventEmitter
+ * @param {Network} network
  */
-function Blockchain() {
+function Blockchain(network) {
+  yatc.verify('Network', network)
+
   events.EventEmitter.call(this)
+
+  Object.defineProperty(this, 'network', {enumerable: true, value: network})
 
   this._currentHeight = -1
   this._currentBlockHash = new Buffer(util.zfill('', 64), 'hex')

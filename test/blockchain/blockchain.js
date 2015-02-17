@@ -18,7 +18,8 @@ describe('blockchain.Blockchain', function () {
   var blockchain
 
   beforeEach(function () {
-    blockchain = new blockchainjs.blockchain.Blockchain()
+    var network = new blockchainjs.network.Network()
+    blockchain = new blockchainjs.blockchain.Blockchain(network)
   })
 
   it('inherits events.EventEmitter', function () {
