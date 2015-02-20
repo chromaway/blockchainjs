@@ -1,5 +1,3 @@
-if (typeof global._babelPolyfill === 'undefined') { require('babel/polyfill') }
-
 module.exports = {
   blockchain: require('./blockchain'),
   network: require('./network'),

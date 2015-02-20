@@ -1,6 +1,7 @@
 var events = require('events')
 
 var expect = require('chai').expect
+var Q = require('q')
 
 var blockchainjs = require('../../src')
 
@@ -55,13 +56,14 @@ describe('network.Network', function () {
       function getPromise() {
         try {
           var promise = network[method]()
-          if (!(promise instanceof Promise)) {
-            promise = Promise.resolve(promise)
+          if (promise instanceof Q.Promise) {
+            return promise
           }
-          return promise
 
-        } catch (error) {
-          return Promise.reject(error)
+          return Q.resolve(promise)
+
+        } catch (reason) {
+          return Q.reject(reason)
 
         }
       }

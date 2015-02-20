@@ -31,6 +31,7 @@ var NotImplementedError = require('../../errors').NotImplementedError
 function Storage() {}
 
 /**
+ * @abstract
  * @return {Q.Promise<string>}
  */
 Storage.prototype.getLastHash = function () {
@@ -38,6 +39,7 @@ Storage.prototype.getLastHash = function () {
 }
 
 /**
+ * @abstract
  * @param {string} lastHash
  * @return {Q.Promise}
  */
@@ -46,6 +48,7 @@ Storage.prototype.setLastHash = function () {
 }
 
 /**
+ * @abstract
  * @return {Q.Promise<number>}
  */
 Storage.prototype.getChunkHashesCount = function () {
@@ -53,6 +56,7 @@ Storage.prototype.getChunkHashesCount = function () {
 }
 
 /**
+ * @abstract
  * @param {number} offset
  * @return {Q.Promise<string>}
  */
@@ -61,6 +65,7 @@ Storage.prototype.getChunkHash = function () {
 }
 
 /**
+ * @abstract
  * @param {string} hash
  * @return {Q.Promise}
  */
@@ -69,6 +74,7 @@ Storage.prototype.putChunkHash = function () {
 }
 
 /**
+ * @abstract
  * @param {number} limit
  * @return {Q.Promise}
  */
@@ -77,6 +83,7 @@ Storage.prototype.truncateChunkHashes = function () {
 }
 
 /**
+ * @abstract
  * @return {Q.Promise<number>}
  */
 Storage.prototype.getBlockHashesCount = function () {
@@ -84,6 +91,7 @@ Storage.prototype.getBlockHashesCount = function () {
 }
 
 /**
+ * @abstract
  * @param {number} offset
  * @return {Q.Promise<string>}
  */
@@ -92,6 +100,7 @@ Storage.prototype.getBlockHash = function () {
 }
 
 /**
+ * @abstract
  * @param {string} hash
  * @return {Q.Promise}
  */
@@ -100,6 +109,7 @@ Storage.prototype.putBlockHash = function () {
 }
 
 /**
+ * @abstract
  * @param {number} limit
  * @return {Q.Promise}
  */
@@ -110,6 +120,7 @@ Storage.prototype.truncateBlockHashes = function () {
 /**
  * Remove all data
  *
+ * @abstract
  * @return {Q.Promise}
  */
 Storage.prototype.clear = function () {

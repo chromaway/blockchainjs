@@ -1,6 +1,7 @@
 var inherits = require('util').inherits
 
 var _ = require('lodash')
+var Q = require('q')
 var io = require('socket.io-client')
 // var ws = require('ws')
 
@@ -125,7 +126,7 @@ function ElectrumJS(opts) {
 
   self.on('connect', function () {
     self.refresh()
-      .catch(function (error) { self.emit('error', error) })
+      .done(void 0, function (error) { self.emit('error', error) })
 
     var addresses = []
     self._subscribedAddresses.forEach(function (addr) { addresses.push(addr) })
@@ -133,7 +134,7 @@ function ElectrumJS(opts) {
 
     addresses.forEach(function (addr) {
       self.subscribeAddress(addr)
-        .catch(function (error) { self.emit('error', error) })
+        .done(void 0, function (error) { self.emit('error', error) })
     })
   })
 
@@ -182,7 +183,7 @@ ElectrumJS.prototype._doClose = function () {
  * @private
  * @param {string} method
  * @param {Array.<*>} [params=[]]
- * @return {Promise}
+ * @return {Q.Promise}
  */
 ElectrumJS.prototype._request = function (method, params) {
   if (typeof params === 'undefined') {
@@ -194,15 +195,13 @@ ElectrumJS.prototype._request = function (method, params) {
 
   var self = this
   if (!self.isConnected()) {
-    return Promise.reject(new errors.NotConnectedError(method))
+    return Q.reject(new errors.NotConnectedError(method))
   }
 
-  return new Promise(function (resolve, reject) {
-    var request = {id: self._requestId++, method: method, params: params}
-    self._requests[request.id] = {resolve: resolve, reject: reject}
+  var request = {id: self._requestId++, method: method, params: params}
+  self._socket.send(JSON.stringify(request))
 
-    self._socket.send(JSON.stringify(request))
-  })
+  return (self._requests[request.id] = Q.defer()).promise
 }
 
 /**
@@ -422,7 +421,7 @@ ElectrumJS.prototype.subscribeAddress = util.makeSerial(function (address) {
     }
   }
 
-  return Promise.resolve()
+  return Q.resolve()
 })
 
 

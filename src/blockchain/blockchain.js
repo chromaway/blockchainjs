@@ -1,7 +1,9 @@
 var events = require('events')
 var inherits = require('util').inherits
 
-var errors = require('../errors')
+var Q = require('q')
+
+var NotImplementedError = require('../errors').NotImplementedError
 var util = require('../util')
 var yatc = require('../yatc')
 
@@ -58,61 +60,55 @@ Blockchain.prototype.getCurrentBlockHash = function () {
 /**
  * @abstract
  * @param {number} height
- * @return {Promise<BitcoinHeader>}
+ * @return {Q.Promise<BitcoinHeader>}
  */
 Blockchain.prototype.getHeader = function () {
-  return Promise.reject(
-    new errors.NotImplementedError('Blockchain.getHeader'))
+  return Q.reject(new NotImplementedError('Blockchain.getHeader'))
 }
 
 /**
  * @abstract
  * @param {string} txId
- * @return {Promise<string>}
+ * @return {Q.Promise<string>}
  */
 Blockchain.prototype.getTx = function () {
-  return Promise.reject(
-    new errors.NotImplementedError('Blockchain.getHeader'))
+  return Q.reject(new NotImplementedError('Blockchain.getTx'))
 }
 
 /**
  * @abstract
  * @param {Transaction} tx
- * @return {Promise<string>}
+ * @return {Q.Promise<string>}
  */
 Blockchain.prototype.sendTx = function () {
-  return Promise.reject(
-    new errors.NotImplementedError('Blockchain.getHeader'))
+  return Q.reject(new NotImplementedError('Blockchain.sendTx'))
 }
 
 /**
  * @abstract
  * @param {string} address
- * @return {Promise<Network~HistoryObject>}
+ * @return {Q.Promise<Network~HistoryObject>}
  */
 Blockchain.prototype.getHistory = function () {
-  return Promise.reject(
-    new errors.NotImplementedError('Blockchain.getHeader'))
+  return Q.reject(new NotImplementedError('Blockchain.getHistory'))
 }
 
 /**
  * @abstract
  * @param {string} address
- * @return {Promise<Network~UnspentObject>}
+ * @return {Q.Promise<Network~UnspentObject>}
  */
 Blockchain.prototype.getUnspent = function () {
-  return Promise.reject(
-    new errors.NotImplementedError('Blockchain.getUnspent'))
+  return Q.reject(new NotImplementedError('Blockchain.getUnspent'))
 }
 
 /**
  * @abstract
  * @param {string} address
- * @return {Promise}
+ * @return {Q.Promise}
  */
 Blockchain.prototype.subscribeAddress = function () {
-  return Promise.reject(
-    new errors.NotImplementedError('Blockchain.getHeader'))
+  return Q.reject(new NotImplementedError('Blockchain.subscribeAddress'))
 }
 
 

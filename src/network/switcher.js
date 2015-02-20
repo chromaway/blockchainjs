@@ -1,6 +1,7 @@
 var inherits = require('util').inherits
 
 var _ = require('lodash')
+var Q = require('q')
 
 var Network = require('./network')
 var errors = require('../errors')
@@ -37,14 +38,11 @@ function Switcher(networks, opts) {
   self._networks = networks
   self._opts = opts
 
-  // resolve function for this._currentNetwork
-  var currentNetworkResolve
   // for switchNetwork event
   var prevNetwork = null
-  // remember resolve function
-  self._currentNetwork = new Promise(function (resolve) {
-    currentNetworkResolve = resolve
-  })
+  // deferred currentNetworkDeferred and this._currentNetwork promise
+  var currentNetworkDeferred = Q.defer()
+  self._currentNetwork = currentNetworkDeferred.promise
   // save new current network to this._currentNetwork
   var updateCurrentNetwork = util.makeSerial(function () {
     // select new current network
@@ -62,15 +60,15 @@ function Switcher(networks, opts) {
       .value()
 
     // current network not set yet? (resolve function isn't null?)
-    if (currentNetworkResolve !== null) {
+    if (currentNetworkDeferred !== null) {
       // set current network if new network is not undefined
       if (typeof network !== 'undefined') {
-        currentNetworkResolve(network)
-        currentNetworkResolve = null
+        currentNetworkDeferred.resolve(network)
+        currentNetworkDeferred = null
         self.emit('switchNetwork', network, prevNetwork)
       }
 
-      return Promise.resolve()
+      return
     }
 
     // compare current network with new network
@@ -83,15 +81,14 @@ function Switcher(networks, opts) {
 
         // set new network as current
         if (typeof network !== 'undefined') {
-          self._currentNetwork = Promise.resolve(network)
+          self._currentNetwork = Q.resolve(network)
           return self.emit('switchNetwork', network, currentNetwork)
         }
 
-        // new network is undefined, save resolve function
-        self._currentNetwork = new Promise(function (resolve) {
-          currentNetworkResolve = resolve
-          prevNetwork = currentNetwork
-        })
+        // new network is undefined, save new deferred
+        prevNetwork = currentNetwork
+        currentNetworkDeferred = Q.defer()
+        self._currentNetwork = currentNetworkDeferred.promise
         self.emit('switchNetwork', null, currentNetwork)
       })
   })
@@ -191,7 +188,7 @@ Switcher.prototype._doClose = function () {
  *
  * @param {string} methodName Network method name
  * @param {*[]} args Arguments for network method
- * @return {Promise}
+ * @return {Q.Promise}
  */
 Switcher.prototype._callMethod = function (methodName, args) {
   var self = this
@@ -242,7 +239,7 @@ Switcher.prototype.refresh = function () {
     return network.refresh()
   })
 
-  return Promise.all(promises)
+  return Q.all(promises)
 }
 
 /**
@@ -343,27 +340,29 @@ Switcher.prototype.subscribeAddress = util.makeSerial(function (address) {
   var self = this
 
   if (self._subscribedAddresses.has(address)) {
-    return Promise.resolve()
+    return Q.resolve()
   }
 
   self._subscribedAddresses.add(address)
 
-  return new Promise(function (resolve, reject) {
-    var rejected = 0
-    function onRejected(error) {
-      self.emit('error', error)
+  var deferred = Q.defer()
 
-      rejected += 1
-      if (rejected === self._networks.length) {
-        var errMsg = 'Switcher: Can\'t subscribe on address ' + address
-        reject(new errors.NetworkError(errMsg))
-      }
+  var rejected = 0
+  function onRejected(error) {
+    self.emit('error', error)
+
+    rejected += 1
+    if (rejected === self._networks.length) {
+      var errMsg = 'Switcher: Can\'t subscribe on address ' + address
+      deferred.reject(new errors.NetworkError(errMsg))
     }
+  }
 
-    self._networks.forEach(function (network) {
-      network.subscribeAddress(address).then(resolve, onRejected)
-    })
+  self._networks.forEach(function (network) {
+    network.subscribeAddress(address).then(deferred.resolve, onRejected)
   })
+
+  return deferred.promise
 })
 
 

@@ -2,6 +2,7 @@ var inherits = require('util').inherits
 
 var _ = require('lodash')
 var LRU = require('lru-cache')
+var Q = require('q')
 
 var Blockchain = require('./blockchain')
 var yatc = require('../yatc')
@@ -50,7 +51,7 @@ NaiveBlockchain.prototype.getHeader = function (height) {
 
   var header = self._headerCache.get(height)
   if (typeof header !== 'undefined') {
-    return Promise.resolve(header)
+    return Q.resolve(header)
   }
 
   return self.network.getHeader(height)
@@ -70,7 +71,7 @@ NaiveBlockchain.prototype.getTx = function (txId) {
 
   var txHex = self._txCache.get(txId)
   if (typeof txHex !== 'undefined') {
-    return Promise.resolve(txHex)
+    return Q.resolve(txHex)
   }
 
   return self.network.getTx(txId)

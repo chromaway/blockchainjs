@@ -3,8 +3,9 @@ var inherits = require('util').inherits
 var timers = require('timers')
 
 var _ = require('lodash')
+var Q = require('q')
 
-var errors = require('../errors')
+var NotImplementedError = require('../errors').NotImplementedError
 var util = require('../util')
 var yatc = require('../yatc')
 
@@ -71,7 +72,7 @@ _.forEach(['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'], function (state, index) {
  * @private
  */
 Network.prototype._doOpen = function () {
-  throw new errors.NotImplementedError('Network._doOpen')
+  throw new NotImplementedError('Network._doOpen')
 }
 
 /**
@@ -81,7 +82,7 @@ Network.prototype._doOpen = function () {
  * @private
  */
 Network.prototype._doClose = function () {
-  throw new errors.NotImplementedError('Network._doClose')
+  throw new NotImplementedError('Network._doClose')
 }
 
 /**
@@ -89,7 +90,7 @@ Network.prototype._doClose = function () {
  *
  * @private
  * @param {number} newHeight
- * @return {Promise}
+ * @return {Q.Promise}
  */
 Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
   yatc.verify('PositiveNumber', newHeight)
@@ -104,10 +105,8 @@ Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
       self._currentHeight = newHeight
       self.emit('newHeight', newHeight)
 
-    }).catch(function (error) {
-      self.emit('error', error)
-
     })
+    .done(void 0, function (error) { self.emit('error', error) })
 })
 
 /**
@@ -228,10 +227,10 @@ Network.prototype.getCurrentBlockHash = function () {
  * Force sync height with remote service
  *
  * @abstract
- * @return {Promise}
+ * @return {Q.Promise}
  */
 Network.prototype.refresh = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.refresh'))
+  return Q.reject(new NotImplementedError('Network.refresh'))
 }
 
 /**
@@ -241,7 +240,7 @@ Network.prototype.refresh = function () {
  * @return {number}
  */
 Network.prototype.getCurrentActiveRequests = function () {
-  throw new errors.NotImplementedError('Network.getCurrentActiveRequests')
+  throw new NotImplementedError('Network.getCurrentActiveRequests')
 }
 
 /**
@@ -251,7 +250,7 @@ Network.prototype.getCurrentActiveRequests = function () {
  * @return {number}
  */
 Network.prototype.getTimeFromLastResponse = function () {
-  throw new errors.NotImplementedError('Network.getTimeFromLastResponse')
+  throw new NotImplementedError('Network.getTimeFromLastResponse')
 }
 
 /**
@@ -259,10 +258,10 @@ Network.prototype.getTimeFromLastResponse = function () {
  *
  * @abstract
  * @param {number} height
- * @return {Promise<BitcoinHeader>}
+ * @return {Q.Promise<BitcoinHeader>}
  */
 Network.prototype.getHeader = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.getHeader'))
+  return Q.reject(new NotImplementedError('Network.getHeader'))
 }
 
 /**
@@ -270,10 +269,10 @@ Network.prototype.getHeader = function () {
  *
  * @abstract
  * @param {number} index
- * @return {Promise<string>}
+ * @return {Q.Promise<string>}
  */
 Network.prototype.getChunk = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.getChunk'))
+  return Q.reject(new NotImplementedError('Network.getChunk'))
 }
 
 /**
@@ -281,10 +280,10 @@ Network.prototype.getChunk = function () {
  *
  * @abstract
  * @param {string} txId
- * @return {Promise<string>}
+ * @return {Q.Promise<string>}
  */
 Network.prototype.getTx = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.getTx'))
+  return Q.reject(new NotImplementedError('Network.getTx'))
 }
 
 /**
@@ -300,10 +299,10 @@ Network.prototype.getTx = function () {
  * @abstract
  * @param {string} txId
  * @param {number} [height]
- * @return {Promise<Network~MerkleObject>}
+ * @return {Q.Promise<Network~MerkleObject>}
  */
 Network.prototype.getMerkle = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.getMerkle'))
+  return Q.reject(new NotImplementedError('Network.getMerkle'))
 }
 
 /**
@@ -311,10 +310,10 @@ Network.prototype.getMerkle = function () {
  *
  * @abstract
  * @param {string} txHex
- * @return {Promise<string>}
+ * @return {Q.Promise<string>}
  */
 Network.prototype.sendTx = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.sendTx'))
+  return Q.reject(new NotImplementedError('Network.sendTx'))
 }
 
 /**
@@ -328,10 +327,10 @@ Network.prototype.sendTx = function () {
  *
  * @abstract
  * @param {string} address
- * @return {Promise<Network~HistoryObject[]>}
+ * @return {Q.Promise<Network~HistoryObject[]>}
  */
 Network.prototype.getHistory = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.getHistory'))
+  return Q.reject(new NotImplementedError('Network.getHistory'))
 }
 
 /**
@@ -348,10 +347,10 @@ Network.prototype.getHistory = function () {
  *
  * @abstract
  * @param {string} address
- * @return {Promise<Network~UnspentObject[]>}
+ * @return {Q.Promise<Network~UnspentObject[]>}
  */
 Network.prototype.getUnspent = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.getUnspent'))
+  return Q.reject(new NotImplementedError('Network.getUnspent'))
 }
 
 /**
@@ -359,10 +358,10 @@ Network.prototype.getUnspent = function () {
  *
  * @abstract
  * @param {string} address
- * @return {Promise}
+ * @return {Q.Promise}
  */
 Network.prototype.subscribeAddress = function () {
-  return Promise.reject(new errors.NotImplementedError('Network.subscribeAddress'))
+  return Q.reject(new NotImplementedError('Network.subscribeAddress'))
 }
 
 

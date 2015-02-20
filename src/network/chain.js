@@ -1,6 +1,7 @@
 var inherits = require('util').inherits
 
 var _ = require('lodash')
+var Q = require('q')
 var WS = require('ws')
 
 var Network = require('./network')
@@ -8,7 +9,7 @@ var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
-var request = util.denodeify(require('request'))
+var request = Q.denodeify(require('request'))
 
 
 /**
@@ -53,7 +54,7 @@ function Chain(opts) {
     var req = {type: 'new-block', block_chain: self._blockChain}
     self._ws.send(JSON.stringify(req))
     self.refresh()
-      .catch(function (error) { self.emit('error', error) })
+      .done(void 0, function (error) { self.emit('error', error) })
 
     var addresses = []
     self._subscribedAddresses.forEach(function (addr) { addresses.push(addr) })
@@ -61,7 +62,7 @@ function Chain(opts) {
 
     addresses.forEach(function (addr) {
       self.subscribeAddress(addr)
-        .catch(function (error) { self.emit('error', error) })
+        .done(void 0, function (error) { self.emit('error', error) })
     })
   })
 
@@ -71,7 +72,6 @@ function Chain(opts) {
       deferred.reject(error)
     })
 
-    self._requestId = 0
     self._requests = {}
   })
 }
@@ -241,33 +241,31 @@ Chain.prototype._request = function (path, data) {
   }
 
   if (!self.isConnected()) {
-    return Promise.reject(new errors.NotConnectedError(requestOpts.uri))
+    return Q.reject(new errors.NotConnectedError(requestOpts.uri))
   }
 
-  return new Promise(function (resolve, reject) {
-    var requestId = self._requestId++
-    self._requests[requestId] = {resolve: resolve, reject: reject}
+  var deferred = Q.defer()
 
-    request(requestOpts)
-      .then(function (response) {
-        if (response.statusCode !== 200) {
-          throw new errors.ChainRequestError(response.statusMessage)
-        }
+  var requestId = self._requestId++
+  self._requests[requestId] = deferred
 
-        return response.body
+  request(requestOpts)
+    .spread(function (response, body) {
+      if (response.statusCode !== 200) {
+        throw new errors.ChainRequestError(response.statusMessage)
+      }
 
-      })
-      .then(function (result) {
-        self._lastResponse = Date.now()
-        delete self._requests[requestId]
-        resolve(result)
+      self._lastResponse = Date.now()
+      return body
 
-      }, function (error) {
-        delete self._requests[requestId]
-        reject(error)
+    })
+    .finally(function () {
+      delete self._requests[requestId]
 
-      })
-  })
+    })
+    .done(deferred.resolve, deferred.reject)
+
+  return deferred.promise
 }
 
 /**
@@ -305,6 +303,7 @@ Chain.prototype.refresh = function () {
       if (self.getCurrentHeight() !== response.height) {
         return self._setCurrentHeight(response.height)
       }
+
     })
 }
 
@@ -432,20 +431,22 @@ Chain.prototype.getUnspent = function (address) {
 
   var self = this
 
-  var promise = new Promise(function (resolve) {
-    if (!self.isConnected()) {
-      self.once('connect', function () { self.refresh().then(resolve, resolve) })
+  // we need last height for calculate utxo height from confirmations
+  var deferred = Q.defer()
+  if (!self.isConnected()) {
+    self.once('connect', function () {
+      self.refresh().then(deferred.resolve, deferred.reject)
+    })
 
-    } else if (self.getCurrentHeight() === -1) {
-      self.once('newHeight', resolve)
+  } else if (self.getCurrentHeight() === -1) {
+    self.once('newHeight', deferred.resolve)
 
-    } else {
-      resolve()
+  } else {
+    deferred.resolve()
 
-    }
-  })
+  }
 
-  return promise
+  return deferred.promise
     .then(function () {
       return self._request('/addresses/' + address + '/unspents')
 
@@ -495,7 +496,7 @@ Chain.prototype.subscribeAddress = util.makeSerial(function (address) {
     }
   }
 
-  return Promise.resolve()
+  return Q.resolve()
 })
 
 
