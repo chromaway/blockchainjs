@@ -215,7 +215,7 @@ Chain.prototype._updateIdleTimeout = function () {
  * @private
  * @param {string} path
  * @param {Object} [data] Data for POST request
- * @return {Promise<string>}
+ * @return {Q.Promise<string>}
  */
 Chain.prototype._request = function (path, data) {
   yatc.verify('Arguments{0: String, 1: Object|Undefined}', arguments)

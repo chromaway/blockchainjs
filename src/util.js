@@ -1,6 +1,7 @@
 var crypto = require('crypto')
 
 var _ = require('lodash')
+var Q = require('q')
 
 var yatc = require('./yatc')
 
@@ -112,18 +113,18 @@ function makeSerial(fn) {
     var ctx = this
     var args = _.slice(arguments)
 
-    var promise = new Promise(function (resolve) { queue.push(resolve) })
+    var deferred = Q.defer()
+    queue.push(deferred)
 
     if (queue.length === 1) {
-      queue.shift()()
+      queue.shift().resolve()
     }
 
-    return promise
+    return deferred.promise
       .then(function () { return fn.apply(ctx, args) })
-      .catch(function () {})
-      .then(function () {
+      .finally(function () {
         if (queue.length > 0) {
-          queue.shift()()
+          queue.shift().resolve()
         }
 
       })

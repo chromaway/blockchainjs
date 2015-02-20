@@ -8,7 +8,7 @@ var NotImplementedError = require('../../errors').NotImplementedError
  * You can save all hashes, but that needed store a large size
  *  on 20 February 2015 mainnet have more that 344k blocks
  *  thats mean you need store minimum 80 * 344000 / 1024 / 1024 = 26.24 MB
- *    or 52.48 MB you save in hex
+ *    or 52.48 MB if you store data in hex
  *  but for example in localStorage you can save only 2.5 MB ...
  *
  * We offer store maximum 2015 blocks hashes and sha256x2 hash for every chunk
@@ -22,7 +22,7 @@ var NotImplementedError = require('../../errors').NotImplementedError
  *   just remember, what sometimes you can't store all data that you needed ...
  *
  * All methods return Q.Promise,
- *  this is done for asynchronous storages, such as WebSQL
+ *  this is done for asynchronous storages such as: File, WebSQL
  *
  * Also all methods represent hashes in hex strings, not Buffer
  *
