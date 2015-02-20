@@ -150,10 +150,10 @@ function Switcher(networks, opts) {
   })
 
   // touchAddress event
-  self._subscribedAddresses = new Set()
+  self._subscribedAddresses = {}
   self._networks.forEach(function (network) {
     network.on('touchAddress', function (address) {
-      if (self._subscribedAddresses.has(address)) {
+      if (typeof self._subscribedAddresses[address] !== 'undefined') {
         self.emit('touchAddress', address)
       }
     })
@@ -339,11 +339,11 @@ Switcher.prototype.getUnspent = function () {
 Switcher.prototype.subscribeAddress = util.makeSerial(function (address) {
   var self = this
 
-  if (self._subscribedAddresses.has(address)) {
+  if (typeof self._subscribedAddresses[address] !== 'undefined') {
     return Q.resolve()
   }
 
-  self._subscribedAddresses.add(address)
+  self._subscribedAddresses[address] = true
 
   var deferred = Q.defer()
 

@@ -36,7 +36,7 @@ function ElectrumJS(opts) {
   self._requests = {}
   self._lastResponse = Date.now()
 
-  self._subscribedAddresses = new Set()
+  self._subscribedAddresses = {}
 
   self._socket = io(opts.url, {
     autoConnect: false,
@@ -103,7 +103,7 @@ function ElectrumJS(opts) {
 
       isMethod = response.method === 'blockchain.address.subscribe'
       isArgs = yatc.is('(BitcoinAddress, String)', response.params)
-      if (isMethod && isArgs && self._subscribedAddresses.has(response.params[0])) {
+      if (isMethod && isArgs && typeof self._subscribedAddresses[response.params[0]] !== 'undefined') {
         return self.emit('touchAddress', response.params[0])
       }
     }
@@ -128,9 +128,8 @@ function ElectrumJS(opts) {
     self.refresh()
       .done(void 0, function (error) { self.emit('error', error) })
 
-    var addresses = []
-    self._subscribedAddresses.forEach(function (addr) { addresses.push(addr) })
-    self._subscribedAddresses.clear()
+    var addresses = _.keys(self._subscribedAddresses)
+    self._subscribedAddresses = {}
 
     addresses.forEach(function (addr) {
       self.subscribeAddress(addr)
@@ -413,8 +412,8 @@ ElectrumJS.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)
 
   var self = this
-  if (!self._subscribedAddresses.has(address)) {
-    self._subscribedAddresses.add(address)
+  if (typeof self._subscribedAddresses[address] !== 'undefined') {
+    self._subscribedAddresses[address] = true
 
     if (self.isConnected()) {
       return self._request('blockchain.address.subscribe', [address])

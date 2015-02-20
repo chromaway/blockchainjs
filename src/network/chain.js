@@ -48,7 +48,7 @@ function Chain(opts) {
   self._requests = {}
   self._lastResponse = Date.now()
 
-  self._subscribedAddresses = new Set()
+  self._subscribedAddresses = {}
 
   self.on('connect', function () {
     var req = {type: 'new-block', block_chain: self._blockChain}
@@ -56,9 +56,8 @@ function Chain(opts) {
     self.refresh()
       .done(void 0, function (error) { self.emit('error', error) })
 
-    var addresses = []
-    self._subscribedAddresses.forEach(function (addr) { addresses.push(addr) })
-    self._subscribedAddresses.clear()
+    var addresses = _.keys(self._subscribedAddresses)
+    self._subscribedAddresses = {}
 
     addresses.forEach(function (addr) {
       self.subscribeAddress(addr)
@@ -127,7 +126,7 @@ Chain.prototype._doOpen = function () {
 
       if (payload.type === 'address') {
         yatc.verify('{confirmations: Number, address: BitcoinAddress, ...}', payload)
-        if (payload.confirmations < 2 && self._subscribedAddresses.has(payload.address)) {
+        if (payload.confirmations < 2 && typeof self._subscribedAddresses[payload.address] !== 'undefined') {
           return self.emit('touchAddress', payload.address)
         }
       }
@@ -483,8 +482,8 @@ Chain.prototype.getUnspent = function (address) {
 Chain.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)
 
-  if (!this._subscribedAddresses.has(address)) {
-    this._subscribedAddresses.add(address)
+  if (typeof this._subscribedAddresses[address] === 'undefined') {
+    this._subscribedAddresses[address] = true
 
     if (this.isConnected()) {
       var req = {
