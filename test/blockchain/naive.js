@@ -8,7 +8,8 @@ describe('blockchain.Naive', function () {
   var blockchain
 
   beforeEach(function (done) {
-    network = new blockchainjs.network.ElectrumJS({testnet: true})
+    var url = blockchainjs.network.ElectrumJS.getURLs('testnet')[0]
+    network = new blockchainjs.network.ElectrumJS({url: url})
     network.on('error', function (error) { throw error })
     network.once('connect', done)
     blockchain = new blockchainjs.blockchain.Naive(network)

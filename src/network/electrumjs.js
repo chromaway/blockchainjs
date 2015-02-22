@@ -3,7 +3,7 @@ var inherits = require('util').inherits
 var _ = require('lodash')
 var Q = require('q')
 var io = require('socket.io-client')
-// var ws = require('ws')
+var ws = require('ws')
 
 var Network = require('./network')
 var errors = require('../errors')
@@ -17,17 +17,11 @@ var yatc = require('../yatc')
  * @class ElectrumJS
  * @extends Network
  *
- * @param {Object} [opts]
- * @param {boolean} [opts.testnet=false]
- * @param {string} [opts.url=ws://devel.hz.udoidio.info:878x]
+ * @param {Object} opts
+ * @param {string} opts.url
  */
 function ElectrumJS(opts) {
-  opts = _.extend({
-    testnet: false,
-    url: 'ws://devel.hz.udoidio.info:' + (!!opts.testnet ? '8784' : '8783')
-  }, opts)
-
-  yatc.verify('{testnet: Boolean, url: String}', opts)
+  yatc.verify('{url: String}', opts)
 
   var self = this
   Network.call(self)
@@ -46,8 +40,8 @@ function ElectrumJS(opts) {
     randomizationFactor: 0,
     forceJSONP: false,
     jsonp: true,
-    transports: ['polling']
-    // transports: ws !== null ? ['websocket', 'polling'] : ['polling']
+    // transports: ['polling']
+    transports: ws !== null ? ['websocket', 'polling'] : ['polling']
   })
 
   self._socket.on('connect', function () {
@@ -149,6 +143,31 @@ function ElectrumJS(opts) {
 }
 
 inherits(ElectrumJS, Network)
+
+ElectrumJS._URLs = {
+  'bitcoin': [
+    'ws://devel.hz.udoidio.info:8783'
+  ],
+  'testnet': [
+    'ws://devel.hz.udoidio.info:8784'
+  ]
+}
+
+/**
+ * Return URLs array for given network
+ * Now available bitcoin and testnet
+ *
+ * @param {string} [network=bitcoin]
+ * @return {string[]}
+ */
+ElectrumJS.getURLs = function (network) {
+  yatc.verify('String', network)
+  if (_.keys(ElectrumJS._URLs).indexOf(network) === -1) {
+    throw new TypeError('Unknow network ' + network + '. You can use only: ' + ElectrumJS._URLs.join(', '))
+  }
+
+  return _.clone(ElectrumJS._URLs[network])
+}
 
 /**
  * @memberof ElectrumJS.prototype

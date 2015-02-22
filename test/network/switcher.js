@@ -9,7 +9,8 @@ implementationTest({
   class:          blockchainjs.network.Switcher,
   description:    'network.Switcher: One source (ElectrumJS)',
   getNetworkOpts: function () {
-    var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})
+    var url = blockchainjs.network.ElectrumJS.getURLs('testnet')[0]
+    var electrumNetwork = new blockchainjs.network.ElectrumJS({url: url})
     return [[electrumNetwork]]
   }
 })
@@ -27,7 +28,8 @@ implementationTest({
   class:          blockchainjs.network.Switcher,
   description:    'network.Switcher: Two sources (ElectrumJS, Chain)',
   getNetworkOpts: function () {
-    var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})
+    var url = blockchainjs.network.ElectrumJS.getURLs('testnet')[0]
+    var electrumNetwork = new blockchainjs.network.ElectrumJS({url: url})
     var chainNetwork = new blockchainjs.network.Chain({testnet: true})
     return [[electrumNetwork, chainNetwork]]
   }
@@ -37,7 +39,8 @@ implementationTest({
   class:          blockchainjs.network.Switcher,
   description:    'network.Switcher: Two sources (ElectrumJS, Chain) (first doesn\'t work)',
   getNetworkOpts: function () {
-    var electrumNetwork = new blockchainjs.network.ElectrumJS({testnet: true})
+    var url = blockchainjs.network.ElectrumJS.getURLs('testnet')[0]
+    var electrumNetwork = new blockchainjs.network.ElectrumJS({url: url})
     var chainNetwork = new blockchainjs.network.Chain({testnet: true})
     // not connected
     electrumNetwork.isConnected = function () { return false }
