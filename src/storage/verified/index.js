@@ -1,3 +1,5 @@
 module.exports = {
-  Storage: require('./storage')
+  Storage: require('./storage'),
+
+  Memory: require('./memory')
 }

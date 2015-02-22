@@ -64,7 +64,7 @@ Storage.prototype.getChunkHashesCount = function () {
 
 /**
  * @abstract
- * @param {number} offset
+ * @param {number} index
  * @return {Q.Promise<string>}
  */
 Storage.prototype.getChunkHash = function () {
@@ -73,7 +73,7 @@ Storage.prototype.getChunkHash = function () {
 
 /**
  * @abstract
- * @param {string} hash
+ * @param {string} chunkHash
  * @return {Q.Promise}
  */
 Storage.prototype.putChunkHash = function () {
@@ -99,7 +99,7 @@ Storage.prototype.getBlockHashesCount = function () {
 
 /**
  * @abstract
- * @param {number} offset
+ * @param {number} index
  * @return {Q.Promise<string>}
  */
 Storage.prototype.getBlockHash = function () {
@@ -108,7 +108,7 @@ Storage.prototype.getBlockHash = function () {
 
 /**
  * @abstract
- * @param {string} hash
+ * @param {string} blockHash
  * @return {Q.Promise}
  */
 Storage.prototype.putBlockHash = function () {

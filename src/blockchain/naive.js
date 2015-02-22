@@ -9,14 +9,14 @@ var yatc = require('../yatc')
 
 
 /**
- * @class NaiveBlockchain
+ * @class Naive
  * @extends Blockchain
  * @param {Network} network
  * @param {Object} [opts]
  * @param {number} [opts.headerCacheSize=50]
  * @param {number} [opts.txCacheSize=100]
  */
-function NaiveBlockchain(network, opts) {
+function Naive(network, opts) {
   opts = _.extend({headerCacheSize: 50, txCacheSize: 100}, opts)
 
   yatc.verify('Network', network)
@@ -39,14 +39,14 @@ function NaiveBlockchain(network, opts) {
   })
 }
 
-inherits(NaiveBlockchain, Blockchain)
+inherits(Naive, Blockchain)
 
 /**
- * @memberof NaiveBlockchain.prototype
+ * @memberof Naive.prototype
  * @method getHeader
  * @see {@link Blockchain#getHeader}
  */
-NaiveBlockchain.prototype.getHeader = function (height) {
+Naive.prototype.getHeader = function (height) {
   var self = this
 
   var header = self._headerCache.get(height)
@@ -62,11 +62,11 @@ NaiveBlockchain.prototype.getHeader = function (height) {
 }
 
 /**
- * @memberof NaiveBlockchain.prototype
+ * @memberof Naive.prototype
  * @method getTx
  * @see {@link Blockchain#getTx}
  */
-NaiveBlockchain.prototype.getTx = function (txId) {
+Naive.prototype.getTx = function (txId) {
   var self = this
 
   var txHex = self._txCache.get(txId)
@@ -82,40 +82,40 @@ NaiveBlockchain.prototype.getTx = function (txId) {
 }
 
 /**
- * @memberof NaiveBlockchain.prototype
+ * @memberof Naive.prototype
  * @method sendTx
  * @see {@link Blockchain#sendTx}
  */
-NaiveBlockchain.prototype.sendTx = function (txHex) {
+Naive.prototype.sendTx = function (txHex) {
   return this.network.sendTx(txHex)
 }
 
 /**
- * @memberof NaiveBlockchain.prototype
+ * @memberof Naive.prototype
  * @method getHistory
  * @see {@link Blockchain#getHistory}
  */
-NaiveBlockchain.prototype.getHistory = function (address) {
+Naive.prototype.getHistory = function (address) {
   return this.network.getHistory(address)
 }
 
 /**
- * @memberof NaiveBlockchain.prototype
+ * @memberof Naive.prototype
  * @method getUnspent
  * @see {@link Blockchain#getUnspent}
  */
-NaiveBlockchain.prototype.getUnspent = function (address) {
+Naive.prototype.getUnspent = function (address) {
   return this.network.getUnspent(address)
 }
 
 /**
- * @memberof NaiveBlockchain.prototype
+ * @memberof Naive.prototype
  * @method subscribeAddress
  * @see {@link Blockchain#subscribeAddress}
  */
-NaiveBlockchain.prototype.subscribeAddress = function (address) {
+Naive.prototype.subscribeAddress = function (address) {
   return this.network.subscribeAddress(address)
 }
 
 
-module.exports = NaiveBlockchain
+module.exports = Naive
