@@ -51,7 +51,9 @@
     "jscs": "1.10.0",
     "jscs-jsdoc": "0.4.0",
     "jshint-stylish": "1.0.0",
-    "mocha": "2.1.0"
+    "mocha": "2.1.0",
+    "optimist": "^0.6.1",
+    "progress": "^1.1.8"
   },
   "browser": {
     "request": "browser-request"

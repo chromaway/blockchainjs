@@ -17,6 +17,8 @@ var NotImplementedError = require('../../errors').NotImplementedError
  *   - get from storage if it belongs to last not complete unhashed chunk
  *   - get chunk from network, calculate hash and compare with saved in storage,
  *       use block hashes from chunk and save it in memory if you needed this
+ *  besides you can use pre-saved chunk hashes from Storage.prototype,
+ *   it's saved user traffic and accelerate blockchain initialization
  *
  * But at least you can use both options, it's your right
  *   just remember, what sometimes you can't store all data that you needed ...
@@ -29,6 +31,11 @@ var NotImplementedError = require('../../errors').NotImplementedError
  * @class Storage
  */
 function Storage() {}
+
+Storage.prototype.preSavedChunkHashes = {
+  bitcoin: require('./hashes/bitcoin'),
+  testnet: require('./hashes/testnet')
+}
 
 /**
  * @abstract

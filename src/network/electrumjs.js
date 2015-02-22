@@ -3,7 +3,7 @@ var inherits = require('util').inherits
 var _ = require('lodash')
 var Q = require('q')
 var io = require('socket.io-client')
-var ws = require('ws')
+// var ws = require('ws')
 
 var Network = require('./network')
 var errors = require('../errors')
@@ -40,8 +40,8 @@ function ElectrumJS(opts) {
     randomizationFactor: 0,
     forceJSONP: false,
     jsonp: true,
-    // transports: ['polling']
-    transports: ws !== null ? ['websocket', 'polling'] : ['polling']
+    transports: ['polling']
+    // transports: ws !== null ? ['websocket', 'polling'] : ['polling']
   })
 
   self._socket.on('connect', function () {
