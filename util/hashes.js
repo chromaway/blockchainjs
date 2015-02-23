@@ -7,6 +7,7 @@ var Q = require('q')
 
 var blockchainjs = require('../src')
 var ElectrumJS = blockchainjs.network.ElectrumJS
+var util = blockchainjs.util
 
 
 var optimist = require('optimist')
@@ -56,14 +57,20 @@ network.once('newHeight', function (height) {
   var barFmt = 'Progress: :percent (:current/:total), :elapseds elapsed, eta :etas'
   var bar = new ProgressBar(barFmt, {total: chunksTotal})
 
-  var hashes = {}
+  var lastHash
+  var hashes = []
 
-  var fns  = _.range(chunksTotal).map(function (chunkIndex) {
+  var fns = _.range(chunksTotal).map(function (chunkIndex) {
     return function () {
       return network.getChunk(chunkIndex)
         .then(function (chunkHex) {
-          var chunkHash = blockchainjs.util.sha256x2(chunkHex).toString('hex')
-          hashes[chunkIndex] = chunkHash
+          var rawChunk = new Buffer(chunkHex, 'hex')
+
+          if (chunkIndex === chunksTotal - 1) {
+            lastHash = util.hashEncode(util.sha256(rawChunk.slice(-80)))
+          }
+
+          hashes.push(util.sha256x2(rawChunk).toString('hex'))
           bar.tick()
         })
     }
@@ -72,10 +79,11 @@ network.once('newHeight', function (height) {
   fns.reduce(Q.when, Q.resolve())
     .finally(network.disconnect.bind(network))
     .then(function () {
+      var data = {lastHash: lastHash, chunkHashes: hashes}
       var content = [
         '// Network: ' + argv.network,
         '// ' + new Date().toUTCString(),
-        'module.exports = ' + JSON.stringify(hashes, null, 2).replace(/"/g, '\'')
+        'module.exports = ' + JSON.stringify(data, null, 2).replace(/"/g, '\'')
       ].join('\n') + '\n'
 
       fs.writeFileSync(argv.out, content)
