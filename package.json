@@ -24,6 +24,7 @@
     "README.md"
   ],
   "dependencies": {
+    "bigi": "^1.4.0",
     "browser-request": "0.3.3",
     "bs58check": "1.0.4",
     "errno": "0.1.1",

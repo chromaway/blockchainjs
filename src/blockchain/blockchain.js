@@ -36,7 +36,7 @@ function Blockchain(network) {
   Object.defineProperty(this, 'network', {enumerable: true, value: network})
 
   this._currentHeight = -1
-  this._currentBlockHash = new Buffer(util.zfill('', 64), 'hex')
+  this._currentBlockHash = util.zfill('', 64)
 }
 
 inherits(Blockchain, events.EventEmitter)
@@ -54,7 +54,7 @@ Blockchain.prototype.getCurrentHeight = function () {
  * @return {Buffer}
  */
 Blockchain.prototype.getCurrentBlockHash = function () {
-  return new Buffer(this._currentBlockHash)
+  return this._currentBlockHash.slice()
 }
 
 /**

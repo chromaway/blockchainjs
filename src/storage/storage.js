@@ -21,6 +21,8 @@ var NotImplementedError = require('../errors').NotImplementedError
  *       use block hashes from chunk and save it in memory if you needed this
  *  besides you can use pre-saved chunk hashes from Storage.prototype,
  *   it's saved user traffic and accelerate blockchain initialization
+ *   pre-saved data has next structure:
+ *    {lastHash: string, chunkHashes: string[]}
  *
  * But at least you can use both options, it's your right
  *   just remember, what sometimes you can't store all data that you needed ...
@@ -39,19 +41,24 @@ function Storage(opts) {
   this._useCompactMode = opts.useCompactMode
 }
 
+// load pre-saved data
 Storage.prototype.preSavedChunkHashes = {
   bitcoin: require('./hashes/bitcoin'),
   testnet: require('./hashes/testnet')
 }
 
 /**
+ * Return boolean, that indicate which mode uses by storage
+ *
  * @return {boolean}
  */
-Storage.prototype.useCompactMode = function () {
+Storage.prototype.isUsedCompactMode = function () {
   return this._useCompactMode
 }
 
 /**
+ * Return last header hash as hex string
+ *
  * @abstract
  * @return {Q.Promise<string>}
  */
@@ -60,6 +67,8 @@ Storage.prototype.getLastHash = function () {
 }
 
 /**
+ * Set last header hash (hex string needed)
+ *
  * @abstract
  * @param {string} lastHash
  * @return {Q.Promise}
@@ -69,6 +78,8 @@ Storage.prototype.setLastHash = function () {
 }
 
 /**
+ * Return total available chunk hashes
+ *
  * @abstract
  * @return {Q.Promise<number>}
  */
@@ -77,6 +88,8 @@ Storage.prototype.getChunkHashesCount = function () {
 }
 
 /**
+ * Get chunk hash for given `index`
+ *
  * @abstract
  * @param {number} index
  * @return {Q.Promise<string>}
@@ -86,15 +99,19 @@ Storage.prototype.getChunkHash = function () {
 }
 
 /**
+ * Put chunk hashes to storage
+ *
  * @abstract
- * @param {string} chunkHash
+ * @param {(string|string[])} chunkHash
  * @return {Q.Promise}
  */
-Storage.prototype.putChunkHash = function () {
+Storage.prototype.putChunkHashes = function () {
   return Q.reject(new NotImplementedError('Storage.putChunkHash'))
 }
 
 /**
+ * Truncate number of saved chunk hashes
+ *
  * @abstract
  * @param {number} limit
  * @return {Q.Promise}
@@ -104,6 +121,8 @@ Storage.prototype.truncateChunkHashes = function () {
 }
 
 /**
+ * Return total available block hashes
+ *
  * @abstract
  * @return {Q.Promise<number>}
  */
@@ -112,6 +131,8 @@ Storage.prototype.getBlockHashesCount = function () {
 }
 
 /**
+ * Return block hash for given `index`
+ *
  * @abstract
  * @param {number} index
  * @return {Q.Promise<string>}
@@ -121,15 +142,19 @@ Storage.prototype.getBlockHash = function () {
 }
 
 /**
+ * Put block hashes to storage
+ *
  * @abstract
- * @param {string} blockHash
+ * @param {(string|string[])} blockHash
  * @return {Q.Promise}
  */
-Storage.prototype.putBlockHash = function () {
+Storage.prototype.putBlockHashes = function () {
   return Q.reject(new NotImplementedError('Storage.putBlockHash'))
 }
 
 /**
+ * Truncate number of saved block hashes
+ *
  * @abstract
  * @param {number} limit
  * @return {Q.Promise}

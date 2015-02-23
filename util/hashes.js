@@ -6,7 +6,7 @@ var ProgressBar = require('progress')
 var Q = require('q')
 
 var blockchainjs = require('../src')
-var ElectrumJS = blockchainjs.network.ElectrumJS
+var ElectrumWS = blockchainjs.network.ElectrumWS
 var util = blockchainjs.util
 
 
@@ -51,7 +51,7 @@ if (argv.help) {
   process.exit(0)
 }
 
-var network = new ElectrumJS({url: ElectrumJS.getURLs(argv.network)[0]})
+var network = new ElectrumWS({url: ElectrumWS.getURLs(argv.network)[0]})
 network.once('newHeight', function (height) {
   var chunksTotal = Math.floor(height/2016)
   var barFmt = 'Progress: :percent (:current/:total), :elapseds elapsed, eta :etas'
@@ -67,10 +67,10 @@ network.once('newHeight', function (height) {
           var rawChunk = new Buffer(chunkHex, 'hex')
 
           if (chunkIndex === chunksTotal - 1) {
-            lastHash = util.hashEncode(util.sha256(rawChunk.slice(-80)))
+            lastHash = util.hashEncode(util.sha256x2(rawChunk.slice(-80)))
           }
 
-          hashes.push(util.sha256x2(rawChunk).toString('hex'))
+          hashes.push(util.hashEncode(util.sha256x2(rawChunk)))
           bar.tick()
         })
     }

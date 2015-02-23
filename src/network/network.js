@@ -48,7 +48,7 @@ function Network() {
   events.EventEmitter.call(self)
 
   self._currentHeight = -1
-  self._currentBlockHash = new Buffer(util.zfill('', 64), 'hex')
+  self._currentBlockHash = util.zfill('', 64)
 
   self._desiredReadyState = null
   self.readyState = self.CLOSED
@@ -86,7 +86,7 @@ Network.prototype._doClose = function () {
 }
 
 /**
- * Set current height and current blockhash by new height
+ * Set current height and current blockHash by new height
  *
  * @private
  * @param {number} newHeight
@@ -101,7 +101,7 @@ Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
       yatc.verify('BitcoinHeader', header)
 
       var rawHeader = util.header2buffer(header)
-      self._currentBlockHash = util.reverse(util.sha256x2(rawHeader))
+      self._currentBlockHash = util.hashEncode(util.sha256x2(rawHeader))
       self._currentHeight = newHeight
       self.emit('newHeight', newHeight)
 
@@ -220,7 +220,7 @@ Network.prototype.getCurrentHeight = function () {
  * @return {Buffer}
  */
 Network.prototype.getCurrentBlockHash = function () {
-  return new Buffer(this._currentBlockHash)
+  return this._currentBlockHash.slice()
 }
 
 /**

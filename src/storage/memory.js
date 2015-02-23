@@ -1,5 +1,6 @@
 var inherits = require('util').inherits
 
+var _ = require('lodash')
 var Q = require('q')
 
 var Storage = require('./storage')
@@ -26,7 +27,7 @@ inherits(Memory, Storage)
  * @see {@link Storage#getLastHash}
  */
 Memory.prototype.getLastHash = function () {
-  return Q.resolve(this._data.lastHash)
+  return Q.resolve(this._data.lastHash.slice())
 }
 
 /**
@@ -38,7 +39,7 @@ Memory.prototype.setLastHash = function (lastHash) {
   var self = this
   return Q.fcall(function () {
     yatc.verify('SHA256Hex', lastHash)
-    self.data_.lastHash = lastHash
+    self.data_.lastHash = lastHash.slice()
   })
 }
 
@@ -60,11 +61,11 @@ Memory.prototype.getChunkHash = function (index) {
   var self = this
   return Q.fcall(function () {
     yatc.verify('Number', index)
-    if (0 <= index && index < self._data.chunkHashes.length) {
+    if (index >= 0 && index < self._data.chunkHashes.length) {
       throw new RangeError('Hash for index ' + index + ' not exists')
     }
 
-    return self._data.chunkHashes[index]
+    return self._data.chunkHashes[index].slice()
   })
 }
 
@@ -73,11 +74,18 @@ Memory.prototype.getChunkHash = function (index) {
  * @method putChunkHash
  * @see {@link Storage#putChunkHash}
  */
-Memory.prototype.putChunkHash = function (chunkHash) {
+Memory.prototype.putChunkHashas = function (chunkHashes) {
   var self = this
   return Q.fcall(function () {
-    yatc.verify('SHA256Hex', chunkHash)
-    self._data.chunkHashes.push(chunkHash)
+    if (!_.isArray(chunkHashes)) {
+      chunkHashes = [chunkHashes]
+    }
+
+    yatc.verify('[SHA256Hex]', chunkHashes)
+
+    chunkHashes.forEach(function (chunkHash) {
+      self._data.chunkHashes.push(chunkHash.slice())
+    })
   })
 }
 
@@ -112,11 +120,11 @@ Memory.prototype.getBlockHash = function (index) {
   var self = this
   return Q.fcall(function () {
     yatc.verify('Number', index)
-    if (0 <= index && index < self._data.blockHashes.length) {
+    if (index >= 0 && index < self._data.blockHashes.length) {
       throw new RangeError('Hash for index ' + index + ' not exists')
     }
 
-    return self._data.blockHashes[index]
+    return self._data.blockHashes[index].slice()
   })
 }
 
@@ -125,11 +133,18 @@ Memory.prototype.getBlockHash = function (index) {
  * @method putBlockHash
  * @see {@link Storage#putBlockHash}
  */
-Memory.prototype.putBlockHash = function (blockHash) {
+Memory.prototype.putBlockHashes = function (blockHashes) {
   var self = this
   return Q.fcall(function () {
-    yatc.verify('BitcoinRawHexHeader', blockHash)
-    self._data.blockHashes.push(blockHash)
+    if (!_.isArray(blockHashes)) {
+      blockHashes = [blockHashes]
+    }
+
+    yatc.verify('[BitcoinRawHexHeader]', [blockHashes])
+
+    blockHashes.forEach(function (blockHash) {
+      self._data.blockHashes.push(blockHash.slice())
+    })
   })
 }
 

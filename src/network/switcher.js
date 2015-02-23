@@ -187,7 +187,7 @@ Switcher.prototype._doClose = function () {
  *   and check results for equality
  *
  * @param {string} methodName Network method name
- * @param {*[]} args Arguments for network method
+ * @param {Array.<*>} args Arguments for network method
  * @return {Q.Promise}
  */
 Switcher.prototype._callMethod = function (methodName, args) {
