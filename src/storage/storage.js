@@ -1,5 +1,7 @@
 var Q = require('q')
-var NotImplementedError = require('../../errors').NotImplementedError
+var _ = require('lodash')
+
+var NotImplementedError = require('../errors').NotImplementedError
 
 
 /**
@@ -29,12 +31,24 @@ var NotImplementedError = require('../../errors').NotImplementedError
  * Also all methods represent hashes in hex strings, not Buffer
  *
  * @class Storage
+ * @param {Object} [opts]
+ * @param {boolean} [opts.useCompactMode=false]
  */
-function Storage() {}
+function Storage(opts) {
+  opts = _.extend({useCompactMode: false}, opts)
+  this._useCompactMode = opts.useCompactMode
+}
 
 Storage.prototype.preSavedChunkHashes = {
   bitcoin: require('./hashes/bitcoin'),
   testnet: require('./hashes/testnet')
+}
+
+/**
+ * @return {boolean}
+ */
+Storage.prototype.useCompactMode = function () {
+  return this._useCompactMode
 }
 
 /**

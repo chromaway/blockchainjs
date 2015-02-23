@@ -3,16 +3,16 @@ var inherits = require('util').inherits
 var Q = require('q')
 
 var Storage = require('./storage')
-var util = require('../../util')
-var yatc = require('../../yatc')
+var util = require('../util')
+var yatc = require('../yatc')
 
 
 /**
  * @class Memory
  * @extends Storage
  */
-function Memory() {
-  Storage.call(this)
+function Memory(opts) {
+  Storage.call(this, opts)
   this.clear() // load this._data
 }
 

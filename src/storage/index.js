@@ -1,3 +1,5 @@
 module.exports = {
-  verified: require('./verified')
+  Storage: require('./storage'),
+
+  Memory: require('./memory')
 }
