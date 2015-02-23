@@ -4,8 +4,8 @@ var implementationTest = require('./implementation.js')
 
 
 implementationTest({
-  class: blockchainjs.network.ElectrumJS,
+  class: blockchainjs.network.ElectrumWS,
   getNetworkOpts: function () {
-    return {url: blockchainjs.network.ElectrumJS.getURLs('testnet')[0]}
+    return {url: blockchainjs.network.ElectrumWS.getURLs('testnet')[0]}
   }
 })

@@ -12,15 +12,15 @@ var yatc = require('../yatc')
 
 
 /**
- * [ElectrumJS api]{@link https://github.com/fanatid/electrumjs-server}
+ * [Electrum api (WebSocket)]{@link https://github.com/fanatid/electrumjs-server}
  *
- * @class ElectrumJS
+ * @class ElectrumWS
  * @extends Network
  *
  * @param {Object} opts
  * @param {string} opts.url
  */
-function ElectrumJS(opts) {
+function ElectrumWS(opts) {
   yatc.verify('{url: String}', opts)
 
   var self = this
@@ -50,12 +50,12 @@ function ElectrumJS(opts) {
 
   self._socket.on('connect_error', function () {
     self._setReadyState(self.CLOSED)
-    self.emit('error', new errors.ConnectionTimeout('ElectrumJS: connect_error'))
+    self.emit('error', new errors.ConnectionTimeout('ElectrumWS: connect_error'))
   })
 
   self._socket.on('connect_timeout', function () {
     self._setReadyState(self.CLOSED)
-    self.emit('error', new errors.ConnectionTimeout('ElectrumJS: connect_timeout'))
+    self.emit('error', new errors.ConnectionTimeout('ElectrumWS: connect_timeout'))
   })
 
   self._socket.on('disconnect', function (reason) {
@@ -111,7 +111,7 @@ function ElectrumJS(opts) {
       deferred.resolve(response.result)
 
     } else {
-      deferred.reject(new errors.ElectrumJSError(response.error))
+      deferred.reject(new errors.ElectrumWSError(response.error))
 
     }
 
@@ -132,7 +132,7 @@ function ElectrumJS(opts) {
   })
 
   self.on('disconnect', function () {
-    var error = new errors.ElectrumJSError('Network unreachable')
+    var error = new errors.ElectrumWSError('Network unreachable')
     _.forEach(self._requests, function (deferred) {
       deferred.reject(error)
     })
@@ -142,9 +142,9 @@ function ElectrumJS(opts) {
   })
 }
 
-inherits(ElectrumJS, Network)
+inherits(ElectrumWS, Network)
 
-ElectrumJS._URLs = {
+ElectrumWS._URLs = {
   'bitcoin': [
     'ws://devel.hz.udoidio.info:8783'
   ],
@@ -160,21 +160,21 @@ ElectrumJS._URLs = {
  * @param {string} [network=bitcoin]
  * @return {string[]}
  */
-ElectrumJS.getURLs = function (network) {
+ElectrumWS.getURLs = function (network) {
   yatc.verify('String', network)
-  if (_.keys(ElectrumJS._URLs).indexOf(network) === -1) {
-    throw new TypeError('Unknow network ' + network + '. You can use only: ' + ElectrumJS._URLs.join(', '))
+  if (_.keys(ElectrumWS._URLs).indexOf(network) === -1) {
+    throw new TypeError('Unknow network ' + network + '. You can use only: ' + ElectrumWS._URLs.join(', '))
   }
 
-  return _.clone(ElectrumJS._URLs[network])
+  return _.clone(ElectrumWS._URLs[network])
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method _doOpen
  * @see {@link Network#_doOpen}
  */
-ElectrumJS.prototype._doOpen = function () {
+ElectrumWS.prototype._doOpen = function () {
   if (this.readyState !== this.CLOSED) {
     return
   }
@@ -184,11 +184,11 @@ ElectrumJS.prototype._doOpen = function () {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method _doClose
  * @see {@link Network#_doClose}
  */
-ElectrumJS.prototype._doClose = function () {
+ElectrumWS.prototype._doClose = function () {
   if (this.readyState === this.CLOSING || this.readyState === this.CLOSED) {
     return
   }
@@ -203,7 +203,7 @@ ElectrumJS.prototype._doClose = function () {
  * @param {Array.<*>} [params=[]]
  * @return {Q.Promise}
  */
-ElectrumJS.prototype._request = function (method, params) {
+ElectrumWS.prototype._request = function (method, params) {
   if (typeof params === 'undefined') {
     params = []
   }
@@ -225,16 +225,16 @@ ElectrumJS.prototype._request = function (method, params) {
 /**
  * @return {boolean}
  */
-ElectrumJS.prototype.supportVerificationMethods = function () {
+ElectrumWS.prototype.supportVerificationMethods = function () {
   return true
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method refresh
  * @see {@link Network#refresh}
  */
-ElectrumJS.prototype.refresh = function () {
+ElectrumWS.prototype.refresh = function () {
   var self = this
   return self._request('blockchain.numblocks.subscribe')
     .then(function (height) {
@@ -247,29 +247,29 @@ ElectrumJS.prototype.refresh = function () {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method getCurrentActiveRequests
  * @see {@link Network#getCurrentActiveRequests}
  */
-ElectrumJS.prototype.getCurrentActiveRequests = function () {
+ElectrumWS.prototype.getCurrentActiveRequests = function () {
   return _.keys(this._requests).length
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method getTimeFromLastResponse
  * @see {@link Network#getTimeFromLastResponse}
  */
-ElectrumJS.prototype.getTimeFromLastResponse = function () {
+ElectrumWS.prototype.getTimeFromLastResponse = function () {
   return Date.now() - this._lastResponse
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method getHeader
  * @see {@link Network#getHeader}
  */
-ElectrumJS.prototype.getHeader = function (height) {
+ElectrumWS.prototype.getHeader = function (height) {
   yatc.verify('PositiveNumber|ZeroNumber', height)
 
   return this._request('blockchain.block.get_header', [height])
@@ -297,11 +297,11 @@ ElectrumJS.prototype.getHeader = function (height) {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method getChunk
  * @see {@link Network#getChunk}
  */
-ElectrumJS.prototype.getChunk = function (index) {
+ElectrumWS.prototype.getChunk = function (index) {
   yatc.verify('PositiveNumber|ZeroNumber', index)
 
   return this._request('blockchain.block.get_chunk', [index])
@@ -312,11 +312,11 @@ ElectrumJS.prototype.getChunk = function (index) {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method getTx
  * @see {@link Network#getTx}
  */
-ElectrumJS.prototype.getTx = function (txId) {
+ElectrumWS.prototype.getTx = function (txId) {
   yatc.verify('SHA256Hex', txId)
 
   return this._request('blockchain.transaction.get', [txId])
@@ -333,11 +333,11 @@ ElectrumJS.prototype.getTx = function (txId) {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method getMerkle
  * @see {@link Network#getMerkle}
  */
-ElectrumJS.prototype.getMerkle = function (txId, height) {
+ElectrumWS.prototype.getMerkle = function (txId, height) {
   yatc.verify('Arguments{0: SHA256Hex, 1: Number|Undefined}', arguments)
 
   return this._request('blockchain.transaction.get_merkle', [txId, height])
@@ -353,11 +353,11 @@ ElectrumJS.prototype.getMerkle = function (txId, height) {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method sendTx
  * @see {@link Network#sendTx}
  */
-ElectrumJS.prototype.sendTx = function (txHex) {
+ElectrumWS.prototype.sendTx = function (txHex) {
   yatc.verify('HexString', txHex)
 
   return this._request('blockchain.transaction.broadcast', [txHex])
@@ -372,11 +372,11 @@ ElectrumJS.prototype.sendTx = function (txHex) {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method getHistory
  * @see {@link Network#getHistory}
  */
-ElectrumJS.prototype.getHistory = function (address) {
+ElectrumWS.prototype.getHistory = function (address) {
   yatc.verify('BitcoinAddress', address)
 
   return this._request('blockchain.address.get_history', [address])
@@ -395,11 +395,11 @@ ElectrumJS.prototype.getHistory = function (address) {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method getUnspent
  * @see {@link Network#getUnspent}
  */
-ElectrumJS.prototype.getUnspent = function (address) {
+ElectrumWS.prototype.getUnspent = function (address) {
   yatc.verify('BitcoinAddress', address)
 
   return this._request('blockchain.address.listunspent', [address])
@@ -423,11 +423,11 @@ ElectrumJS.prototype.getUnspent = function (address) {
 }
 
 /**
- * @memberof ElectrumJS.prototype
+ * @memberof ElectrumWS.prototype
  * @method subscribeAddress
  * @see {@link Network#subscribeAddress}
  */
-ElectrumJS.prototype.subscribeAddress = util.makeSerial(function (address) {
+ElectrumWS.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)
 
   var self = this
@@ -443,4 +443,4 @@ ElectrumJS.prototype.subscribeAddress = util.makeSerial(function (address) {
 })
 
 
-module.exports = ElectrumJS
+module.exports = ElectrumWS

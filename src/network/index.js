@@ -2,7 +2,7 @@ module.exports = {
   Network: require('./network'),
 
   Chain: require('./chain'),
-  ElectrumJS: require('./electrumjs'),
+  ElectrumWS: require('./electrumws'),
 
   Switcher: require('./switcher')
 }

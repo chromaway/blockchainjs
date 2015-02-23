@@ -211,7 +211,7 @@ function implementationTest(opts) {
         expect(result).to.be.undefined
 
       }).catch(function (error) {
-        expect(error).to.be.instanceof(blockchainjs.errors.ElectrumJSError)
+        expect(error).to.be.instanceof(blockchainjs.errors.ElectrumWSError)
         expect(error.message).to.be.equal('TransactionNotFound')
 
       }).then(done, done)

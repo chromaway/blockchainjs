@@ -10,6 +10,8 @@ var yatc = require('../yatc')
 /**
  * @class Memory
  * @extends Storage
+ * @param {Object} [opts]
+ * @param {boolean} [opts.useCompactMode]
  */
 function Memory(opts) {
   Storage.call(this, opts)

@@ -4,10 +4,12 @@ var createError = require('errno').create
 /**
  * Error
  *  +-- BlockchainJSError
+ *       +-- BlockchainError
+ *       |    +-- VerifyHeaderError
  *       +-- NetworkError
  *       |    +-- ChainRequestError
  *       |    +-- ConnectionTimeout
- *       |    +-- ElectrumJSError
+ *       |    +-- ElectrumWSError
  *       |    +-- GetHeaderError
  *       |    +-- GetTxError
  *       |    +-- IdleTimeout
@@ -18,10 +20,13 @@ var createError = require('errno').create
 
 var BlockchainJSError = createError('BlockchainJSError', Error)
 
+var BlockchainError = createError('BlockchainError', BlockchainJSError)
+var VerifyHeaderError = createError('VerifyHeaderError', BlockchainError)
+
 var NetworkError = createError('NetworkError', BlockchainJSError)
 var ChainRequestError = createError('ChainRequestError', NetworkError)
 var ConnectionTimeout = createError('ConnectionTimeout', NetworkError)
-var ElectrumJSError = createError('ElectrumJSError', NetworkError)
+var ElectrumWSError = createError('ElectrumWSError', NetworkError)
 var GetHeaderError = createError('GetHeaderError', NetworkError)
 var GetTxError = createError('GetTxError', NetworkError)
 var IdleTimeout = createError('IdleTimeout', NetworkError)
@@ -34,10 +39,13 @@ var NotImplementedError = createError('NotImplementedError', BlockchainJSError)
 module.exports = {
   BlockchainJSError: BlockchainJSError,
 
+  BlockchainError: BlockchainError,
+  VerifyHeaderError: VerifyHeaderError,
+
   NetworkError: NetworkError,
   ChainRequestError: ChainRequestError,
   ConnectionTimeout: ConnectionTimeout,
-  ElectrumJSError: ElectrumJSError,
+  ElectrumWSError: ElectrumWSError,
   GetHeaderError: GetHeaderError,
   GetTxError: GetTxError,
   IdleTimeout: IdleTimeout,
