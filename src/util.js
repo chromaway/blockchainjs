@@ -10,10 +10,17 @@ var yatc = require('./yatc')
  * @param {Buffer} buffer
  * @return {Buffer}
  */
+function sha256(buffer) {
+  yatc.verify('Buffer', buffer)
+  return crypto.createHash('sha256').update(buffer).digest()
+}
+
+/**
+ * @param {Buffer} buffer
+ * @return {Buffer}
+ */
 function sha256x2(buffer) {
-  buffer = crypto.createHash('sha256').update(buffer).digest()
-  buffer = crypto.createHash('sha256').update(buffer).digest()
-  return buffer
+  return sha256(sha256(buffer))
 }
 
 /**
@@ -21,6 +28,7 @@ function sha256x2(buffer) {
  * @return {Buffer}
  */
 function reverse(buffer) {
+  yatc.verify('Buffer', buffer)
   return Array.prototype.reverse.call(new Buffer(buffer))
 }
 
@@ -31,6 +39,7 @@ function reverse(buffer) {
  * @return {string}
  */
 function hashEncode(s) {
+  yatc.verify('Buffer', s)
   return Array.prototype.reverse.call(new Buffer(s)).toString('hex')
 }
 
@@ -41,6 +50,7 @@ function hashEncode(s) {
  * @return {Buffer}
  */
 function hashDecode(s) {
+  yatc.verify('HexString', s)
   return Array.prototype.reverse.call(new Buffer(s, 'hex'))
 }
 
@@ -150,6 +160,7 @@ function zfill(obj, size) {
 
 
 module.exports = {
+  sha256: sha256,
   sha256x2: sha256x2,
   reverse: reverse,
   hashEncode: hashEncode,

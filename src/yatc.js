@@ -118,6 +118,10 @@ yatc.extend({
       return obj.length === 160 && isHexString(obj)
     }
   },
+  Buffer: {
+    typeOf: 'Object',
+    validate: Buffer.isBuffer
+  },
   ChainHeader: {
     typeOf: 'Object',
     validate: isChainHeader
@@ -156,6 +160,12 @@ yatc.extend({
     typeOf: 'Object',
     validate: function (obj) {
       return obj instanceof require('./network').Network
+    }
+  },
+  Storage: {
+    typeOf: 'Object',
+    validate: function (obj) {
+      return obj instanceof require('./storage').Storage
     }
   },
   SHA256Hex: {
