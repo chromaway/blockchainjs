@@ -113,7 +113,7 @@ yatc.extend({
     }
   },
   BitcoinRawHexHeader: {
-    typeOf: 'Object',
+    typeOf: 'String',
     validate: function (obj) {
       return obj.length === 160 && isHexString(obj)
     }

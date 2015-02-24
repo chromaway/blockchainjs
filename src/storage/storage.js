@@ -57,6 +57,15 @@ Storage.prototype.isUsedCompactMode = function () {
 }
 
 /**
+ * @throws
+ */
+Storage.prototype.checkCompactModeAvailable = function () {
+  if (!this.isUsedCompactMode()) {
+    throw new
+  }
+}
+
+/**
  * Return last header hash as hex string
  *
  * @abstract
@@ -99,14 +108,24 @@ Storage.prototype.getChunkHash = function () {
 }
 
 /**
+ * Put chunk hash to storage
+ *
+ * @param {string} chunkHash
+ * @return {Q.Promise}
+ */
+Storage.prototype.putChunkHash = function (chunkHash) {
+  return this.putChunkHashes([chunkHash])
+}
+
+/**
  * Put chunk hashes to storage
  *
  * @abstract
- * @param {(string|string[])} chunkHash
+ * @param {string[]} chunkHashes
  * @return {Q.Promise}
  */
 Storage.prototype.putChunkHashes = function () {
-  return Q.reject(new NotImplementedError('Storage.putChunkHash'))
+  return Q.reject(new NotImplementedError('Storage.putChunkHashes'))
 }
 
 /**
@@ -117,49 +136,59 @@ Storage.prototype.putChunkHashes = function () {
  * @return {Q.Promise}
  */
 Storage.prototype.truncateChunkHashes = function () {
-  return Q.reject(new NotImplementedError('Storage.truncateChunkHahes'))
+  return Q.reject(new NotImplementedError('Storage.truncateChunkHashes'))
 }
 
 /**
- * Return total available block hashes
+ * Return total available headers
  *
  * @abstract
  * @return {Q.Promise<number>}
  */
-Storage.prototype.getBlockHashesCount = function () {
-  return Q.reject(new NotImplementedError('Storage.getBlockHashesCount'))
+Storage.prototype.getHeadersCount = function () {
+  return Q.reject(new NotImplementedError('Storage.getHeadersCount'))
 }
 
 /**
- * Return block hash for given `index`
+ * Return hex header for given `index`
  *
  * @abstract
  * @param {number} index
  * @return {Q.Promise<string>}
  */
-Storage.prototype.getBlockHash = function () {
-  return Q.reject(new NotImplementedError('Storage.getBlockHash'))
+Storage.prototype.getHeader = function () {
+  return Q.reject(new NotImplementedError('Storage.getHeader'))
 }
 
 /**
- * Put block hashes to storage
+ * Put hex header to storage
  *
- * @abstract
- * @param {(string|string[])} blockHash
+ * @param {string} header
  * @return {Q.Promise}
  */
-Storage.prototype.putBlockHashes = function () {
-  return Q.reject(new NotImplementedError('Storage.putBlockHash'))
+Storage.prototype.putHeader = function (hexHeader) {
+  return this.putBlockHashes(hexHeader)
 }
 
 /**
- * Truncate number of saved block hashes
+ * Put hex headers to storage
+ *
+ * @abstract
+ * @param {string[]} headers
+ * @return {Q.Promise}
+ */
+Storage.prototype.putHeaders = function () {
+  return Q.reject(new NotImplementedError('Storage.putHeaders'))
+}
+
+/**
+ * Truncate number of saved headers
  *
  * @abstract
  * @param {number} limit
  * @return {Q.Promise}
  */
-Storage.prototype.truncateBlockHashes = function () {
+Storage.prototype.truncateHeaders = function () {
   return Q.reject(new NotImplementedError('Storage.truncateBlockHashes'))
 }
 

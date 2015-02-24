@@ -1,6 +1,5 @@
 var inherits = require('util').inherits
 
-var _ = require('lodash')
 var Q = require('q')
 
 var Storage = require('./storage')
@@ -74,15 +73,10 @@ Memory.prototype.getChunkHash = function (index) {
  * @method putChunkHash
  * @see {@link Storage#putChunkHash}
  */
-Memory.prototype.putChunkHashas = function (chunkHashes) {
+Memory.prototype.putChunkHashes = function (chunkHashes) {
   var self = this
   return Q.fcall(function () {
-    if (!_.isArray(chunkHashes)) {
-      chunkHashes = [chunkHashes]
-    }
-
     yatc.verify('[SHA256Hex]', chunkHashes)
-
     chunkHashes.forEach(function (chunkHash) {
       self._data.chunkHashes.push(chunkHash.slice())
     })
@@ -104,60 +98,55 @@ Memory.prototype.truncateChunkHashes = function (limit) {
 
 /**
  * @memberof Memory.prototype
- * @method getBlockHashesCount
- * @see {@link Storage#getBlockHashesCount}
+ * @method getHeadersCount
+ * @see {@link Storage#getHeadersCount}
  */
-Memory.prototype.getBlockHashesCount = function () {
-  return Q.resolve(this._data.blockHashes.length)
+Memory.prototype.getHeadersCount = function () {
+  return Q.resolve(this._data.headers.length)
 }
 
 /**
  * @memberof Memory.prototype
- * @method getBlockHashesCount
- * @see {@link Storage#getBlockHashesCount}
+ * @method getHeader
+ * @see {@link Storage#getHeader}
  */
-Memory.prototype.getBlockHash = function (index) {
+Memory.prototype.getHeader = function (index) {
   var self = this
   return Q.fcall(function () {
     yatc.verify('Number', index)
-    if (index >= 0 && index < self._data.blockHashes.length) {
-      throw new RangeError('Hash for index ' + index + ' not exists')
+    if (index >= 0 && index < self._data.headers.length) {
+      throw new RangeError('Header for index ' + index + ' not exists')
     }
 
-    return self._data.blockHashes[index].slice()
+    return self._data.headers[index].slice()
   })
 }
 
 /**
  * @memberof Memory.prototype
- * @method putBlockHash
- * @see {@link Storage#putBlockHash}
+ * @method putHeaders
+ * @see {@link Storage#putHeaders}
  */
-Memory.prototype.putBlockHashes = function (blockHashes) {
+Memory.prototype.putHeaders = function (headers) {
   var self = this
   return Q.fcall(function () {
-    if (!_.isArray(blockHashes)) {
-      blockHashes = [blockHashes]
-    }
-
-    yatc.verify('[BitcoinRawHexHeader]', [blockHashes])
-
-    blockHashes.forEach(function (blockHash) {
-      self._data.blockHashes.push(blockHash.slice())
+    yatc.verify('[BitcoinRawHexHeader]', headers)
+    headers.forEach(function (header) {
+      self._data.headers.push(header.slice())
     })
   })
 }
 
 /**
  * @memberof Memory.prototype
- * @method truncateBlockHashes
- * @see {@link Storage#truncateBlockHashes}
+ * @method truncateHeader
+ * @see {@link Storage#truncateHeaders}
  */
-Memory.prototype.truncateBlockHashes = function (limit) {
+Memory.prototype.truncateHeaders = function (limit) {
   var self = this
   return Q.fcall(function () {
     yatc.verify('PositiveNumber|ZeroNumber', limit)
-    self._data.blockHashes = self._data.blockHashes.slice(0, limit)
+    self._data.headers = self._data.headers.slice(0, limit)
   })
 }
 
@@ -170,7 +159,7 @@ Memory.prototype.clear = function () {
   this._data = {
     lastHash: util.zfill(64),
     chunkHashes: [],
-    blockHashes: []
+    headers: []
   }
   return Q.resolve()
 }

@@ -5,7 +5,9 @@ var createError = require('errno').create
  * Error
  *  +-- BlockchainJSError
  *       +-- BlockchainError
+ *       |    +-- VerifyChunkError
  *       |    +-- VerifyHeaderError
+ *       |    +-- VerifyTxError
  *       +-- NetworkError
  *       |    +-- ChainRequestError
  *       |    +-- ConnectionTimeout
@@ -21,7 +23,9 @@ var createError = require('errno').create
 var BlockchainJSError = createError('BlockchainJSError', Error)
 
 var BlockchainError = createError('BlockchainError', BlockchainJSError)
+var VerifyChunkError = createError('VerifyChunkError', BlockchainError)
 var VerifyHeaderError = createError('VerifyHeaderError', BlockchainError)
+var VerifyTxError = createError('VerifyTxError', BlockchainError)
 
 var NetworkError = createError('NetworkError', BlockchainJSError)
 var ChainRequestError = createError('ChainRequestError', NetworkError)
@@ -33,6 +37,9 @@ var IdleTimeout = createError('IdleTimeout', NetworkError)
 var NotConnectedError = createError('NotConnectedError', NetworkError)
 var SendTxError = createError('SendTxError', NetworkError)
 
+//var StorageError = createError('StorageError', BlockchainJSError)
+//var CompactModeAvailableError = createError('CompactModeAvailableError', StorageError)
+
 var NotImplementedError = createError('NotImplementedError', BlockchainJSError)
 
 
@@ -40,7 +47,9 @@ module.exports = {
   BlockchainJSError: BlockchainJSError,
 
   BlockchainError: BlockchainError,
+  VerifyChunkError: VerifyChunkError,
   VerifyHeaderError: VerifyHeaderError,
+  VerifyTxError: VerifyTxError,
 
   NetworkError: NetworkError,
   ChainRequestError: ChainRequestError,
