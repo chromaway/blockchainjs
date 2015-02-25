@@ -41,6 +41,11 @@ describe('storage.Storage', function () {
     expect(storage.isUsedCompactModeCheck.bind(storage)).to.throw(errors.CompactModeError)
   })
 
+  it('isReady', function () {
+    var storage = new Storage()
+    expect(storage.isReady()).to.be.false
+  })
+
   NOT_IMPLEMENTED_METHODS.forEach(function (method) {
     var storage = new Storage()
     it(method, function (done) {

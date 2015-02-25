@@ -40,6 +40,14 @@ function implementationTest(opts) {
         storage.once('ready', done)
       })
 
+      it('compact mode is true', function () {
+        expect(storage.isUsedCompactMode()).to.be.true
+      })
+
+      it('isReady', function () {
+        expect(storage.isReady()).to.be.true
+      })
+
       it('setLastHash/getLastHash', function (done) {
         var newHash = zfill('1', 64)
         storage.getLastHash()
@@ -146,6 +154,14 @@ function implementationTest(opts) {
       beforeEach(function (done) {
         storage = new opts.class({useCompactMode: false})
         storage.once('ready', done)
+      })
+
+      it('compact mode is false', function () {
+        expect(storage.isUsedCompactMode()).to.be.false
+      })
+
+      it('isReady', function () {
+        expect(storage.isReady()).to.be.true
       })
 
       it('setLastHash/getLastHash', function (done) {

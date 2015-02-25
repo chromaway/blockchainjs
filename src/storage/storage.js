@@ -6,6 +6,7 @@ var _ = require('lodash')
 
 var errors = require('../errors')
 var NotImplementedError = errors.NotImplementedError
+var yatc = require('../yatc')
 
 
 /**
@@ -50,9 +51,16 @@ var NotImplementedError = errors.NotImplementedError
  * @param {boolean} [opts.useCompactMode=false]
  */
 function Storage(opts) {
-  events.EventEmitter.call(this)
   opts = _.extend({useCompactMode: false}, opts)
-  this._useCompactMode = opts.useCompactMode
+  yatc.verify('{useCompactMode: Boolean}', opts)
+
+  var self = this
+  events.EventEmitter.call(self)
+
+  self._useCompactMode = opts.useCompactMode
+
+  self._isReady = false
+  self.once('ready', function () { self._isReady = true })
 }
 
 inherits(Storage, events.EventEmitter)
@@ -81,6 +89,13 @@ Storage.prototype.isUsedCompactModeCheck = function () {
   if (!this.isUsedCompactMode()) {
     throw new errors.CompactModeError('Compact mode not used')
   }
+}
+
+/**
+ * @return {boolean}
+ */
+Storage.prototype.isReady = function () {
+  return this._isReady
 }
 
 /**
