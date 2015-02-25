@@ -162,6 +162,10 @@ yatc.extend({
       return obj instanceof require('./network').Network
     }
   },
+  SlowBuffer: {
+    typeOf: 'SlowBuffer',
+    validate: Buffer.isBuffer
+  },
   Storage: {
     typeOf: 'Object',
     validate: function (obj) {
