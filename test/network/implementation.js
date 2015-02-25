@@ -3,6 +3,8 @@ var crypto = require('crypto')
 var expect = require('chai').expect
 
 var bitcoin = require('bitcoinjs-lib')
+var Q = require('q')
+var request = Q.denodeify(require('request'))
 var _ = require('lodash')
 
 var blockchainjs = require('../../src')
@@ -212,37 +214,49 @@ function implementationTest(opts) {
 
       }).catch(function (error) {
         expect(error).to.be.instanceof(blockchainjs.errors.ElectrumWSError)
-        expect(error.message).to.be.equal('TransactionNotFound')
+        expect(error.message).to.equal('TransactionNotFound')
 
       }).then(done, done)
     })
 
-    it.skip('sendTx', function (done) {
-      var hdnode = bitcoin.HDNode.fromSeedHex('00000000000000000000000000000000', bitcoin.networks.testnet)
-      // address is mhW9PYb5jsjpsS5x6dcLrZj7gPvw9mMb9c
-      var address = hdnode.pubKey.getAddress(bitcoin.networks.testnet).toBase58Check()
+    it('sendTx', function (done) {
+      // thanks helloblock.io for programmatic faucet
+      var opts = {
+        uri: 'https://testnet.helloblock.io/v1/faucet?type=1',
+        json: true,
+        zip: true
+      }
 
-      return network.getUnspent(address)
-        .then(function (coins) {
-          var totalValue = coins.reduce(function (total, coin) {
-            return total + coin.value
-          }, 0)
+      request(opts)
+        .spread(function (response, body) {
+          if (response.statusCode !== 200) {
+            throw new Error(response.statusMessage)
+          }
 
-          // send totalValue minus 0.1 mBTC to mhW9PYb5jsjpsS5x6dcLrZj7gPvw9mMb9c
+          if (body.status !== 'success') {
+            throw new Error('Status: ' + body.status)
+          }
+          return body.data
+        })
+        .then(function (data) {
+          var privKey = bitcoin.ECKey.fromWIF(data.privateKeyWIF)
+          var total = 0
           var txb = new bitcoin.TransactionBuilder()
-          coins.forEach(function (coin) {
-            txb.addInput(coin.txId, coin.outIndex)
+          data.unspents.forEach(function (unspent) {
+            total += unspent.value
+            txb.addInput(unspent.txHash, unspent.index)
           })
-          txb.addOutput(address, totalValue - 10000)
-          coins.forEach(function (coin, index) {
-            txb.sign(index, hdnode.privKey)
+          // send all satoshi (exclude 10000) to faucet.xeno-genesis.com
+          txb.addOutput('mp8XoMWnJzQwovninMdChQutPuhyHokJNc', total - 10000)
+          _.range(data.unspents.length).forEach(function (index) {
+            txb.sign(index, privKey)
           })
 
           var tx = txb.build()
           return network.sendTx(tx.toHex())
             .then(function (txId) { expect(txId).to.equal(tx.getId()) })
         })
-        .then(done, done)
+        .done(done, done)
     })
 
     it('getHistory', function (done) {

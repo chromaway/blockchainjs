@@ -9,7 +9,6 @@ var blockchainjs = require('../src')
 var ElectrumWS = blockchainjs.network.ElectrumWS
 var util = blockchainjs.util
 
-
 var optimist = require('optimist')
   .usage('Usage: $0 [-h] [-n NETWORK]')
   .options('n', {
@@ -53,7 +52,7 @@ if (argv.help) {
 
 var network = new ElectrumWS({url: ElectrumWS.getURLs(argv.network)[0]})
 network.once('newHeight', function (height) {
-  var chunksTotal = Math.floor(height/2016)
+  var chunksTotal = Math.floor(height / 2016)
   var barFmt = 'Progress: :percent (:current/:total), :elapseds elapsed, eta :etas'
   var bar = new ProgressBar(barFmt, {total: chunksTotal})
 

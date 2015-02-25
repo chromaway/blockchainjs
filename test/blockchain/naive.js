@@ -30,7 +30,7 @@ describe('blockchain.Naive', function () {
   })
 
   it('getCurrentHeight', function (done) {
-    expect(blockchain.getCurrentHeight()).to.be.equal(-1)
+    expect(blockchain.getCurrentHeight()).to.equal(-1)
     blockchain.once('newHeight', function () {
       expect(blockchain.getCurrentHeight()).to.at.least(300000)
       done()

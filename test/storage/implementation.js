@@ -20,7 +20,7 @@ function implementationTest(opts) {
   opts = _.extend({
     describe: describe,
     description: opts.class.name,
-    testFullMode: true,
+    testFullMode: true
   }, opts)
 
   describe(opts.description, function () {
@@ -44,14 +44,14 @@ function implementationTest(opts) {
         var newHash = zfill('1', 64)
         storage.getLastHash()
           .then(function (lastHash) {
-            expect(lastHash).to.be.equal(zfill('', 64))
+            expect(lastHash).to.equal(zfill('', 64))
             return storage.setLastHash(newHash)
           })
           .then(function () {
             return storage.getLastHash()
           })
           .then(function (lastHash) {
-            expect(lastHash).to.be.equal(newHash)
+            expect(lastHash).to.equal(newHash)
           })
           .done(done, done)
       })
@@ -59,7 +59,7 @@ function implementationTest(opts) {
       it('chunkHashes', function (done) {
         storage.getChunkHashesCount()
           .then(function (chunkHashesCount) {
-            expect(chunkHashesCount).to.be.equal(0)
+            expect(chunkHashesCount).to.equal(0)
             return storage.putChunkHash(zfill('', 64))
           })
           .then(function () {
@@ -69,18 +69,28 @@ function implementationTest(opts) {
             return storage.getChunkHashesCount()
           })
           .then(function (chunkHashesCount) {
-            expect(chunkHashesCount).to.be.equal(3)
+            expect(chunkHashesCount).to.equal(3)
             return storage.truncateChunkHashes(2)
           })
           .then(function () {
             return storage.getChunkHashesCount()
           })
           .then(function (chunkHashesCount) {
-            expect(chunkHashesCount).to.be.equal(2)
+            expect(chunkHashesCount).to.equal(2)
             return storage.getChunkHash(1)
           })
           .then(function (chunkHash) {
-            expect(chunkHash).to.be.equal(zfill('1', 64))
+            expect(chunkHash).to.equal(zfill('1', 64))
+            return storage.getChunkHash(-1)
+          })
+          .then(function () { throw new Error('Unexpected response') })
+          .catch(function (error) {
+            expect(error).to.be.instanceof(RangeError)
+            return storage.getChunkHash(2)
+          })
+          .then(function () { throw new Error('Unexpected response') })
+          .catch(function (error) {
+            expect(error).to.be.instanceof(RangeError)
           })
           .done(done, done)
       })
@@ -88,7 +98,7 @@ function implementationTest(opts) {
       it('headers', function (done) {
         storage.getHeadersCount()
           .then(function (headersCount) {
-            expect(headersCount).to.be.equal(0)
+            expect(headersCount).to.equal(0)
             return storage.putHeader(zfill('', 160))
           })
           .then(function () {
@@ -98,24 +108,34 @@ function implementationTest(opts) {
             return storage.getHeadersCount()
           })
           .then(function (headerCount) {
-            expect(headerCount).to.be.equal(3)
+            expect(headerCount).to.equal(3)
             return storage.truncateHeaders(2)
           })
           .then(function () {
             return storage.getHeadersCount()
           })
           .then(function (headersCount) {
-            expect(headersCount).to.be.equal(2)
+            expect(headersCount).to.equal(2)
             return storage.getHeader(1)
           })
           .then(function (header) {
-            expect(header).to.be.equal(zfill('1', 160))
+            expect(header).to.equal(zfill('1', 160))
             var headers = _.range(2014).map(function () { return zfill('', 160) })
             return storage.putHeaders(headers)
           })
           .then(function () { throw new Error('Unexpected response') })
           .catch(function (error) {
             expect(error).to.be.instanceof(errors.CompactModeError)
+            return storage.getHeader(-1)
+          })
+          .then(function () { throw new Error('Unexpected response') })
+          .catch(function (error) {
+            expect(error).to.be.instanceof(RangeError)
+            return storage.getHeader(2)
+          })
+          .then(function () { throw new Error('Unexpected response') })
+          .catch(function (error) {
+            expect(error).to.be.instanceof(RangeError)
           })
           .done(done, done)
       })
@@ -132,14 +152,14 @@ function implementationTest(opts) {
         var newHash = zfill('1', 64)
         storage.getLastHash()
           .then(function (lastHash) {
-            expect(lastHash).to.be.equal(zfill('', 64))
+            expect(lastHash).to.equal(zfill('', 64))
             return storage.setLastHash(newHash)
           })
           .then(function () {
             return storage.getLastHash()
           })
           .then(function (lastHash) {
-            expect(lastHash).to.be.equal(newHash)
+            expect(lastHash).to.equal(newHash)
           })
           .done(done, done)
       })
@@ -168,7 +188,7 @@ function implementationTest(opts) {
       it('headers', function (done) {
         storage.getHeadersCount()
           .then(function (headersCount) {
-            expect(headersCount).to.be.equal(0)
+            expect(headersCount).to.equal(0)
             return storage.putHeader(zfill('', 160))
           })
           .then(function () {
@@ -178,18 +198,18 @@ function implementationTest(opts) {
             return storage.getHeadersCount()
           })
           .then(function (headerCount) {
-            expect(headerCount).to.be.equal(3)
+            expect(headerCount).to.equal(3)
             return storage.truncateHeaders(2)
           })
           .then(function () {
             return storage.getHeadersCount()
           })
           .then(function (headersCount) {
-            expect(headersCount).to.be.equal(2)
+            expect(headersCount).to.equal(2)
             return storage.getHeader(1)
           })
           .then(function (header) {
-            expect(header).to.be.equal(zfill('1', 160))
+            expect(header).to.equal(zfill('1', 160))
             var headers = _.range(2014).map(function () { return zfill('', 160) })
             return storage.putHeaders(headers)
           })
@@ -197,7 +217,17 @@ function implementationTest(opts) {
             return storage.getHeadersCount()
           })
           .then(function (headersCount) {
-            expect(headersCount).to.be.equal(2016)
+            expect(headersCount).to.equal(2016)
+            return storage.getHeader(-1)
+          })
+          .then(function () { throw new Error('Unexpected response') })
+          .catch(function (error) {
+            expect(error).to.be.instanceof(RangeError)
+            return storage.getHeader(2016)
+          })
+          .then(function () { throw new Error('Unexpected response') })
+          .catch(function (error) {
+            expect(error).to.be.instanceof(RangeError)
           })
           .done(done, done)
       })
