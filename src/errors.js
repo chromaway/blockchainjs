@@ -17,6 +17,8 @@ var createError = require('errno').create
  *       |    +-- IdleTimeout
  *       |    +-- NotConnectedError
  *       |    +-- SendTxError
+ *       +-- StorageError
+ *       |    +-- CompactModeError
  *       +-- NotImplementedError
  */
 
@@ -37,8 +39,8 @@ var IdleTimeout = createError('IdleTimeout', NetworkError)
 var NotConnectedError = createError('NotConnectedError', NetworkError)
 var SendTxError = createError('SendTxError', NetworkError)
 
-//var StorageError = createError('StorageError', BlockchainJSError)
-//var CompactModeAvailableError = createError('CompactModeAvailableError', StorageError)
+var StorageError = createError('StorageError', BlockchainJSError)
+var CompactModeError = createError('CompactModeError', StorageError)
 
 var NotImplementedError = createError('NotImplementedError', BlockchainJSError)
 
@@ -60,6 +62,9 @@ module.exports = {
   IdleTimeout: IdleTimeout,
   NotConnectedError: NotConnectedError,
   SendTxError: SendTxError,
+
+  StorageError: StorageError,
+  CompactModeError: CompactModeError,
 
   NotImplementedError: NotImplementedError
 }

@@ -1,8 +1,21 @@
+var events = require('events')
+var inherits = require('util').inherits
+
 var Q = require('q')
 var _ = require('lodash')
 
-var NotImplementedError = require('../errors').NotImplementedError
+var errors = require('../errors')
+var NotImplementedError = errors.NotImplementedError
 
+
+/**
+ * @event Storage#ready
+ */
+
+/**
+ * @event Storage#error
+ * @param {Error} error
+ */
 
 /**
  * Abstract storage for verified blockchain
@@ -37,9 +50,12 @@ var NotImplementedError = require('../errors').NotImplementedError
  * @param {boolean} [opts.useCompactMode=false]
  */
 function Storage(opts) {
+  events.EventEmitter.call(this)
   opts = _.extend({useCompactMode: false}, opts)
   this._useCompactMode = opts.useCompactMode
 }
+
+inherits(Storage, events.EventEmitter)
 
 // load pre-saved data
 Storage.prototype.preSavedChunkHashes = {
@@ -57,11 +73,13 @@ Storage.prototype.isUsedCompactMode = function () {
 }
 
 /**
+ * Throw error if compact mode not used
+ *
  * @throws
  */
-Storage.prototype.checkCompactModeAvailable = function () {
+Storage.prototype.isUsedCompactModeCheck = function () {
   if (!this.isUsedCompactMode()) {
-    throw new
+    throw new errors.CompactModeError('Compact mode not used')
   }
 }
 
@@ -163,18 +181,18 @@ Storage.prototype.getHeader = function () {
 /**
  * Put hex header to storage
  *
- * @param {string} header
+ * @param {string} rawHexHeader
  * @return {Q.Promise}
  */
-Storage.prototype.putHeader = function (hexHeader) {
-  return this.putBlockHashes(hexHeader)
+Storage.prototype.putHeader = function (rawHexHeader) {
+  return this.putHeaders([rawHexHeader])
 }
 
 /**
  * Put hex headers to storage
  *
  * @abstract
- * @param {string[]} headers
+ * @param {string[]} rawHexHeaders
  * @return {Q.Promise}
  */
 Storage.prototype.putHeaders = function () {

@@ -3,6 +3,7 @@ var inherits = require('util').inherits
 var Q = require('q')
 
 var Storage = require('./storage')
+var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
@@ -14,54 +15,64 @@ var yatc = require('../yatc')
  * @param {boolean} [opts.useCompactMode]
  */
 function Memory(opts) {
-  Storage.call(this, opts)
-  this.clear() // load this._data
+  var self = this
+  Storage.call(self, opts)
+
+  // load this._data
+  self.clear()
+    .done(function () {
+      self.emit('ready')
+
+    }, function (error) {
+      self.emit('error', error)
+
+    })
 }
 
 inherits(Memory, Storage)
 
 /**
- * @memberof Memory.prototype
- * @method getLastHash
- * @see {@link Storage#getLastHash}
+ * @return {Q.Promise<string>}
  */
 Memory.prototype.getLastHash = function () {
   return Q.resolve(this._data.lastHash.slice())
 }
 
 /**
- * @memberof Memory.prototype
- * @method setLastHash
- * @see {@link Storage#setLashHash}
+ * @param {string} lastHash
+ * @return {Q.Promise}
  */
 Memory.prototype.setLastHash = function (lastHash) {
   var self = this
   return Q.fcall(function () {
     yatc.verify('SHA256Hex', lastHash)
-    self.data_.lastHash = lastHash.slice()
+    self._data.lastHash = lastHash.slice()
   })
 }
 
 /**
- * @memberof Memory.prototype
- * @method getChunkHashesCount
- * @see {@link Storage#getChunkHashesCount}
+ * @return {Q.Promise<number>}
  */
 Memory.prototype.getChunkHashesCount = function () {
-  return Q.resolve(this._data.chunkHashes.length)
+  var self = this
+  return Q.fcall(function () {
+    self.isUsedCompactModeCheck()
+    return self._data.chunkHashes.length
+  })
 }
 
 /**
- * @memberof Memory.prototype
- * @method getChunkHashesCount
- * @see {@link Storage#getChunkHashesCount}
+ * @param {number} index
+ * @return {Q.Promise<string>}
  */
 Memory.prototype.getChunkHash = function (index) {
   var self = this
   return Q.fcall(function () {
+    self.isUsedCompactModeCheck()
+
     yatc.verify('Number', index)
-    if (index >= 0 && index < self._data.chunkHashes.length) {
-      throw new RangeError('Hash for index ' + index + ' not exists')
+    if (index < 0 || index >= self._data.chunkHashes.length) {
+      throw new RangeError('Chunk hash for index ' + index + ' not exists')
     }
 
     return self._data.chunkHashes[index].slice()
@@ -69,14 +80,16 @@ Memory.prototype.getChunkHash = function (index) {
 }
 
 /**
- * @memberof Memory.prototype
- * @method putChunkHash
- * @see {@link Storage#putChunkHash}
+ * @param {Array.<string>} chunkHashes
+ * @return {Q.Promise}
  */
 Memory.prototype.putChunkHashes = function (chunkHashes) {
   var self = this
   return Q.fcall(function () {
+    self.isUsedCompactModeCheck()
+
     yatc.verify('[SHA256Hex]', chunkHashes)
+
     chunkHashes.forEach(function (chunkHash) {
       self._data.chunkHashes.push(chunkHash.slice())
     })
@@ -84,37 +97,36 @@ Memory.prototype.putChunkHashes = function (chunkHashes) {
 }
 
 /**
- * @memberof Memory.prototype
- * @method truncateChunkHashes
- * @see {@link Storage#truncateChunkHashes}
+ * @param {number} limit
+ * @return {Q.Promise}
  */
 Memory.prototype.truncateChunkHashes = function (limit) {
   var self = this
   return Q.fcall(function () {
+    self.isUsedCompactModeCheck()
+
     yatc.verify('PositiveNumber|ZeroNumber', limit)
+
     self._data.chunkHashes = self._data.chunkHashes.slice(0, limit)
   })
 }
 
 /**
- * @memberof Memory.prototype
- * @method getHeadersCount
- * @see {@link Storage#getHeadersCount}
+ * @return {Q.Promise<number>}
  */
 Memory.prototype.getHeadersCount = function () {
   return Q.resolve(this._data.headers.length)
 }
 
 /**
- * @memberof Memory.prototype
- * @method getHeader
- * @see {@link Storage#getHeader}
+ * @param {number} index
+ * @return {Q.Promise<string>}
  */
 Memory.prototype.getHeader = function (index) {
   var self = this
   return Q.fcall(function () {
     yatc.verify('Number', index)
-    if (index >= 0 && index < self._data.headers.length) {
+    if (index < 0 || index >= self._data.headers.length) {
       throw new RangeError('Header for index ' + index + ' not exists')
     }
 
@@ -123,14 +135,20 @@ Memory.prototype.getHeader = function (index) {
 }
 
 /**
- * @memberof Memory.prototype
- * @method putHeaders
- * @see {@link Storage#putHeaders}
+ * @param {Array.<string>} headers
+ * @return {Q.Promise}
  */
 Memory.prototype.putHeaders = function (headers) {
   var self = this
   return Q.fcall(function () {
     yatc.verify('[BitcoinRawHexHeader]', headers)
+
+    if (self.isUsedCompactMode() &&
+        self._data.headers.length + headers.length > 2015) {
+      var errMsg = 'In compact mode you can\'t store more than 2015 headers'
+      throw new errors.CompactModeError(errMsg)
+    }
+
     headers.forEach(function (header) {
       self._data.headers.push(header.slice())
     })
@@ -138,9 +156,8 @@ Memory.prototype.putHeaders = function (headers) {
 }
 
 /**
- * @memberof Memory.prototype
- * @method truncateHeader
- * @see {@link Storage#truncateHeaders}
+ * @param {number} limit
+ * @return {Q.Promise}
  */
 Memory.prototype.truncateHeaders = function (limit) {
   var self = this
@@ -151,17 +168,17 @@ Memory.prototype.truncateHeaders = function (limit) {
 }
 
 /**
- * @memberof Memory.prototype
- * @method clear
- * @see {@link Storage#clear}
+ * @return {Q.Promise}
  */
 Memory.prototype.clear = function () {
-  this._data = {
-    lastHash: util.zfill(64),
-    chunkHashes: [],
-    headers: []
-  }
-  return Q.resolve()
+  var self = this
+  return Q.fcall(function () {
+    self._data = {
+      lastHash: util.zfill('', 64),
+      chunkHashes: [],
+      headers: []
+    }
+  })
 }
 
 
