@@ -1,13 +1,10 @@
 var crypto = require('crypto')
-
 var expect = require('chai').expect
-
-var bitcoin = require('bitcoinjs-lib')
-var Q = require('q')
-var request = Q.denodeify(require('request'))
 var _ = require('lodash')
+var bitcoin = require('bitcoinjs-lib')
 
 var blockchainjs = require('../../src')
+var createTx = require('../helpers').createTx
 
 
 /**
@@ -220,39 +217,8 @@ function implementationTest(opts) {
     })
 
     it('sendTx', function (done) {
-      // thanks helloblock.io for programmatic faucet
-      var opts = {
-        uri: 'https://testnet.helloblock.io/v1/faucet?type=1',
-        json: true,
-        zip: true
-      }
-
-      request(opts)
-        .spread(function (response, body) {
-          if (response.statusCode !== 200) {
-            throw new Error(response.statusMessage)
-          }
-
-          if (body.status !== 'success') {
-            throw new Error('Status: ' + body.status)
-          }
-          return body.data
-        })
-        .then(function (data) {
-          var privKey = bitcoin.ECKey.fromWIF(data.privateKeyWIF)
-          var total = 0
-          var txb = new bitcoin.TransactionBuilder()
-          data.unspents.forEach(function (unspent) {
-            total += unspent.value
-            txb.addInput(unspent.txHash, unspent.index)
-          })
-          // send all satoshi (exclude 10000) to faucet.xeno-genesis.com
-          txb.addOutput('mp8XoMWnJzQwovninMdChQutPuhyHokJNc', total - 10000)
-          _.range(data.unspents.length).forEach(function (index) {
-            txb.sign(index, privKey)
-          })
-
-          var tx = txb.build()
+      createTx()
+        .then(function (tx) {
           return network.sendTx(tx.toHex())
             .then(function (txId) { expect(txId).to.equal(tx.getId()) })
         })
@@ -300,7 +266,25 @@ function implementationTest(opts) {
     })
 
     it('address subscribe', function (done) {
-      network.subscribeAddress('ms8XQE6MHsreo9ZJx1vXqQVgzi84xb9FRZ').then(done, done)
+      createTx()
+        .then(function (tx) {
+          var address = bitcoin.Address.fromOutputScript(
+            tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
+
+          network.on('touchAddress', function (touchedAddress) {
+            if (touchedAddress === address) {
+              done()
+            }
+          })
+
+          network.subscribeAddress(address)
+            .then(function () {
+              return network.sendTx(tx.toHex())
+            })
+            .then(function (txId) {
+              expect(txId).to.equal(tx.getId())
+            })
+        })
     })
   })
 }

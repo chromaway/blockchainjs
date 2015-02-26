@@ -40,6 +40,11 @@ function implementationTest(opts) {
         storage.once('ready', done)
       })
 
+      it('inherits Storage', function () {
+        expect(storage).to.be.instanceof(blockchainjs.storage.Storage)
+        expect(storage).to.be.instanceof(opts.class)
+      })
+
       it('compact mode is true', function () {
         expect(storage.isUsedCompactMode()).to.be.true
       })
@@ -154,6 +159,11 @@ function implementationTest(opts) {
       beforeEach(function (done) {
         storage = new opts.class({useCompactMode: false})
         storage.once('ready', done)
+      })
+
+      it('inherits Storage', function () {
+        expect(storage).to.be.instanceof(blockchainjs.storage.Storage)
+        expect(storage).to.be.instanceof(opts.class)
       })
 
       it('compact mode is false', function () {

@@ -1,6 +1,8 @@
 var expect = require('chai').expect
+var bitcoin = require('bitcoinjs-lib')
 
 var blockchainjs = require('../../src')
+var createTx = require('../helpers').createTx
 
 
 describe('blockchain.Naive', function () {
@@ -10,18 +12,25 @@ describe('blockchain.Naive', function () {
   beforeEach(function (done) {
     var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
     network = new blockchainjs.network.ElectrumWS({url: url})
-    network.on('error', function (error) { throw error })
+    //network = new blockchainjs.network.Chain({testnet: true})
     network.once('connect', done)
     blockchain = new blockchainjs.blockchain.Naive(network)
-    blockchain.on('error', function (error) { throw error })
     network.connect()
   })
 
-  afterEach(function () {
-    network.removeAllListeners()
-    network = null
-    blockchain.removeAllListeners()
-    blockchain = null
+  afterEach(function (done) {
+    network.once('disconnect', function () {
+      network.removeAllListeners()
+      network.on('error', function () {})
+
+      blockchain.removeAllListeners()
+      blockchain.on('error', function () {})
+
+      network = blockchain = null
+
+      done()
+    })
+    network.disconnect()
   })
 
   it('inherits Blockchain', function () {
@@ -82,7 +91,14 @@ describe('blockchain.Naive', function () {
       .then(done, done)
   })
 
-  it.skip('sendTx', function () {})
+  it('sendTx', function (done) {
+    createTx()
+      .then(function (tx) {
+        return blockchain.sendTx(tx.toHex())
+          .then(function (txId) { expect(txId).to.equal(tx.getId()) })
+      })
+      .done(done, done)
+  })
 
   it('getHistory', function (done) {
     var address = 'n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'
@@ -118,9 +134,24 @@ describe('blockchain.Naive', function () {
   })
 
   it('subscribeAddress', function (done) {
-    var address = 'mgBcotqHuxNHTN1fFeryAwxmB4uvWPy9hx'
+    createTx()
+      .then(function (tx) {
+        var address = bitcoin.Address.fromOutputScript(
+          tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
 
-    blockchain.subscribeAddress(address)
-      .then(done, done)
+        blockchain.on('touchAddress', function (touchedAddress) {
+          if (touchedAddress === address) {
+            done()
+          }
+        })
+
+        blockchain.subscribeAddress(address)
+          .then(function () {
+            return blockchain.sendTx(tx.toHex())
+          })
+          .then(function (txId) {
+            expect(txId).to.equal(tx.getId())
+          })
+      })
   })
 })

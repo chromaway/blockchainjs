@@ -120,14 +120,14 @@ function ElectrumWS(opts) {
 
   self.on('connect', function () {
     self.refresh()
-      .done(void 0, function (error) { self.emit('error', error) })
+      .done(null, function (error) { self.emit('error', error) })
 
     var addresses = _.keys(self._subscribedAddresses)
     self._subscribedAddresses = {}
 
     addresses.forEach(function (addr) {
       self.subscribeAddress(addr)
-        .done(void 0, function (error) { self.emit('error', error) })
+        .done(null, function (error) { self.emit('error', error) })
     })
   })
 
@@ -431,7 +431,7 @@ ElectrumWS.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)
 
   var self = this
-  if (typeof self._subscribedAddresses[address] !== 'undefined') {
+  if (typeof self._subscribedAddresses[address] === 'undefined') {
     self._subscribedAddresses[address] = true
 
     if (self.isConnected()) {
