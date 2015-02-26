@@ -7,11 +7,20 @@ var yatc = require('./yatc')
 
 
 /**
+ * @throws {TypeError}
+ */
+function isBufferCheck(buffer) {
+  if (!Buffer.isBuffer(buffer)) {
+    throw new TypeError('Expect buffer, got ' + Object.prototype.toString.call(buffer))
+  }
+}
+
+/**
  * @param {Buffer} buffer
  * @return {Buffer}
  */
 function sha256(buffer) {
-  yatc.verify('Buffer|SlowBuffer', buffer)
+  isBufferCheck(buffer)
   return crypto.createHash('sha256').update(buffer).digest()
 }
 
@@ -28,7 +37,7 @@ function sha256x2(buffer) {
  * @return {Buffer}
  */
 function reverse(buffer) {
-  yatc.verify('Buffer|SlowBuffer', buffer)
+  isBufferCheck(buffer)
   return Array.prototype.reverse.call(new Buffer(buffer))
 }
 
@@ -39,7 +48,7 @@ function reverse(buffer) {
  * @return {string}
  */
 function hashEncode(s) {
-  yatc.verify('Buffer|SlowBuffer', s)
+  isBufferCheck(s)
   return Array.prototype.reverse.call(new Buffer(s)).toString('hex')
 }
 

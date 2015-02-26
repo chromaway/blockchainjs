@@ -1,5 +1,6 @@
 var expect = require('chai').expect
 var bitcoin = require('bitcoinjs-lib')
+var Q = require('q')
 
 var blockchainjs = require('../../src')
 var createTx = require('../helpers').createTx
@@ -112,7 +113,7 @@ describe('blockchain.Naive', function () {
           }
         ])
       })
-      .then(done, done)
+      .done(done, done)
   })
 
   it('getUnspent', function (done) {
@@ -129,8 +130,8 @@ describe('blockchain.Naive', function () {
     blockchain.getUnspent(address)
       .then(function (coins) {
         expect(coins).to.deep.equal(addressCoins)
-
-      }).then(done, done)
+      })
+      .done(done, done)
   })
 
   it('subscribeAddress', function (done) {
@@ -139,9 +140,11 @@ describe('blockchain.Naive', function () {
         var address = bitcoin.Address.fromOutputScript(
           tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
 
+        var deferred = Q.defer()
+        deferred.promise.done(done, done)
         blockchain.on('touchAddress', function (touchedAddress) {
           if (touchedAddress === address) {
-            done()
+            deferred.resolve()
           }
         })
 
@@ -153,5 +156,6 @@ describe('blockchain.Naive', function () {
             expect(txId).to.equal(tx.getId())
           })
       })
+      .done()
   })
 })

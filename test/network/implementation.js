@@ -2,6 +2,7 @@ var crypto = require('crypto')
 var expect = require('chai').expect
 var _ = require('lodash')
 var bitcoin = require('bitcoinjs-lib')
+var Q = require('q')
 
 var blockchainjs = require('../../src')
 var createTx = require('../helpers').createTx
@@ -271,9 +272,11 @@ function implementationTest(opts) {
           var address = bitcoin.Address.fromOutputScript(
             tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
 
+          var deferred = Q.defer()
+          deferred.promise.done(done, done)
           network.on('touchAddress', function (touchedAddress) {
             if (touchedAddress === address) {
-              done()
+              deferred.resolve()
             }
           })
 

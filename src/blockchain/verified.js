@@ -260,13 +260,14 @@ function Verified(network, opts) {
     self._storage.once('ready', resolve)
   })
   .then(function () {
-    return self._initialize(opts)
+    return self._initialize({usePreSavedChunkHashes: opts.usePreSavedChunkHashes})
   })
   .then(function () {
     // set isReady is true and start syncing after initialization
     isReady = true
     syncBlockchain()
   })
+  .done()
 }
 
 inherits(Verified, Blockchain)
@@ -286,7 +287,7 @@ Verified.prototype._initialize = function (opts) {
   var storage = self._storage
 
   return Q.all([
-    storage.getChunkHashesCount(),
+    storage.isUsedCompactMode() ? storage.getChunkHashesCount() : null,
     storage.getHeadersCount()
   ])
   .spread(function (chunkHashesCount, headersCount) {
@@ -306,7 +307,7 @@ Verified.prototype._initialize = function (opts) {
   .then(function () {
     return Q.all([
       storage.getLastHash(),
-      storage.getChunkHashesCount(),
+      storage.isUsedCompactMode() ? storage.getChunkHashesCount() : null,
       storage.getHeadersCount()
     ])
   })
@@ -455,8 +456,8 @@ Verified.prototype._sync = function () {
             // sync next chunk
             syncThroughChunks()
           })
-          .done(null, deferred.reject)
       })
+      .done(null, deferred.reject)
   }
 
   /**
@@ -726,8 +727,8 @@ Verified.prototype.getHeader = function (height, waitHeader) {
 
             // update header cache
             _.range(0, 2016).forEach(function (offset) {
-              var hexHeader = chunk.slice(offset * 160, (offset + 1) * 160)
-              var header = util.buffer2header(new Buffer(hexHeader, 'hex'))
+              var rawHeader = chunk.slice(offset * 80, (offset + 1) * 80)
+              var header = util.buffer2header(rawHeader)
               self._headerCache.set(chunkIndex * 2016 + offset, header)
             })
 

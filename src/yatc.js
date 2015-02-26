@@ -96,10 +96,13 @@ yatc.extend({
       }
     }
   },
-  BitcoinChunk: {
+  BitcoinHexChunk: {
     typeOf: 'String',
     validate: function (obj) {
-      return obj.length === 322560 && isHexString(obj)
+      return obj.length % 160 === 0 &&
+             obj.length > 0 &&
+             obj.length <= 322560 &&
+             isHexString(obj)
     }
   },
   BitcoinHeader: {
@@ -117,10 +120,6 @@ yatc.extend({
     validate: function (obj) {
       return obj.length === 160 && isHexString(obj)
     }
-  },
-  Buffer: {
-    typeOf: 'Object',
-    validate: Buffer.isBuffer
   },
   ChainHeader: {
     typeOf: 'Object',
@@ -161,10 +160,6 @@ yatc.extend({
     validate: function (obj) {
       return obj instanceof require('./network').Network
     }
-  },
-  SlowBuffer: {
-    typeOf: 'SlowBuffer',
-    validate: Buffer.isBuffer
   },
   Storage: {
     typeOf: 'Object',

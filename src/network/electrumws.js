@@ -306,7 +306,7 @@ ElectrumWS.prototype.getChunk = function (index) {
 
   return this._request('blockchain.block.get_chunk', [index])
     .then(function (chunkHex) {
-      yatc.verify('BitcoinChunk', chunkHex)
+      yatc.verify('BitcoinHexChunk', chunkHex)
       return chunkHex
     })
 }
