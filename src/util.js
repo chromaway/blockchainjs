@@ -133,19 +133,19 @@ function makeSerial(fn) {
     var args = _.slice(arguments)
 
     var deferred = Q.defer()
-    queue.push(deferred)
 
+    queue.push(deferred)
     if (queue.length === 1) {
-      queue.shift().resolve()
+      queue[0].resolve()
     }
 
     return deferred.promise
       .then(function () { return fn.apply(ctx, args) })
       .finally(function () {
+        queue.shift()
         if (queue.length > 0) {
-          queue.shift().resolve()
+          queue[0].resolve()
         }
-
       })
   }
 }
