@@ -65,6 +65,12 @@ function implementationTest(opts) {
           })
           .then(function (lastHash) {
             expect(lastHash).to.equal(newHash)
+            return storage.clear()
+          }).then(function () {
+            return storage.getLastHash()
+          })
+          .then(function (lastHash) {
+            expect(lastHash).to.equal(zfill('', 64))
           })
           .done(done, done)
       })
@@ -104,6 +110,13 @@ function implementationTest(opts) {
           .then(function () { throw new Error('Unexpected response') })
           .catch(function (error) {
             expect(error).to.be.instanceof(RangeError)
+            return storage.clear()
+          })
+          .then(function () {
+            return storage.getChunkHashesCount()
+          })
+          .then(function (chunkHashesCount) {
+            expect(chunkHashesCount).to.equal(0)
           })
           .done(done, done)
       })
@@ -149,6 +162,13 @@ function implementationTest(opts) {
           .then(function () { throw new Error('Unexpected response') })
           .catch(function (error) {
             expect(error).to.be.instanceof(RangeError)
+            return storage.clear()
+          })
+          .then(function () {
+            return storage.getHeadersCount()
+          })
+          .then(function (headersCount) {
+            expect(headersCount).to.equal(0)
           })
           .done(done, done)
       })
@@ -186,6 +206,12 @@ function implementationTest(opts) {
           })
           .then(function (lastHash) {
             expect(lastHash).to.equal(newHash)
+            return storage.clear()
+          }).then(function () {
+            return storage.getLastHash()
+          })
+          .then(function (lastHash) {
+            expect(lastHash).to.equal(zfill('', 64))
           })
           .done(done, done)
       })
@@ -254,6 +280,13 @@ function implementationTest(opts) {
           .then(function () { throw new Error('Unexpected response') })
           .catch(function (error) {
             expect(error).to.be.instanceof(RangeError)
+            return storage.clear()
+          })
+          .then(function () {
+            return storage.getHeadersCount()
+          })
+          .then(function (headersCount) {
+            expect(headersCount).to.equal(0)
           })
           .done(done, done)
       })

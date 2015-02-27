@@ -50,6 +50,7 @@ describe('blockchain.Verified', function () {
 
       storage.removeAllListeners()
       storage.on('error', function () {})
+      storage.clear()
 
       blockchain.removeAllListeners()
       blockchain.on('error', function () {})
