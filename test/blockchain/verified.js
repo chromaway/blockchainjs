@@ -13,13 +13,13 @@ describe('blockchain.Verified', function () {
   var storage
   var blockchain
 
-  function createBeforeEachFunction(storageOpts, blockchainOpts) {
+  function createBeforeEachFunction(Storage, storageOpts, blockchainOpts) {
     return function (done) {
       var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
       network = new blockchainjs.network.ElectrumWS({url: url})
       network.on('error', helpers.ignoreNetworkErrors)
 
-      storage = new blockchainjs.storage.Memory(storageOpts)
+      storage = new Storage(storageOpts)
 
       var opts = _.extend(
         {storage: storage, isTestnet: true}, blockchainOpts)
@@ -204,23 +204,38 @@ describe('blockchain.Verified', function () {
     })
   }
 
-  describe('full mode', function () {
+  describe('full mode (memory storage)', function () {
     beforeEach(createBeforeEachFunction(
-      {useCompactMode: false}, {compactMode: false}))
+      blockchainjs.storage.Memory,
+      {useCompactMode: false},
+      {compactMode: false}))
 
     runTests()
   })
 
-  describe('compact mode with pre-saved data', function () {
+  describe('compact mode with pre-saved data (memory storage)', function () {
     beforeEach(createBeforeEachFunction(
-      {useCompactMode: true}, {compactMode: true, usePreSavedChunkHashes: true}))
+      blockchainjs.storage.Memory,
+      {useCompactMode: true},
+      {compactMode: true, usePreSavedChunkHashes: true}))
 
     runTests()
   })
 
-  describe('compact mode without pre-saved data', function () {
+  describe('compact mode with pre-saved data (localStorage storage)', function () {
     beforeEach(createBeforeEachFunction(
-      {useCompactMode: true}, {compactMode: true, usePreSavedChunkHashes: false}))
+      blockchainjs.storage.LocalStorage,
+      {useCompactMode: true},
+      {compactMode: true, usePreSavedChunkHashes: true}))
+
+    runTests()
+  })
+
+  describe('compact mode without pre-saved data (memory storage)', function () {
+    beforeEach(createBeforeEachFunction(
+      blockchainjs.storage.Memory,
+      {useCompactMode: true},
+      {compactMode: true, usePreSavedChunkHashes: false}))
 
     runTests()
   })
