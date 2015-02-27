@@ -215,7 +215,9 @@ function Verified(network, opts) {
   self._isSyncing = false
   var syncBlockchain = util.makeSerial(function () {
     // exit if is not ready yet
-    if (!isReady) {
+    if (!isReady ||
+        self.network.getCurrentHeight() === -1 ||
+        self._currentBlockHash === self.network.getCurrentBlockHash()) {
       return Q.resolve()
     }
 
@@ -248,7 +250,7 @@ function Verified(network, opts) {
     })
 
     // sync blockchain
-    syncBlockchain()
+    syncBlockchain().done()
   })
 
   // wait when the storage will be ready and run initialize
@@ -265,7 +267,7 @@ function Verified(network, opts) {
   .then(function () {
     // set isReady is true and start syncing after initialization
     isReady = true
-    syncBlockchain()
+    syncBlockchain().done()
   })
   .done()
 }
@@ -368,6 +370,14 @@ Verified.prototype._sync = function () {
     // get chunk for index
     self.network.getChunk(index)
       .then(function (chunkHex) {
+        // check chunkHex length
+        if (index < networkIndex && chunkHex.length !== 322560) {
+          throw new errors.VerifyChunkError('Chunk have wrong length!')
+        }
+        if (index === networkIndex && chunkHex.length !== (networkHeight + 1) % 2016 * 160) {
+          console.warn('Last chunk have wrong length')
+          chunkHex = chunkHex.slice(0, (networkHeight + 1) % 2016 * 160)
+        }
         // decode chunk from hex to buffer
         rawChunk = new Buffer(chunkHex, 'hex')
 
@@ -461,19 +471,19 @@ Verified.prototype._sync = function () {
   }
 
   /**
-   * headers: verify, save and return
+   * headers: verify, save and return promise
    */
   function syncThroughHeaders(prevHeaderHash, prevHeader) {
     // calculate last header hash of headersChain
-    var lastRawHeader = _.last(headersChain)
+    var lastRawHeader = util.header2buffer(_.last(headersChain).header)
     var lastHash = util.hashEncode(util.sha256x2(lastRawHeader))
 
     // convert headers in headersChain to hex format
-    var rawHexHeaders = headersChain.map(function (data) {
+    var hexHeaders = headersChain.map(function (data) {
       return util.header2buffer(data.header).toString('hex')
     })
 
-    Q.fcall(function () {
+    return Q.fcall(function () {
       // target cache, it's help save don't call getTarget 49 times or 0 :)
       var targets = {}
 
@@ -520,7 +530,7 @@ Verified.prototype._sync = function () {
       return self._storage.setLastHash(lastHash)
     })
     .then(function () {
-      return self._storage.getChunkHashesCount()
+      return self._storage.isUsedCompactMode() ? self._storage.getChunkHashesCount() : null
     })
     .then(function (chunkHashesCount) {
       var lastHeaderChunkIndex = Math.floor(_.last(headersChain).height / 2016)
@@ -528,7 +538,7 @@ Verified.prototype._sync = function () {
       //  as in compact mode, if current chunk index equal
       //  to the chunk index for last header
       if (!self._storage.isUsedCompactMode() || chunkHashesCount === lastHeaderChunkIndex) {
-        return self._storage.putHeaders(rawHexHeaders)
+        return self._storage.putHeaders(hexHeaders)
       }
 
       // collect headers to chunk and compute chunk hash
@@ -544,7 +554,7 @@ Verified.prototype._sync = function () {
               if (index === headersCount) {
                 index = 0
                 while (chunkHeaders.length !== 2016) {
-                  chunkHeaders.push(rawHexHeaders[index])
+                  chunkHeaders.push(hexHeaders[index])
                   index += 1
                 }
                 // convert to buffer and compute hash
@@ -555,8 +565,8 @@ Verified.prototype._sync = function () {
 
               // get header from storage
               return self._storage.getHeader(index)
-                .then(function (rawHexHeader) {
-                  chunkHeaders.push(rawHexHeader)
+                .then(function (hexHeader) {
+                  chunkHeaders.push(hexHeader)
                   readHeader(index + 1)
                 })
 
@@ -576,13 +586,13 @@ Verified.prototype._sync = function () {
         .then(function () {
           // select headers not included in chunk ...
           var startHeight = chunkHashesCount * 2016
-          var rawHexHeaders = _.chain(headersChain)
+          var hexHeaders = _.chain(headersChain)
             .filter(function (data) { return data.height >= startHeight })
             .map(function (data) { return util.header2buffer(data.header).toString('hex') })
             .value()
 
           // ... and save
-          return self._storage.putHeaders(rawHexHeaders)
+          return self._storage.putHeaders(hexHeaders)
         })
     })
     .then(function () {
@@ -591,7 +601,6 @@ Verified.prototype._sync = function () {
       self._currentHeight = _.last(headersChain).height
       self.emit('newHeight', self._currentHeight)
     })
-    .done(deferred.resolve, deferred.reject)
   }
 
   // sync through chunk or headers depends from
@@ -625,8 +634,9 @@ Verified.prototype._sync = function () {
       }
 
       // finally run syncThroughHeaders
-      syncThroughHeaders(prevHash, prevHeader)
+      return syncThroughHeaders(prevHash, prevHeader)
     })
+    .done(deferred.resolve, deferred.reject)
 
   }
 

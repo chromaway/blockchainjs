@@ -106,7 +106,9 @@ function header2buffer(header) {
  * @return {BitcoinHeader}
  */
 function buffer2header(buffer) {
-  yatc.verify('BitcoinRawHeader', buffer)
+  if (!Buffer.isBuffer(buffer) || buffer.length !== 80) {
+    throw new TypeError('Expect buffer with length 80, got ' + Object.prototype.toString.call(buffer))
+  }
 
   return {
     version: buffer.readUInt32LE(0),

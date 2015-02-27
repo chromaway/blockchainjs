@@ -5,7 +5,7 @@ var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
 
 var blockchainjs = require('../../src')
-var createTx = require('../helpers').createTx
+var helpers = require('../helpers')
 
 
 /**
@@ -28,13 +28,7 @@ function implementationTest(opts) {
       var args = [null].concat(opts.getNetworkOpts())
       var Network = Function.prototype.bind.apply(opts.class, args)
       network = new Network()
-      network.on('error', function (error) {
-        if (error.message === 'Network unreachable') {
-          return
-        }
-
-        throw error
-      })
+      network.on('error', helpers.ignoreNetworkErrors)
       network.once('connect', done)
       network.connect()
     })
@@ -50,9 +44,9 @@ function implementationTest(opts) {
             return
           }
 
-          // not good
-          // network.removeAllListeners()
-          network.removeListener('newReadyState', onNewReadyState)
+          network.removeAllListeners()
+          //network.removeListener('newReadyState', onNewReadyState)
+          network.on('error', function () {})
           network = null
           done()
         }
@@ -218,7 +212,7 @@ function implementationTest(opts) {
     })
 
     it('sendTx', function (done) {
-      createTx()
+      helpers.createTx()
         .then(function (tx) {
           return network.sendTx(tx.toHex())
             .then(function (txId) { expect(txId).to.equal(tx.getId()) })
@@ -267,7 +261,7 @@ function implementationTest(opts) {
     })
 
     it('address subscribe', function (done) {
-      createTx()
+      helpers.createTx()
         .then(function (tx) {
           var address = bitcoin.Address.fromOutputScript(
             tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()

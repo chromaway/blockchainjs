@@ -3,6 +3,9 @@ var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
 var request = Q.denodeify(require('request'))
 
+var blockchainjs = require('../src')
+var errors = blockchainjs.errors
+
 
 /**
  * @return {Q.Promise}
@@ -44,7 +47,24 @@ function createTx() {
     })
 }
 
+/**
+ * @param {Error} error
+ * @throws {Error}
+ */
+function ignoreNetworkErrors(error) {
+  if (error.message === 'Network unreachable') {
+    return
+  }
+
+  if (error instanceof errors.NotConnectedError) {
+    return
+  }
+
+  throw error
+}
+
 
 module.exports = {
-  createTx: createTx
+  createTx: createTx,
+  ignoreNetworkErrors: ignoreNetworkErrors
 }

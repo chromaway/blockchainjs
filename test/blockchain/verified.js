@@ -5,7 +5,7 @@ var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
 
 var blockchainjs = require('../../src')
-var createTx = require('../helpers').createTx
+var helpers = require('../helpers')
 
 
 describe('blockchain.Verified', function () {
@@ -17,15 +17,27 @@ describe('blockchain.Verified', function () {
     return function (done) {
       var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
       network = new blockchainjs.network.ElectrumWS({url: url})
-      network.once('newHeight', function () {
-        done()
-      })
+      network.on('error', helpers.ignoreNetworkErrors)
 
       storage = new blockchainjs.storage.Memory(storageOpts)
 
       var opts = _.extend(
         {storage: storage, isTestnet: true}, blockchainOpts)
       blockchain = new blockchainjs.blockchain.Verified(network, opts)
+      blockchain.on('error', helpers.ignoreNetworkErrors)
+
+      // for using syncThroughHeaders in syncing process
+      var blockchainNewHeightListener = network._events.newHeight
+      network._events.newHeight = function (realHeight) {
+        network._events.newHeight = blockchainNewHeightListener
+        network._setCurrentHeight(realHeight - 10)
+        network.once('newHeight', function () {
+          network.refresh()
+            .catch(helpers.ignoreNetworkErrors)
+            .done()
+          done()
+        })
+      }
 
       network.connect()
     }
@@ -76,8 +88,28 @@ describe('blockchain.Verified', function () {
         '001976a914b96b816f378babb1fe585b7be7a2cd16eb99b3e488ac00000000'
       ].join('')
 
+      var stream = process.stderr
+      if (typeof window !== 'undefined') {
+        stream = {
+          isTTY: true,
+          columns: 100,
+          clearLine: function () {},
+          cursorTo: function () {},
+          write: console.log.bind(console)
+        }
+      }
+
       var barFmt = 'Syncing: :percent (:current/:total), :elapseds elapsed, eta :etas'
-      var bar = new ProgressBar(barFmt, {total: network.getCurrentHeight()})
+      var bar = new ProgressBar(barFmt, {
+        total: network.getCurrentHeight(),
+        stream: stream
+      })
+      // bar.render = function () {}
+
+      network.on('newHeight', function (newHeight) {
+        bar.total = newHeight
+      })
+
       if (blockchain.getCurrentHeight() !== -1) {
         bar.tick(blockchain.getCurrentHeight())
       }
@@ -86,7 +118,11 @@ describe('blockchain.Verified', function () {
         bar.tick(newHeight - bar.curr)
       })
 
-      blockchain.once('syncStop', function () {
+      blockchain.on('syncStop', function () {
+        if (network.getCurrentHeight() !== blockchain.getCurrentHeight()) {
+          return
+        }
+
         blockchain.getHeader(300000)
           .then(function (header) {
             expect(header).to.deep.equal(header300k)
@@ -97,6 +133,15 @@ describe('blockchain.Verified', function () {
           })
           .done(done, done)
       })
+    })
+
+    it('sendTx', function (done) {
+      helpers.createTx()
+        .then(function (tx) {
+          return blockchain.sendTx(tx.toHex())
+            .then(function (txId) { expect(txId).to.equal(tx.getId()) })
+        })
+        .done(done, done)
     })
 
     it('getHistory', function (done) {
@@ -133,7 +178,7 @@ describe('blockchain.Verified', function () {
     })
 
     it('subscribeAddress', function (done) {
-      createTx()
+      helpers.createTx()
         .then(function (tx) {
           var address = bitcoin.Address.fromOutputScript(
             tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
@@ -157,7 +202,6 @@ describe('blockchain.Verified', function () {
         .done()
     })
   }
-
 
   describe('full mode', function () {
     beforeEach(createBeforeEachFunction(

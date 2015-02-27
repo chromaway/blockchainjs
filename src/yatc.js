@@ -109,12 +109,6 @@ yatc.extend({
     typeOf: 'Object',
     validate: isBitcoinHeader
   },
-  BitcoinRawHeader: {
-    typeOf: 'Object',
-    validate: function (obj) {
-      return obj.length === 80 && Buffer.isBuffer(obj)
-    }
-  },
   BitcoinRawHexHeader: {
     typeOf: 'String',
     validate: function (obj) {

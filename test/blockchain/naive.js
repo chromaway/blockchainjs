@@ -3,7 +3,7 @@ var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
 
 var blockchainjs = require('../../src')
-var createTx = require('../helpers').createTx
+var helpers = require('../helpers')
 
 
 describe('blockchain.Naive', function () {
@@ -11,12 +11,14 @@ describe('blockchain.Naive', function () {
   var blockchain
 
   beforeEach(function (done) {
-    var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
-    network = new blockchainjs.network.ElectrumWS({url: url})
-    //network = new blockchainjs.network.Chain({testnet: true})
+    //var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
+    //network = new blockchainjs.network.ElectrumWS({url: url})
+    network = new blockchainjs.network.Chain({testnet: true})
+    network.on('error', helpers.ignoreNetworkErrors)
     network.once('connect', done)
-    blockchain = new blockchainjs.blockchain.Naive(network)
     network.connect()
+    blockchain = new blockchainjs.blockchain.Naive(network)
+    blockchain.on('error', helpers.ignoreNetworkErrors)
   })
 
   afterEach(function (done) {
@@ -93,7 +95,7 @@ describe('blockchain.Naive', function () {
   })
 
   it('sendTx', function (done) {
-    createTx()
+    helpers.createTx()
       .then(function (tx) {
         return blockchain.sendTx(tx.toHex())
           .then(function (txId) { expect(txId).to.equal(tx.getId()) })
@@ -135,7 +137,7 @@ describe('blockchain.Naive', function () {
   })
 
   it('subscribeAddress', function (done) {
-    createTx()
+    helpers.createTx()
       .then(function (tx) {
         var address = bitcoin.Address.fromOutputScript(
           tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
