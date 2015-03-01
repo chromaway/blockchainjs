@@ -2,7 +2,7 @@ var _ = require('lodash')
 var inherits = require('util').inherits
 var io = require('socket.io-client')
 var Q = require('q')
-// var ws = require('ws')
+var ws = require('ws')
 
 var Network = require('./network')
 var errors = require('../errors')
@@ -19,6 +19,7 @@ var yatc = require('../yatc')
  * @param {Object} [opts]
  * @param {string} [opts.networkName=bitcoin]
  * @param {string} [opts.url]
+ * @param {string[]} [opts.transports] Socket.IO transports (polling, websocket)
  */
 function ElectrumWS(opts) {
   var self = this
@@ -26,6 +27,7 @@ function ElectrumWS(opts) {
 
   opts = _.extend({
     url: ElectrumWS.getURLs(self.getNetworkName())[0],
+    transports: ws !== null ? ['websocket', 'polling'] : ['polling']
   }, opts)
   if (!_.isString(opts.url)) {
     throw new TypeError('Can\'t resolve network name `' + self.getNetworkName() + '` to url')
@@ -45,8 +47,7 @@ function ElectrumWS(opts) {
     randomizationFactor: 0,
     forceJSONP: false,
     jsonp: true,
-    transports: ['polling']
-    // transports: ws !== null ? ['websocket', 'polling'] : ['polling']
+    transports: opts.transports
   })
 
   self._socket.on('connect', function () {
