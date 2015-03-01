@@ -1,5 +1,5 @@
 var _ = require('lodash')
-var EventEmitter = require('eventemitter2').EventEmitter2
+var EventEmitter = require('events').EventEmitter
 var inherits = require('util').inherits
 var Q = require('q')
 
@@ -47,6 +47,8 @@ var yatc = require('../yatc')
  * Also all methods represent hashes in hex strings, not Buffer
  *
  * @class Storage
+ * @extends events.EventEmitter
+ *
  * @param {Object} [opts]
  * @param {string} [opts.networkName=bitcoin]
  * @param {boolean} [opts.useCompactMode=false]

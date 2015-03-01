@@ -1,4 +1,4 @@
-var EventEmitter = require('eventemitter2').EventEmitter2
+var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
 
 var blockchainjs = require('../../src')

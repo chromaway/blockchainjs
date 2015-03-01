@@ -1,5 +1,5 @@
 var _ = require('lodash')
-var EventEmitter = require('eventemitter2').EventEmitter2
+var EventEmitter = require('events').EventEmitter
 var Q = require('q')
 var timers = require('timers')
 var inherits = require('util').inherits
@@ -41,7 +41,7 @@ var yatc = require('../yatc')
  * Abstract class for communication with remote service
  *
  * @class Network
- * @extends eventemitter2.EventEmitter2
+ * @extends events.EventEmitter
  *
  * @param {Object} [opts]
  * @param {string} [opts.networkName=bitcoin]

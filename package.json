@@ -28,7 +28,6 @@
     "browser-request": "0.3.3",
     "bs58check": "1.0.4",
     "errno": "0.1.1",
-    "eventemitter2": "0.4.14",
     "lodash": "3.0.0",
     "lru-cache": "2.5.0",
     "q": "1.2.0",

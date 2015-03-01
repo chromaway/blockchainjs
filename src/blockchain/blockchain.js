@@ -1,5 +1,5 @@
 var _ = require('lodash')
-var EventEmitter = require('eventemitter2').EventEmitter2
+var EventEmitter = require('events').EventEmitter
 var inherits = require('util').inherits
 var Q = require('q')
 
