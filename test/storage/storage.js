@@ -1,5 +1,4 @@
-var events = require('events')
-
+var EventEmitter = require('eventemitter2').EventEmitter2
 var expect = require('chai').expect
 
 var blockchainjs = require('../../src')
@@ -26,7 +25,7 @@ var NOT_IMPLEMENTED_METHODS = [
 describe('storage.Storage', function () {
   it('inherits EventEmitter', function () {
     var storage = new Storage()
-    expect(storage).to.be.instanceof(events.EventEmitter)
+    expect(storage).to.be.instanceof(EventEmitter)
   })
 
   it('compactMode is true', function () {

@@ -1,7 +1,6 @@
-var inherits = require('util').inherits
-
 var _ = require('lodash')
 var Q = require('q')
+var inherits = require('util').inherits
 
 var Storage = require('./storage')
 var errors = require('../errors')
@@ -62,24 +61,27 @@ function getStorage() {
  *
  * @class LocalStorage
  * @extends Storage
+ *
  * @param {Object} [opts]
- * @param {boolean} [opts.useCompactMode]
- * @param {string} [opts.keyName=blockchainjs] Recommended for use
- *   with network name (blockchainjs_testnet, blockchainjs_bitcoin)
+ * @param {string} [opts.networkName=bitcoin]
+ * @param {boolean} [opts.useCompactMode=false]
+ * @param {string} [opts.keyName] Recommended for use with network name
  */
 function LocalStorage(opts) {
-  opts = _.extend({keyName: 'blockchainjs'}, opts)
-  yatc.verify('{keyName: String, ...}', opts)
+  if (!isLocalStorageSupported()) {
+    console.warn('localStorage not supported! (data will be stored in memory)')
+  }
 
   var self = this
-  Storage.call(self, {useCompactMode: opts.useCompactMode})
+  Storage.call(self, opts)
+
+  opts = _.extend({
+    keyName: 'blockchainjs_' + self.getNetworkName()
+  }, opts)
+  yatc.verify('{keyName: String, ...}', opts)
 
   if (!this.isUsedCompactMode()) {
     throw new errors.CompactModeError('Only compactMode supported!')
-  }
-
-  if (!isLocalStorageSupported()) {
-    console.warn('localStorage not supported! (data will be stored in memory)')
   }
 
   self._storage = getStorage()
@@ -107,10 +109,25 @@ LocalStorage.prototype._init = function () {
   this._data = this._storage.get(this._keyName)
   if (typeof this._data === 'undefined') {
     this._data = {
+      networkName: this.getNetworkName(),
       lastHash: util.zfill('', 64),
       chunkHashes: [],
       headers: []
     }
+    return
+  }
+
+  yatc.verify([
+    '{',
+      'networkName: String,',
+      'lastHash: SHA256Hex,',
+      'chunkHashes: [SHA256Hex],',
+      'headers: [SHA256Hex]',
+    '}'
+  ].join(''), this._data)
+
+  if (this._data.networkName !== this.getNetworkName()) {
+    throw new TypeError('Loaded network name doesn\'t match to storage network name!')
   }
 }
 
@@ -121,7 +138,7 @@ LocalStorage.prototype._save = function () {
 }
 
 /**
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 LocalStorage.prototype.getLastHash = function () {
   return Q.resolve(this._data.lastHash.slice())
@@ -129,7 +146,7 @@ LocalStorage.prototype.getLastHash = function () {
 
 /**
  * @param {string} lastHash
- * @return {Q.Promise}
+ * @return {Promise}
  */
 LocalStorage.prototype.setLastHash = function (lastHash) {
   var self = this
@@ -141,7 +158,7 @@ LocalStorage.prototype.setLastHash = function (lastHash) {
 }
 
 /**
- * @return {Q.Promise<number>}
+ * @return {Promise<number>}
  */
 LocalStorage.prototype.getChunkHashesCount = function () {
   var self = this
@@ -153,7 +170,7 @@ LocalStorage.prototype.getChunkHashesCount = function () {
 
 /**
  * @param {number} index
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 LocalStorage.prototype.getChunkHash = function (index) {
   var self = this
@@ -171,7 +188,7 @@ LocalStorage.prototype.getChunkHash = function (index) {
 
 /**
  * @param {Array.<string>} chunkHashes
- * @return {Q.Promise}
+ * @return {Promise}
  */
 LocalStorage.prototype.putChunkHashes = function (chunkHashes) {
   var self = this
@@ -190,7 +207,7 @@ LocalStorage.prototype.putChunkHashes = function (chunkHashes) {
 
 /**
  * @param {number} limit
- * @return {Q.Promise}
+ * @return {Promise}
  */
 LocalStorage.prototype.truncateChunkHashes = function (limit) {
   var self = this
@@ -206,7 +223,7 @@ LocalStorage.prototype.truncateChunkHashes = function (limit) {
 }
 
 /**
- * @return {Q.Promise<number>}
+ * @return {Promise<number>}
  */
 LocalStorage.prototype.getHeadersCount = function () {
   return Q.resolve(this._data.headers.length)
@@ -214,7 +231,7 @@ LocalStorage.prototype.getHeadersCount = function () {
 
 /**
  * @param {number} index
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 LocalStorage.prototype.getHeader = function (index) {
   var self = this
@@ -230,7 +247,7 @@ LocalStorage.prototype.getHeader = function (index) {
 
 /**
  * @param {Array.<string>} headers
- * @return {Q.Promise}
+ * @return {Promise}
  */
 LocalStorage.prototype.putHeaders = function (headers) {
   var self = this
@@ -253,7 +270,7 @@ LocalStorage.prototype.putHeaders = function (headers) {
 
 /**
  * @param {number} limit
- * @return {Q.Promise}
+ * @return {Promise}
  */
 LocalStorage.prototype.truncateHeaders = function (limit) {
   var self = this
@@ -265,7 +282,7 @@ LocalStorage.prototype.truncateHeaders = function (limit) {
 }
 
 /**
- * @return {Q.Promise}
+ * @return {Promise}
  */
 LocalStorage.prototype.clear = function () {
   var self = this

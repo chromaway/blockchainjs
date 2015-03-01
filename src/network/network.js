@@ -1,9 +1,8 @@
-var events = require('events')
-var inherits = require('util').inherits
-var timers = require('timers')
-
 var _ = require('lodash')
+var EventEmitter = require('eventemitter2').EventEmitter2
 var Q = require('q')
+var timers = require('timers')
+var inherits = require('util').inherits
 
 var NotImplementedError = require('../errors').NotImplementedError
 var util = require('../util')
@@ -30,6 +29,7 @@ var yatc = require('../yatc')
 
 /**
  * @event Network#newReadyState
+ * @param {number} readyState
  */
 
 /**
@@ -41,20 +41,26 @@ var yatc = require('../yatc')
  * Abstract class for communication with remote service
  *
  * @class Network
- * @extends events.EventEmitter
+ * @extends eventemitter2.EventEmitter2
+ *
+ * @param {Object} [opts]
+ * @param {string} [opts.networkName=bitcoin]
  */
-function Network() {
-  var self = this
-  events.EventEmitter.call(self)
+function Network(opts) {
+  opts = _.extend({networkName: 'bitcoin'}, opts)
+  yatc.verify('{networkName: String, ...}', opts)
 
-  self._currentHeight = -1
-  self._currentBlockHash = util.zfill('', 64)
+  EventEmitter.call(this)
 
-  self._desiredReadyState = null
-  self.readyState = self.CLOSED
+  this._networkName = opts.networkName
+  this._currentHeight = -1
+  this._currentBlockHash = util.zfill('', 64)
+
+  this._desiredReadyState = null
+  this.readyState = this.CLOSED
 }
 
-inherits(Network, events.EventEmitter)
+inherits(Network, EventEmitter)
 
 /**
  * Ready States
@@ -90,7 +96,7 @@ Network.prototype._doClose = function () {
  *
  * @private
  * @param {number} newHeight
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
   yatc.verify('PositiveNumber', newHeight)
@@ -98,15 +104,12 @@ Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
   var self = this
   return self.getHeader(newHeight)
     .then(function (header) {
-      yatc.verify('BitcoinHeader', header)
-
       var rawHeader = util.header2buffer(header)
       self._currentBlockHash = util.hashEncode(util.sha256x2(rawHeader))
       self._currentHeight = newHeight
       self.emit('newHeight', newHeight)
-
     })
-    .done(void 0, function (error) { self.emit('error', error) })
+    .done(null, function (error) { self.emit('error', error) })
 })
 
 /**
@@ -125,7 +128,8 @@ Network.prototype._setReadyState = function (newReadyState) {
     timers.setImmediate(this.emit.bind(this), 'connect')
   }
 
-  if (this.readyState === this.OPEN && (newReadyState === this.CLOSING || newReadyState === this.CLOSED)) {
+  if (this.readyState === this.OPEN &&
+      (newReadyState === this.CLOSING || newReadyState === this.CLOSED)) {
     timers.setImmediate(this.emit.bind(this), 'disconnect')
   }
 
@@ -148,10 +152,10 @@ Network.prototype._setReadyState = function (newReadyState) {
 
 /**
  * @private
- * @param {number} desiredState
+ * @param {number} desiredReadyState
  */
-Network.prototype._updateDesiredReadyState = function (desiredState) {
-  if (desiredState === this.OPEN) {
+Network.prototype._updateDesiredReadyState = function (desiredReadyState) {
+  if (desiredReadyState === this.OPEN) {
     // wait CLOSED state and call _doOpen in `newReadyState` handler
     if (this.readyState === this.CLOSING) {
       return this._desiredReadyState = this.OPEN
@@ -163,7 +167,7 @@ Network.prototype._updateDesiredReadyState = function (desiredState) {
     }
   }
 
-  if (desiredState === this.CLOSED) {
+  if (desiredReadyState === this.CLOSED) {
     // wait OPEN state and call _doClose in `newReadyState` handler
     if (this.readyState === this.CONNECTING) {
       return this._desiredReadyState = this.CLOSED
@@ -182,19 +186,19 @@ Network.prototype._updateDesiredReadyState = function (desiredState) {
  *
  * @return {boolean}
  */
-Network.prototype.supportVerificationMethods = function () {
+Network.prototype.supportSPV = function () {
   return false
 }
 
 /**
- * Update desiredState
+ * Update desiredReadyState
  */
 Network.prototype.connect = function () {
   this._updateDesiredReadyState(this.OPEN)
 }
 
 /**
- * Update desiredState
+ * Update desiredReadyState
  */
 Network.prototype.disconnect = function () {
   this._updateDesiredReadyState(this.CLOSED)
@@ -207,6 +211,13 @@ Network.prototype.disconnect = function () {
  */
 Network.prototype.isConnected = function () {
   return this.readyState === Network.OPEN
+}
+
+/**
+ * @return {string}
+ */
+Network.prototype.getNetworkName = function () {
+  return this._networkName.slice()
 }
 
 /**
@@ -227,7 +238,7 @@ Network.prototype.getCurrentBlockHash = function () {
  * Force sync height with remote service
  *
  * @abstract
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Network.prototype.refresh = function () {
   return Q.reject(new NotImplementedError('Network.refresh'))
@@ -258,7 +269,7 @@ Network.prototype.getTimeFromLastResponse = function () {
  *
  * @abstract
  * @param {number} height
- * @return {Q.Promise<BitcoinHeader>}
+ * @return {Promise<BitcoinHeader>}
  */
 Network.prototype.getHeader = function () {
   return Q.reject(new NotImplementedError('Network.getHeader'))
@@ -269,7 +280,7 @@ Network.prototype.getHeader = function () {
  *
  * @abstract
  * @param {number} index
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Network.prototype.getChunk = function () {
   return Q.reject(new NotImplementedError('Network.getChunk'))
@@ -280,7 +291,7 @@ Network.prototype.getChunk = function () {
  *
  * @abstract
  * @param {string} txId
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Network.prototype.getTx = function () {
   return Q.reject(new NotImplementedError('Network.getTx'))
@@ -299,7 +310,7 @@ Network.prototype.getTx = function () {
  * @abstract
  * @param {string} txId
  * @param {number} [height]
- * @return {Q.Promise<Network~MerkleObject>}
+ * @return {Promise<Network~MerkleObject>}
  */
 Network.prototype.getMerkle = function () {
   return Q.reject(new NotImplementedError('Network.getMerkle'))
@@ -310,7 +321,7 @@ Network.prototype.getMerkle = function () {
  *
  * @abstract
  * @param {string} txHex
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Network.prototype.sendTx = function () {
   return Q.reject(new NotImplementedError('Network.sendTx'))
@@ -327,7 +338,7 @@ Network.prototype.sendTx = function () {
  *
  * @abstract
  * @param {string} address
- * @return {Q.Promise<Network~HistoryObject[]>}
+ * @return {Promise<Network~HistoryObject[]>}
  */
 Network.prototype.getHistory = function () {
   return Q.reject(new NotImplementedError('Network.getHistory'))
@@ -347,7 +358,7 @@ Network.prototype.getHistory = function () {
  *
  * @abstract
  * @param {string} address
- * @return {Q.Promise<Network~UnspentObject[]>}
+ * @return {Promise<Network~UnspentObject[]>}
  */
 Network.prototype.getUnspent = function () {
   return Q.reject(new NotImplementedError('Network.getUnspent'))
@@ -358,7 +369,7 @@ Network.prototype.getUnspent = function () {
  *
  * @abstract
  * @param {string} address
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Network.prototype.subscribeAddress = function () {
   return Q.reject(new NotImplementedError('Network.subscribeAddress'))

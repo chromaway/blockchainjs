@@ -15,14 +15,16 @@ describe('blockchain.Verified', function () {
 
   function createBeforeEachFunction(Storage, storageOpts, blockchainOpts) {
     return function (done) {
-      var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
-      network = new blockchainjs.network.ElectrumWS({url: url})
+      network = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
       network.on('error', helpers.ignoreNetworkErrors)
 
       storage = new Storage(storageOpts)
 
-      var opts = _.extend(
-        {storage: storage, isTestnet: true}, blockchainOpts)
+      var opts = _.extend({
+        storage: storage,
+        networkName: 'testnet',
+        testnet: true
+      }, blockchainOpts)
       blockchain = new blockchainjs.blockchain.Verified(network, opts)
       blockchain.on('error', helpers.ignoreNetworkErrors)
 
@@ -208,25 +210,7 @@ describe('blockchain.Verified', function () {
     beforeEach(createBeforeEachFunction(
       blockchainjs.storage.Memory,
       {useCompactMode: false},
-      {compactMode: false}))
-
-    runTests()
-  })
-
-  describe('compact mode with pre-saved data (memory storage)', function () {
-    beforeEach(createBeforeEachFunction(
-      blockchainjs.storage.Memory,
-      {useCompactMode: true},
-      {compactMode: true, usePreSavedChunkHashes: true}))
-
-    runTests()
-  })
-
-  describe('compact mode with pre-saved data (localStorage storage)', function () {
-    beforeEach(createBeforeEachFunction(
-      blockchainjs.storage.LocalStorage,
-      {useCompactMode: true},
-      {compactMode: true, usePreSavedChunkHashes: true}))
+      {useCompactMode: false}))
 
     runTests()
   })
@@ -235,7 +219,25 @@ describe('blockchain.Verified', function () {
     beforeEach(createBeforeEachFunction(
       blockchainjs.storage.Memory,
       {useCompactMode: true},
-      {compactMode: true, usePreSavedChunkHashes: false}))
+      {useCompactMode: true, usePreSavedChunkHashes: false}))
+
+    runTests()
+  })
+
+  describe('compact mode with pre-saved data (memory storage)', function () {
+    beforeEach(createBeforeEachFunction(
+      blockchainjs.storage.Memory,
+      {useCompactMode: true},
+      {useCompactMode: true, usePreSavedChunkHashes: true}))
+
+    runTests()
+  })
+
+  describe('compact mode with pre-saved data (localStorage storage)', function () {
+    beforeEach(createBeforeEachFunction(
+      blockchainjs.storage.LocalStorage,
+      {useCompactMode: true},
+      {useCompactMode: true, usePreSavedChunkHashes: true}))
 
     runTests()
   })

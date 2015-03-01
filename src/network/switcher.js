@@ -1,10 +1,8 @@
-var inherits = require('util').inherits
-
 var _ = require('lodash')
+var inherits = require('util').inherits
 var Q = require('q')
 
 var Network = require('./network')
-var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
@@ -24,19 +22,32 @@ var yatc = require('../yatc')
  *
  * @param {Network[]} networks Array of Network instances sorted by priority
  * @param {Object} [opts]
- * @param {boolean} [opts.spv=false] value of supportVerificationMethods
+ * @param {string} [opts.networkName=bitcoin]
+ * @param {boolean} [opts.useSPV=false] Value of supportSPV
  */
 function Switcher(networks, opts) {
-  opts = _.extend({spv: false}, opts)
-
-  yatc.verify('[Network]', networks)
-  yatc.verify('{spv: Boolean}', opts)
-
   var self = this
-  Network.call(self)
+  Network.call(self, opts)
 
+  // compare current network name with network names
+  yatc.verify('[Network]', networks)
+  yatc.verify('{length: PositiveNumber, ...}', networks)
+  var networksNetworkName = _(networks).invoke('getNetworkName').uniq().first()
+  if (networksNetworkName !== self.getNetworkName()) {
+    var errMsg = 'Given networks have different network: ' + networksNetworkName + ' instead ' + self.getNetworkName()
+    throw new TypeError(errMsg)
+  }
+
+  // check spv mode support
+  opts = _.extend({useSPV: false}, opts)
+  yatc.verify('{useSPV: Boolean, ...}', opts)
+  if (opts.useSPV && !_(networks).invoke('supportSPV').some()) {
+    throw new TypeError('Given networks doesn\'t support SPV mode!')
+  }
+
+  // save networks and spv mode
   self._networks = networks
-  self._opts = opts
+  self._useSPV = opts.useSPV
 
   // for switchNetwork event
   var prevNetwork = null
@@ -48,12 +59,15 @@ function Switcher(networks, opts) {
     // select new current network
     var network = _.chain(self._networks)
       .filter(function (network) {
+        // only connected
         return network.isConnected()
       })
       .filter(function (network) {
-        return !self._opts.spv || network.supportVerificationMethods()
+        // filter with spv support if needed
+        return !self.supportSPV() || network.supportSPV()
       })
       .sortBy(function (network, index) {
+        // by height and index in networks array
         return [network.getCurrentHeight(), self._networks.length - index]
       })
       .last()
@@ -130,6 +144,7 @@ function Switcher(networks, opts) {
     network.on('newHeight', updateCurrentNetwork)
   })
 
+  // for getCurrentActiveRequests and getTimeFromLastResponse
   self._lastNetworkValue = self._networks[0]
   // check height on switchNetwork event
   var setCurrentHeight = self._setCurrentHeight.bind(self)
@@ -163,9 +178,7 @@ function Switcher(networks, opts) {
 inherits(Switcher, Network)
 
 /**
- * @memberof Switcher.prototype
- * @method _doOpen
- * @see {@link Network#_doOpen}
+ * @private
  */
 Switcher.prototype._doOpen = function () {
   this._setReadyState(this.CONNECTING)
@@ -173,9 +186,7 @@ Switcher.prototype._doOpen = function () {
 }
 
 /**
- * @memberof Switcher.prototype
- * @method _doClose
- * @see {@link Network#_doClose}
+ * @private
  */
 Switcher.prototype._doClose = function () {
   this._setReadyState(this.CLOSING)
@@ -188,7 +199,7 @@ Switcher.prototype._doClose = function () {
  *
  * @param {string} methodName Network method name
  * @param {Array.<*>} args Arguments for network method
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Switcher.prototype._callMethod = function (methodName, args) {
   var self = this
@@ -221,61 +232,45 @@ Switcher.prototype.getNetworks = function () {
 /**
  * @return {boolean}
  */
-Switcher.prototype.supportVerificationMethods = function () {
-  return this._opts.spv
+Switcher.prototype.supportSPV = function () {
+  return this._useSPV
 }
 
 /**
- * @memberof Switcher.prototype
- * @method refresh
- * @see {@link Network#refresh}
+ * @return {Promise}
  */
 Switcher.prototype.refresh = function () {
-  var promises = this._networks.map(function (network) {
-    if (!network.isConnected()) {
-      return
-    }
-
-    return network.refresh()
-  })
-
-  return Q.all(promises)
+  return Q.any(_.invoke(this._networks, 'refresh'))
 }
 
 /**
- * @memberof Switcher.prototype
- * @method getCurrentActiveRequests
- * @see {@link Network#getCurrentActiveRequests}
+ * @return {number}
  */
 Switcher.prototype.getCurrentActiveRequests = function () {
   return this._lastNetworkValue.getCurrentActiveRequests()
 }
 
 /**
- * @memberof Switcher.prototype
- * @method getTimeFromLastResponse
- * @see {@link Network#getTimeFromLastResponse}
+ * @return {number}
  */
 Switcher.prototype.getTimeFromLastResponse = function () {
   return this._lastNetworkValue.getTimeFromLastResponse()
 }
 
 /**
- * @memberof Switcher.prototype
- * @method getHeader
- * @see {@link Network#getHeader}
+ * @param {number} height
+ * @return {Promise<BitcoinHeader>}
  */
 Switcher.prototype.getHeader = function () {
   return this._callMethod('getHeader', _.slice(arguments))
 }
 
 /**
- * @memberof Switcher.prototype
- * @method getChunk
- * @see {@link Network#getChunk}
+ * @param {number} index
+ * @return {Promise<string>}
  */
 Switcher.prototype.getChunk = function () {
-  if (!this.supportVerificationMethods()) {
+  if (!this.supportSPV()) {
     Network.prototype.getChunk.call(this)
   }
 
@@ -283,21 +278,20 @@ Switcher.prototype.getChunk = function () {
 }
 
 /**
- * @memberof Switcher.prototype
- * @method getTx
- * @see {@link Network#getTx}
+ * @param {string} txId
+ * @return {Promise<string>}
  */
 Switcher.prototype.getTx = function () {
   return this._callMethod('getTx', _.slice(arguments))
 }
 
 /**
- * @memberof Switcher.prototype
- * @method getMerkle
- * @see {@link Network#getMerkle}
+ * @param {string} txId
+ * @param {number} [height]
+ * @return {Promise<Network~MerkleObject>}
  */
 Switcher.prototype.getMerkle = function () {
-  if (!this.supportVerificationMethods()) {
+  if (!this.supportSPV()) {
     Network.prototype.getMerkle.call(this)
   }
 
@@ -305,36 +299,32 @@ Switcher.prototype.getMerkle = function () {
 }
 
 /**
- * @memberof Switcher.prototype
- * @method sendTx
- * @see {@link Network#sendTx}
+ * @param {string} txHex
+ * @return {Promise<string>}
  */
 Switcher.prototype.sendTx = function () {
   return this._callMethod('sendTx', _.slice(arguments))
 }
 
 /**
- * @memberof Switcher.prototype
- * @method getHistory
- * @see {@link Network#getHistory}
+ * @param {string} address
+ * @return {Promise<Network~HistoryObject[]>}
  */
 Switcher.prototype.getHistory = function () {
   return this._callMethod('getHistory', _.slice(arguments))
 }
 
 /**
- * @memberof Switcher.prototype
- * @method getUnspent
- * @see {@link Network#getUnspent}
+ * @param {string} address
+ * @return {Promise<Network~UnspentObject[]>}
  */
 Switcher.prototype.getUnspent = function () {
   return this._callMethod('getUnspent', _.slice(arguments))
 }
 
 /**
- * @memberof Switcher.prototype
- * @method subscribeAddress
- * @see {@link Network#subscribeAddress}
+ * @param {string} address
+ * @return {Promise}
  */
 Switcher.prototype.subscribeAddress = util.makeSerial(function (address) {
   var self = this
@@ -345,24 +335,11 @@ Switcher.prototype.subscribeAddress = util.makeSerial(function (address) {
 
   self._subscribedAddresses[address] = true
 
-  var deferred = Q.defer()
-
-  var rejected = 0
-  function onRejected(error) {
-    self.emit('error', error)
-
-    rejected += 1
-    if (rejected === self._networks.length) {
-      var errMsg = 'Switcher: Can\'t subscribe on address ' + address
-      deferred.reject(new errors.NetworkError(errMsg))
-    }
-  }
-
-  self._networks.forEach(function (network) {
-    network.subscribeAddress(address).then(deferred.resolve, onRejected)
+  var promises = self._networks.map(function (network) {
+    return network.subscribeAddress(address)
   })
 
-  return deferred.promise
+  return Q.any(promises)
 })
 
 

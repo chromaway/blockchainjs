@@ -1,4 +1,4 @@
-var events = require('events')
+var EventEmitter = require('eventemitter2').EventEmitter2
 
 var expect = require('chai').expect
 var Q = require('q')
@@ -30,12 +30,12 @@ describe('network.Network', function () {
   })
 
   it('inherits events.EventEmitter', function () {
-    expect(network).to.be.instanceof(events.EventEmitter)
+    expect(network).to.be.instanceof(EventEmitter)
     expect(network).to.be.instanceof(blockchainjs.network.Network)
   })
 
-  it('supportVerificationMethods', function () {
-    expect(network.supportVerificationMethods()).to.be.false
+  it('supportSPV', function () {
+    expect(network.supportSPV()).to.be.false
   })
 
   it('isConnected', function () {
@@ -74,6 +74,7 @@ describe('network.Network', function () {
           expect(result).to.be.instanceof(blockchainjs.errors.NotImplementedError)
           done()
         })
+        .done()
     })
   })
 })

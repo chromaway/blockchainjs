@@ -11,13 +11,12 @@ describe('blockchain.Naive', function () {
   var blockchain
 
   beforeEach(function (done) {
-    //var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
-    //network = new blockchainjs.network.ElectrumWS({url: url})
-    network = new blockchainjs.network.Chain({testnet: true})
+    network = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
+    //network = new blockchainjs.network.Chain({networkName: 'testnet'})
     network.on('error', helpers.ignoreNetworkErrors)
     network.once('connect', done)
     network.connect()
-    blockchain = new blockchainjs.blockchain.Naive(network)
+    blockchain = new blockchainjs.blockchain.Naive(network, {networkName: 'testnet'})
     blockchain.on('error', helpers.ignoreNetworkErrors)
   })
 
@@ -74,7 +73,7 @@ describe('blockchain.Naive', function () {
       .then(function (header) {
         expect(header).to.deep.equal(header300k)
       })
-      .then(done, done)
+      .done(done, done)
   })
 
   it('getTx', function (done) {
@@ -91,7 +90,7 @@ describe('blockchain.Naive', function () {
       .then(function (txHex) {
         expect(txHex).to.equal(expectedTxHex)
       })
-      .then(done, done)
+      .done(done, done)
   })
 
   it('sendTx', function (done) {
@@ -157,6 +156,7 @@ describe('blockchain.Naive', function () {
           .then(function (txId) {
             expect(txId).to.equal(tx.getId())
           })
+          .done()
       })
       .done()
   })

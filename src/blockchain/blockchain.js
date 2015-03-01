@@ -1,6 +1,6 @@
-var events = require('events')
+var _ = require('lodash')
+var EventEmitter = require('eventemitter2').EventEmitter2
 var inherits = require('util').inherits
-
 var Q = require('q')
 
 var NotImplementedError = require('../errors').NotImplementedError
@@ -26,20 +26,33 @@ var yatc = require('../yatc')
 /**
  * @class Blockchain
  * @extends events.EventEmitter
+ *
  * @param {Network} network
+ * @param {Object} [opts]
+ * @param {string} [opts.networkName=bitcoin]
  */
-function Blockchain(network) {
+function Blockchain(network, opts) {
+  opts = _.extend({networkName: 'bitcoin'}, opts)
   yatc.verify('Network', network)
+  yatc.verify('{networkName: String, ...}', opts)
 
-  events.EventEmitter.call(this)
+  EventEmitter.call(this)
 
   Object.defineProperty(this, 'network', {enumerable: true, value: network})
+  this._networkName = opts.networkName
 
   this._currentHeight = -1
   this._currentBlockHash = util.zfill('', 64)
 }
 
-inherits(Blockchain, events.EventEmitter)
+inherits(Blockchain, EventEmitter)
+
+/**
+ * @return {string}
+ */
+Blockchain.prototype.getNetworkName = function () {
+  return this._networkName.slice()
+}
 
 /**
  * @abstract
@@ -60,7 +73,7 @@ Blockchain.prototype.getCurrentBlockHash = function () {
 /**
  * @abstract
  * @param {number} height
- * @return {Q.Promise<BitcoinHeader>}
+ * @return {Promise<BitcoinHeader>}
  */
 Blockchain.prototype.getHeader = function () {
   return Q.reject(new NotImplementedError('Blockchain.getHeader'))
@@ -69,7 +82,7 @@ Blockchain.prototype.getHeader = function () {
 /**
  * @abstract
  * @param {string} txId
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Blockchain.prototype.getTx = function () {
   return Q.reject(new NotImplementedError('Blockchain.getTx'))
@@ -77,8 +90,8 @@ Blockchain.prototype.getTx = function () {
 
 /**
  * @abstract
- * @param {Transaction} tx
- * @return {Q.Promise<string>}
+ * @param {string} tx
+ * @return {Promise<string>}
  */
 Blockchain.prototype.sendTx = function () {
   return Q.reject(new NotImplementedError('Blockchain.sendTx'))
@@ -87,7 +100,7 @@ Blockchain.prototype.sendTx = function () {
 /**
  * @abstract
  * @param {string} address
- * @return {Q.Promise<Network~HistoryObject>}
+ * @return {Promise<Network~HistoryObject>}
  */
 Blockchain.prototype.getHistory = function () {
   return Q.reject(new NotImplementedError('Blockchain.getHistory'))
@@ -96,7 +109,7 @@ Blockchain.prototype.getHistory = function () {
 /**
  * @abstract
  * @param {string} address
- * @return {Q.Promise<Network~UnspentObject>}
+ * @return {Promise<Network~UnspentObject>}
  */
 Blockchain.prototype.getUnspent = function () {
   return Q.reject(new NotImplementedError('Blockchain.getUnspent'))
@@ -105,7 +118,7 @@ Blockchain.prototype.getUnspent = function () {
 /**
  * @abstract
  * @param {string} address
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Blockchain.prototype.subscribeAddress = function () {
   return Q.reject(new NotImplementedError('Blockchain.subscribeAddress'))

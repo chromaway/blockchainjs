@@ -1,5 +1,4 @@
-var events = require('events')
-
+var EventEmitter = require('eventemitter2').EventEmitter2
 var expect = require('chai').expect
 
 var blockchainjs = require('../../src')
@@ -22,8 +21,8 @@ describe('blockchain.Blockchain', function () {
     blockchain = new blockchainjs.blockchain.Blockchain(network)
   })
 
-  it('inherits events.EventEmitter', function () {
-    expect(blockchain).to.be.instanceof(events.EventEmitter)
+  it('inherits EventEmitter', function () {
+    expect(blockchain).to.be.instanceof(EventEmitter)
     expect(blockchain).to.be.instanceof(blockchainjs.blockchain.Blockchain)
   })
 

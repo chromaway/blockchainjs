@@ -9,9 +9,8 @@ implementationTest({
   class:          blockchainjs.network.Switcher,
   description:    'network.Switcher: One source (ElectrumWS)',
   getNetworkOpts: function () {
-    var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
-    var electrumNetwork = new blockchainjs.network.ElectrumWS({url: url})
-    return [[electrumNetwork]]
+    var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
+    return [[electrumNetwork], {networkName: 'testnet'}]
   }
 })
 
@@ -19,8 +18,8 @@ implementationTest({
   class:          blockchainjs.network.Switcher,
   description:    'network.Switcher: One source (Chain)',
   getNetworkOpts: function () {
-    var chainNetwork = new blockchainjs.network.Chain({testnet: true})
-    return [[chainNetwork]]
+    var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
+    return [[chainNetwork], {networkName: 'testnet'}]
   }
 })
 
@@ -28,10 +27,9 @@ implementationTest({
   class:          blockchainjs.network.Switcher,
   description:    'network.Switcher: Two sources (ElectrumWS, Chain)',
   getNetworkOpts: function () {
-    var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
-    var electrumNetwork = new blockchainjs.network.ElectrumWS({url: url})
-    var chainNetwork = new blockchainjs.network.Chain({testnet: true})
-    return [[electrumNetwork, chainNetwork]]
+    var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
+    var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
+    return [[electrumNetwork, chainNetwork], {networkName: 'testnet'}]
   }
 })
 
@@ -39,9 +37,8 @@ implementationTest({
   class:          blockchainjs.network.Switcher,
   description:    'network.Switcher: Two sources (ElectrumWS, Chain) (first doesn\'t work)',
   getNetworkOpts: function () {
-    var url = blockchainjs.network.ElectrumWS.getURLs('testnet')[0]
-    var electrumNetwork = new blockchainjs.network.ElectrumWS({url: url})
-    var chainNetwork = new blockchainjs.network.Chain({testnet: true})
+    var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
+    var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
     // not connected
     electrumNetwork.isConnected = function () { return false }
     // not emit `connect` & `disconnect`
@@ -51,6 +48,6 @@ implementationTest({
       }
     }
 
-    return [[electrumNetwork, chainNetwork]]
+    return [[electrumNetwork, chainNetwork], {networkName: 'testnet'}]
   }
 })

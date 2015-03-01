@@ -1,6 +1,5 @@
-var inherits = require('util').inherits
-
 var Q = require('q')
+var inherits = require('util').inherits
 
 var Storage = require('./storage')
 var errors = require('../errors')
@@ -11,8 +10,10 @@ var yatc = require('../yatc')
 /**
  * @class Memory
  * @extends Storage
+ *
  * @param {Object} [opts]
- * @param {boolean} [opts.useCompactMode]
+ * @param {string} [opts.networkName=bitcoin]
+ * @param {boolean} [opts.useCompactMode=false]
  */
 function Memory(opts) {
   var self = this
@@ -32,7 +33,7 @@ function Memory(opts) {
 inherits(Memory, Storage)
 
 /**
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Memory.prototype.getLastHash = function () {
   return Q.resolve(this._data.lastHash.slice())
@@ -40,7 +41,7 @@ Memory.prototype.getLastHash = function () {
 
 /**
  * @param {string} lastHash
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Memory.prototype.setLastHash = function (lastHash) {
   var self = this
@@ -51,7 +52,7 @@ Memory.prototype.setLastHash = function (lastHash) {
 }
 
 /**
- * @return {Q.Promise<number>}
+ * @return {Promise<number>}
  */
 Memory.prototype.getChunkHashesCount = function () {
   var self = this
@@ -63,7 +64,7 @@ Memory.prototype.getChunkHashesCount = function () {
 
 /**
  * @param {number} index
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Memory.prototype.getChunkHash = function (index) {
   var self = this
@@ -81,7 +82,7 @@ Memory.prototype.getChunkHash = function (index) {
 
 /**
  * @param {Array.<string>} chunkHashes
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Memory.prototype.putChunkHashes = function (chunkHashes) {
   var self = this
@@ -98,7 +99,7 @@ Memory.prototype.putChunkHashes = function (chunkHashes) {
 
 /**
  * @param {number} limit
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Memory.prototype.truncateChunkHashes = function (limit) {
   var self = this
@@ -112,7 +113,7 @@ Memory.prototype.truncateChunkHashes = function (limit) {
 }
 
 /**
- * @return {Q.Promise<number>}
+ * @return {Promise<number>}
  */
 Memory.prototype.getHeadersCount = function () {
   return Q.resolve(this._data.headers.length)
@@ -120,7 +121,7 @@ Memory.prototype.getHeadersCount = function () {
 
 /**
  * @param {number} index
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Memory.prototype.getHeader = function (index) {
   var self = this
@@ -136,7 +137,7 @@ Memory.prototype.getHeader = function (index) {
 
 /**
  * @param {Array.<string>} headers
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Memory.prototype.putHeaders = function (headers) {
   var self = this
@@ -157,7 +158,7 @@ Memory.prototype.putHeaders = function (headers) {
 
 /**
  * @param {number} limit
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Memory.prototype.truncateHeaders = function (limit) {
   var self = this
@@ -168,7 +169,7 @@ Memory.prototype.truncateHeaders = function (limit) {
 }
 
 /**
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Memory.prototype.clear = function () {
   var self = this

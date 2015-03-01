@@ -11,19 +11,23 @@ var yatc = require('../yatc')
 /**
  * @class Naive
  * @extends Blockchain
+ *
  * @param {Network} network
  * @param {Object} [opts]
+ * @param {string} [opts.networkName=bitcoin]
  * @param {number} [opts.headerCacheSize=50]
  * @param {number} [opts.txCacheSize=100]
  */
 function Naive(network, opts) {
-  opts = _.extend({headerCacheSize: 50, txCacheSize: 100}, opts)
-
-  yatc.verify('Network', network)
-  yatc.verify('{headerCacheSize: Number, txCacheSize: Number}', opts)
-
   var self = this
-  Blockchain.call(self, network)
+  Blockchain.call(self, network, opts)
+
+  opts = _.extend({headerCacheSize: 50, txCacheSize: 100}, opts)
+  yatc.verify('Network', network)
+  if (network.getNetworkName() !== self.getNetworkName()) {
+    throw new TypeError('Network and Blockchain have different networks')
+  }
+  yatc.verify('{headerCacheSize: Number, txCacheSize: Number, ...}', opts)
 
   self._headerCache = LRU({max: opts.headerCacheSize})
   self._txCache = LRU({max: opts.txCacheSize})
@@ -42,9 +46,8 @@ function Naive(network, opts) {
 inherits(Naive, Blockchain)
 
 /**
- * @memberof Naive.prototype
- * @method getHeader
- * @see {@link Blockchain#getHeader}
+ * @param {number} height
+ * @return {Promise<BitcoinHeader>}
  */
 Naive.prototype.getHeader = function (height) {
   var self = this
@@ -62,9 +65,8 @@ Naive.prototype.getHeader = function (height) {
 }
 
 /**
- * @memberof Naive.prototype
- * @method getTx
- * @see {@link Blockchain#getTx}
+ * @param {string} txId
+ * @return {Promise<string>}
  */
 Naive.prototype.getTx = function (txId) {
   var self = this
@@ -82,36 +84,32 @@ Naive.prototype.getTx = function (txId) {
 }
 
 /**
- * @memberof Naive.prototype
- * @method sendTx
- * @see {@link Blockchain#sendTx}
+ * @param {string} txHex
+ * @return {Promise<string>}
  */
 Naive.prototype.sendTx = function (txHex) {
   return this.network.sendTx(txHex)
 }
 
 /**
- * @memberof Naive.prototype
- * @method getHistory
- * @see {@link Blockchain#getHistory}
+ * @param {string} address
+ * @return {Promise<Network~HistoryObject>}
  */
 Naive.prototype.getHistory = function (address) {
   return this.network.getHistory(address)
 }
 
 /**
- * @memberof Naive.prototype
- * @method getUnspent
- * @see {@link Blockchain#getUnspent}
+ * @param {string} address
+ * @return {Promise<Network~UnspentObject>}
  */
 Naive.prototype.getUnspent = function (address) {
   return this.network.getUnspent(address)
 }
 
 /**
- * @memberof Naive.prototype
- * @method subscribeAddress
- * @see {@link Blockchain#subscribeAddress}
+ * @param {string} address
+ * @return {Promise}
  */
 Naive.prototype.subscribeAddress = function (address) {
   return this.network.subscribeAddress(address)

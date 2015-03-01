@@ -1,8 +1,7 @@
-var inherits = require('util').inherits
-
 var _ = require('lodash')
-var Q = require('q')
+var inherits = require('util').inherits
 var io = require('socket.io-client')
+var Q = require('q')
 // var ws = require('ws')
 
 var Network = require('./network')
@@ -17,14 +16,20 @@ var yatc = require('../yatc')
  * @class ElectrumWS
  * @extends Network
  *
- * @param {Object} opts
- * @param {string} opts.url
+ * @param {Object} [opts]
+ * @param {string} [opts.networkName=bitcoin]
+ * @param {string} [opts.url]
  */
 function ElectrumWS(opts) {
-  yatc.verify('{url: String}', opts)
-
   var self = this
-  Network.call(self)
+  Network.call(self, opts)
+
+  opts = _.extend({
+    url: ElectrumWS.getURLs(self.getNetworkName())[0],
+  }, opts)
+  if (!_.isString(opts.url)) {
+    throw new TypeError('Can\'t resolve network name `' + self.getNetworkName() + '` to url')
+  }
 
   self._requestId = 0
   self._requests = {}
@@ -163,16 +168,16 @@ ElectrumWS._URLs = {
 ElectrumWS.getURLs = function (network) {
   yatc.verify('String', network)
   if (_.keys(ElectrumWS._URLs).indexOf(network) === -1) {
-    throw new TypeError('Unknow network ' + network + '. You can use only: ' + ElectrumWS._URLs.join(', '))
+    var networkNames = _.keys(ElectrumWS._URLs)
+    var errMsg = 'Unknow network ' + network + '. You can use only: ' + networkNames.join(', ')
+    throw new TypeError(errMsg)
   }
 
   return _.clone(ElectrumWS._URLs[network])
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method _doOpen
- * @see {@link Network#_doOpen}
+ * @private
  */
 ElectrumWS.prototype._doOpen = function () {
   if (this.readyState !== this.CLOSED) {
@@ -184,9 +189,7 @@ ElectrumWS.prototype._doOpen = function () {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method _doClose
- * @see {@link Network#_doClose}
+ * @private
  */
 ElectrumWS.prototype._doClose = function () {
   if (this.readyState === this.CLOSING || this.readyState === this.CLOSED) {
@@ -201,7 +204,7 @@ ElectrumWS.prototype._doClose = function () {
  * @private
  * @param {string} method
  * @param {Array.<*>} [params=[]]
- * @return {Q.Promise}
+ * @return {Promise}
  */
 ElectrumWS.prototype._request = function (method, params) {
   if (typeof params === 'undefined') {
@@ -225,14 +228,12 @@ ElectrumWS.prototype._request = function (method, params) {
 /**
  * @return {boolean}
  */
-ElectrumWS.prototype.supportVerificationMethods = function () {
+ElectrumWS.prototype.supportSPV = function () {
   return true
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method refresh
- * @see {@link Network#refresh}
+ * @return {Promise}
  */
 ElectrumWS.prototype.refresh = function () {
   var self = this
@@ -247,27 +248,22 @@ ElectrumWS.prototype.refresh = function () {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method getCurrentActiveRequests
- * @see {@link Network#getCurrentActiveRequests}
+ * @return {number}
  */
 ElectrumWS.prototype.getCurrentActiveRequests = function () {
   return _.keys(this._requests).length
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method getTimeFromLastResponse
- * @see {@link Network#getTimeFromLastResponse}
+ * @return {number}
  */
 ElectrumWS.prototype.getTimeFromLastResponse = function () {
   return Date.now() - this._lastResponse
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method getHeader
- * @see {@link Network#getHeader}
+ * @param {number} height
+ * @return {Promise<BitcoinHeader>}
  */
 ElectrumWS.prototype.getHeader = function (height) {
   yatc.verify('PositiveNumber|ZeroNumber', height)
@@ -297,9 +293,8 @@ ElectrumWS.prototype.getHeader = function (height) {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method getChunk
- * @see {@link Network#getChunk}
+ * @param {number} index
+ * @return {Promise<string>}
  */
 ElectrumWS.prototype.getChunk = function (index) {
   yatc.verify('PositiveNumber|ZeroNumber', index)
@@ -312,9 +307,8 @@ ElectrumWS.prototype.getChunk = function (index) {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method getTx
- * @see {@link Network#getTx}
+ * @param {string} txId
+ * @return {Promise<string>}
  */
 ElectrumWS.prototype.getTx = function (txId) {
   yatc.verify('SHA256Hex', txId)
@@ -333,9 +327,9 @@ ElectrumWS.prototype.getTx = function (txId) {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method getMerkle
- * @see {@link Network#getMerkle}
+ * @param {string} txId
+ * @param {number} [height]
+ * @return {Promise<Network~MerkleObject>}
  */
 ElectrumWS.prototype.getMerkle = function (txId, height) {
   yatc.verify('Arguments{0: SHA256Hex, 1: Number|Undefined}', arguments)
@@ -353,9 +347,8 @@ ElectrumWS.prototype.getMerkle = function (txId, height) {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method sendTx
- * @see {@link Network#sendTx}
+ * @param {string} txHex
+ * @return {Promise<string>}
  */
 ElectrumWS.prototype.sendTx = function (txHex) {
   yatc.verify('HexString', txHex)
@@ -372,9 +365,8 @@ ElectrumWS.prototype.sendTx = function (txHex) {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method getHistory
- * @see {@link Network#getHistory}
+ * @param {string} address
+ * @return {Promise<Network~HistoryObject[]>}
  */
 ElectrumWS.prototype.getHistory = function (address) {
   yatc.verify('BitcoinAddress', address)
@@ -395,9 +387,8 @@ ElectrumWS.prototype.getHistory = function (address) {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method getUnspent
- * @see {@link Network#getUnspent}
+ * @param {string} address
+ * @return {Promise<Network~UnspentObject[]>}
  */
 ElectrumWS.prototype.getUnspent = function (address) {
   yatc.verify('BitcoinAddress', address)
@@ -423,9 +414,8 @@ ElectrumWS.prototype.getUnspent = function (address) {
 }
 
 /**
- * @memberof ElectrumWS.prototype
- * @method subscribeAddress
- * @see {@link Network#subscribeAddress}
+ * @param {string} address
+ * @return {Promise}
  */
 ElectrumWS.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)

@@ -19,23 +19,26 @@ var request = Q.denodeify(require('request'))
  * @extends Network
  *
  * @param {Object} [opts]
- * @param {boolean} [opts.testnet=false]
+ * @param {string} [opts.networkName=bitcoin]
  * @param {string} [opts.apiKeyId=DEMO-4a5e1e4]
  * @param {number} [opts.requestTimeout=10000]
  */
 function Chain(opts) {
+  var self = this
+  Network.call(self, opts)
+
   opts = _.extend({
-    testnet: false,
     apiKeyId: 'DEMO-4a5e1e4',
     requestTimeout: 10000,
   }, opts)
+  yatc.verify('{apiKeyId: String, requestTimeout: PositiveNumber, ...}', opts)
 
-  yatc.verify('{testnet: Boolean, apiKeyId: String, requestTimeout: PositiveNumber}', opts)
+  var networkName = self.getNetworkName()
+  if (['testnet', 'bitcoin'].indexOf(networkName) === -1) {
+    throw new Error('Can\'t resolve network name "' + networkName + '" to url')
+  }
 
-  var self = this
-  Network.call(self)
-
-  self._blockChain = opts.testnet ? 'testnet3' : 'bitcoin'
+  self._blockChain = networkName === 'testnet' ? 'testnet3' : 'bitcoin'
   self._apiKeyId = opts.apiKeyId
   self._requestTimeout = opts.requestTimeout
 
@@ -54,14 +57,14 @@ function Chain(opts) {
     var req = {type: 'new-block', block_chain: self._blockChain}
     self._ws.send(JSON.stringify(req))
     self.refresh()
-      .done(void 0, function (error) { self.emit('error', error) })
+      .done(null, function (error) { self.emit('error', error) })
 
     var addresses = _.keys(self._subscribedAddresses)
     self._subscribedAddresses = {}
 
     addresses.forEach(function (addr) {
       self.subscribeAddress(addr)
-        .done(void 0, function (error) { self.emit('error', error) })
+        .done(null, function (error) { self.emit('error', error) })
     })
   })
 
@@ -78,9 +81,7 @@ function Chain(opts) {
 inherits(Chain, Network)
 
 /**
- * @memberof Chain.prototype
- * @method _doOpen
- * @see {@link Network#_doOpen}
+ * @private
  */
 Chain.prototype._doOpen = function () {
   var self = this
@@ -162,9 +163,7 @@ Chain.prototype._doOpen = function () {
 }
 
 /**
- * @memberof Chain.prototype
- * @method _doClose
- * @see {@link Network#_doClose}
+ * @private
  */
 Chain.prototype._doClose = function () {
   if (this.readyState === this.CLOSING || this.readyState === this.CLOSED) {
@@ -215,7 +214,7 @@ Chain.prototype._updateIdleTimeout = function () {
  * @private
  * @param {string} path
  * @param {Object} [data] Data for POST request
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Chain.prototype._request = function (path, data) {
   yatc.verify('Arguments{0: String, 1: Object|Undefined}', arguments)
@@ -256,11 +255,9 @@ Chain.prototype._request = function (path, data) {
 
       self._lastResponse = Date.now()
       return body
-
     })
     .finally(function () {
       delete self._requests[requestId]
-
     })
     .done(deferred.resolve, deferred.reject)
 
@@ -268,9 +265,6 @@ Chain.prototype._request = function (path, data) {
 }
 
 /**
- * @memberof Chain.prototype
- * @method connect
- * @see {@link Network#connect}
  */
 Chain.prototype.connect = function () {
   this._autoReconnect = true
@@ -278,9 +272,6 @@ Chain.prototype.connect = function () {
 }
 
 /**
- * @memberof Chain.prototype
- * @method disconnect
- * @see {@link Network#disconnect}
  */
 Chain.prototype.disconnect = function () {
   this._autoReconnect = false
@@ -288,9 +279,7 @@ Chain.prototype.disconnect = function () {
 }
 
 /**
- * @memberof Chain.prototype
- * @method refresh
- * @see {@link Network#refresh}
+ * @return {Promise}
  */
 Chain.prototype.refresh = function () {
   var self = this
@@ -302,32 +291,26 @@ Chain.prototype.refresh = function () {
       if (self.getCurrentHeight() !== response.height) {
         return self._setCurrentHeight(response.height)
       }
-
     })
 }
 
 /**
- * @memberof Chain.prototype
- * @method getCurrentActiveRequests
- * @see {@link Network#getCurrentActiveRequests}
+ * @return {number}
  */
 Chain.prototype.getCurrentActiveRequests = function () {
   return _.keys(this._requests).length
 }
 
 /**
- * @memberof Chain.prototype
- * @method getTimeFromLastResponse
- * @see {@link Network#getTimeFromLastResponse}
+ * @return {number}
  */
 Chain.prototype.getTimeFromLastResponse = function () {
   return Date.now() - this._lastResponse
 }
 
 /**
- * @memberof Chain.prototype
- * @method getHeader
- * @see {@link Network#getHeader}
+ * @param {number} height
+ * @return {Promise<BitcoinHeader>}
  */
 Chain.prototype.getHeader = function (height) {
   yatc.verify('PositiveNumber|ZeroNumber', height)
@@ -357,9 +340,8 @@ Chain.prototype.getHeader = function (height) {
 }
 
 /**
- * @memberof Chain.prototype
- * @method getTx
- * @see {@link Network#getTx}
+ * @param {string} txId
+ * @return {Promise<string>}
  */
 Chain.prototype.getTx = function (txId) {
   yatc.verify('SHA256Hex', txId)
@@ -378,9 +360,8 @@ Chain.prototype.getTx = function (txId) {
 }
 
 /**
- * @memberof Chain.prototype
- * @method sendTx
- * @see {@link Network#sendTx}
+ * @param {string} txHex
+ * @return {Promise<string>}
  */
 Chain.prototype.sendTx = function (txHex) {
   yatc.verify('HexString', txHex)
@@ -398,9 +379,8 @@ Chain.prototype.sendTx = function (txHex) {
 }
 
 /**
- * @memberof Chain.prototype
- * @method getHistory
- * @see {@link Network#getHistory}
+ * @param {string} address
+ * @return {Promise<Network~HistoryObject[]>}
  */
 Chain.prototype.getHistory = function (address) {
   yatc.verify('BitcoinAddress', address)
@@ -421,9 +401,8 @@ Chain.prototype.getHistory = function (address) {
 }
 
 /**
- * @memberof Chain.prototype
- * @method getUnspent
- * @see {@link Network#getUnspent}
+ * @param {string} address
+ * @return {Promise<Network~UnspentObject[]>}
  */
 Chain.prototype.getUnspent = function (address) {
   yatc.verify('BitcoinAddress', address)
@@ -475,9 +454,8 @@ Chain.prototype.getUnspent = function (address) {
 }
 
 /**
- * @memberof Chain.prototype
- * @method subscribeAddress
- * @see {@link Network#subscribeAddress}
+ * @param {string} address
+ * @return {Promise}
  */
 Chain.prototype.subscribeAddress = util.makeSerial(function (address) {
   yatc.verify('BitcoinAddress', address)

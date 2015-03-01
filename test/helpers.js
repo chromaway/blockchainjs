@@ -8,7 +8,7 @@ var errors = blockchainjs.errors
 
 
 /**
- * @return {Q.Promise}
+ * @return {Promise}
  */
 function createTx() {
   // thanks helloblock.io for programmatic faucet

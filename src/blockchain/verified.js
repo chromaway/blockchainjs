@@ -1,11 +1,10 @@
-var assert = require('assert')
-var inherits = require('util').inherits
-var timers = require('timers')
-
-var BigInteger = require('bigi')
 var _ = require('lodash')
+var assert = require('assert')
+var BigInteger = require('bigi')
+var inherits = require('util').inherits
 var LRU = require('lru-cache')
 var Q = require('q')
+var timers = require('timers')
 
 var Blockchain = require('./blockchain')
 var errors = require('../errors')
@@ -23,7 +22,7 @@ var MAX_TARGET_BI = BigInteger.fromHex(MAX_TARGET)
  * @param {number} index
  * @param {string[]} headersChain
  * @param {function} getHeader
- * @return {Q.Promise<{bits: number, target: string}>}
+ * @return {Promise<{bits: number, target: string}>}
  */
 function getTarget(index, headersChain, getHeader) {
   if (index === 0) {
@@ -158,44 +157,49 @@ function verifyHeader(currentHash, currentHeader, prevHash, prevHeader, target, 
  * @param {Network} network
  * @param {Object} opts
  * @param {Storage} opts.storage
- * @param {boolean} [opts.isTestnet=false]
- * @param {boolean} [opts.compactMode=false]
+ * @param {string} [opts.networkName=bitcoin]
+ * @param {boolean} [opts.testnet=false]
+ * @param {boolean} [opts.useCompactMode=false]
  * @param {boolean} [opts.usePreSavedChunkHashes=false]
  * @param {number} [opts.headerCacheSize=10000] ~1.5MB
  * @param {number} [opts.txCacheSize=100]
  */
 function Verified(network, opts) {
+  var self = this
+  Blockchain.call(self, network, opts)
+
   opts = _.extend({
-    isTestnet: false,
-    compactMode: false,
+    testnet: false,
+    useCompactMode: false,
     usePreSavedChunkHashes: false,
     headerCacheSize: 10000,
     txCacheSize: 100
   }, opts)
 
   yatc.verify('Network', network)
-  yatc.create([
+  if (network.getNetworkName() !== self.getNetworkName()) {
+    throw new TypeError('Network and Blockchain have different networks')
+  }
+  yatc.verify([
     '{',
       'storage:                Storage,',
-      'isTestnet:              Boolean,',
-      'compactMode:            Boolean,',
+      'testnet:                Boolean,',
+      'useCompactMode:         Boolean,',
       'usePreSavedChunkHashes: Boolean,',
       'headerCacheSize:        PositiveNumber|ZeroNumber,',
-      'txCacheSize:            PositiveNumber|ZeroNumber',
+      'txCacheSize:            PositiveNumber|ZeroNumber,',
+      '...',
     '}'
   ].join(''), opts)
-  if (opts.compactMode !== opts.storage.isUsedCompactMode()) {
-    throw new TypeError('Storage compactMode not compatible with Blockchain compactMode')
+  if (opts.useCompactMode !== opts.storage.isUsedCompactMode()) {
+    throw new TypeError('Storage and Blockchain have different compactMode')
   }
-
-  var self = this
-  Blockchain.call(self, network)
 
   // save storage (opts.compactMode not needed because already yet in storage)
   self._storage = opts.storage
 
   // save testnet mode, needed for header verification
-  self._isTestnet = opts.isTestnet
+  self._isTestnet = opts.testnet
 
   // create header and tx caches
   self._headerCache = LRU({max: opts.headerCacheSize})
@@ -262,7 +266,7 @@ function Verified(network, opts) {
     self._storage.once('ready', resolve)
   })
   .then(function () {
-    return self._initialize({usePreSavedChunkHashes: opts.usePreSavedChunkHashes})
+    return self._initialize(opts)
   })
   .then(function () {
     // set isReady is true and start syncing after initialization
@@ -280,10 +284,10 @@ inherits(Verified, Blockchain)
  *
  * @param {Object} opts
  * @param {boolean} opts.usePreSavedChunkHashes
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Verified.prototype._initialize = function (opts) {
-  yatc.verify('{usePreSavedChunkHashes: Boolean}', opts)
+  yatc.verify('{usePreSavedChunkHashes: Boolean, ...}', opts)
 
   var self = this
   var storage = self._storage
@@ -334,7 +338,7 @@ Verified.prototype._initialize = function (opts) {
 }
 
 /**
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Verified.prototype._sync = function () {
   var self = this
@@ -659,7 +663,7 @@ Verified.prototype.isSyncing = function () {
  * @param {number} height
  * @param {boolean} [waitHeader=true]
  *   wait header if height greather than current blockchain height
- * @return {Q.Promise<BitcoinHeader>}
+ * @return {Promise<BitcoinHeader>}
  */
 Verified.prototype.getHeader = function (height, waitHeader) {
   if (typeof waitHeader === 'undefined') {
@@ -752,7 +756,7 @@ Verified.prototype.getHeader = function (height, waitHeader) {
 
 /**
  * @param {string} txId
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Verified.prototype.getTx = function (txId) {
   var self = this
@@ -820,7 +824,7 @@ Verified.prototype.getTx = function (txId) {
 
 /**
  * @param {string} txHex
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Verified.prototype.sendTx = function (txHex) {
   return this.network.sendTx(txHex)
@@ -828,7 +832,7 @@ Verified.prototype.sendTx = function (txHex) {
 
 /**
  * @param {string} address
- * @return {Q.Promise<Network~HistoryObject>}
+ * @return {Promise<Network~HistoryObject>}
  */
 Verified.prototype.getHistory = function (address) {
   return this.network.getHistory(address)
@@ -836,7 +840,7 @@ Verified.prototype.getHistory = function (address) {
 
 /**
  * @param {string} address
- * @return {Q.Promise<Network~UnspentObject>}
+ * @return {Promise<Network~UnspentObject>}
  */
 Verified.prototype.getUnspent = function (address) {
   return this.network.getUnspent(address)
@@ -844,7 +848,7 @@ Verified.prototype.getUnspent = function (address) {
 
 /**
  * @param {string} address
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Verified.prototype.subscribeAddress = function (address) {
   return this.network.subscribeAddress(address)

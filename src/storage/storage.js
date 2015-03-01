@@ -1,10 +1,10 @@
-var events = require('events')
-var inherits = require('util').inherits
-
-var Q = require('q')
 var _ = require('lodash')
+var EventEmitter = require('eventemitter2').EventEmitter2
+var inherits = require('util').inherits
+var Q = require('q')
 
 var errors = require('../errors')
+var CompactModeError = errors.CompactModeError
 var NotImplementedError = errors.NotImplementedError
 var yatc = require('../yatc')
 
@@ -48,22 +48,27 @@ var yatc = require('../yatc')
  *
  * @class Storage
  * @param {Object} [opts]
+ * @param {string} [opts.networkName=bitcoin]
  * @param {boolean} [opts.useCompactMode=false]
  */
 function Storage(opts) {
-  opts = _.extend({useCompactMode: false}, opts)
-  yatc.verify('{useCompactMode: Boolean}', opts)
+  opts = _.extend({
+    networkName: 'bitcoin',
+    useCompactMode: false
+  }, opts)
+  yatc.verify('{networkName: String, useCompactMode: Boolean, ...}', opts)
 
   var self = this
-  events.EventEmitter.call(self)
+  EventEmitter.call(self)
 
+  self._networkName = opts.networkName
   self._useCompactMode = opts.useCompactMode
 
   self._isReady = false
   self.once('ready', function () { self._isReady = true })
 }
 
-inherits(Storage, events.EventEmitter)
+inherits(Storage, EventEmitter)
 
 // load pre-saved data
 Storage.prototype.preSavedChunkHashes = {
@@ -83,12 +88,19 @@ Storage.prototype.isUsedCompactMode = function () {
 /**
  * Throw error if compact mode not used
  *
- * @throws
+ * @throws {CompactModeError}
  */
 Storage.prototype.isUsedCompactModeCheck = function () {
   if (!this.isUsedCompactMode()) {
-    throw new errors.CompactModeError('Compact mode not used')
+    throw new CompactModeError('Compact mode not used')
   }
+}
+
+/**
+ * @return {string}
+ */
+Storage.prototype.getNetworkName = function () {
+  return this._networkName.slice()
 }
 
 /**
@@ -102,7 +114,7 @@ Storage.prototype.isReady = function () {
  * Return last header hash as hex string
  *
  * @abstract
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Storage.prototype.getLastHash = function () {
   return Q.reject(new NotImplementedError('Storage.getLastHash'))
@@ -113,7 +125,7 @@ Storage.prototype.getLastHash = function () {
  *
  * @abstract
  * @param {string} lastHash
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Storage.prototype.setLastHash = function () {
   return Q.reject(new NotImplementedError('Storage.setLastHash'))
@@ -123,7 +135,7 @@ Storage.prototype.setLastHash = function () {
  * Return total available chunk hashes
  *
  * @abstract
- * @return {Q.Promise<number>}
+ * @return {Promise<number>}
  */
 Storage.prototype.getChunkHashesCount = function () {
   return Q.reject(new NotImplementedError('Storage.getChunkHashesCount'))
@@ -134,7 +146,7 @@ Storage.prototype.getChunkHashesCount = function () {
  *
  * @abstract
  * @param {number} index
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Storage.prototype.getChunkHash = function () {
   return Q.reject(new NotImplementedError('Storage.getChunkHash'))
@@ -144,7 +156,7 @@ Storage.prototype.getChunkHash = function () {
  * Put chunk hash to storage
  *
  * @param {string} chunkHash
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Storage.prototype.putChunkHash = function (chunkHash) {
   return this.putChunkHashes([chunkHash])
@@ -155,7 +167,7 @@ Storage.prototype.putChunkHash = function (chunkHash) {
  *
  * @abstract
  * @param {string[]} chunkHashes
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Storage.prototype.putChunkHashes = function () {
   return Q.reject(new NotImplementedError('Storage.putChunkHashes'))
@@ -166,7 +178,7 @@ Storage.prototype.putChunkHashes = function () {
  *
  * @abstract
  * @param {number} limit
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Storage.prototype.truncateChunkHashes = function () {
   return Q.reject(new NotImplementedError('Storage.truncateChunkHashes'))
@@ -176,7 +188,7 @@ Storage.prototype.truncateChunkHashes = function () {
  * Return total available headers
  *
  * @abstract
- * @return {Q.Promise<number>}
+ * @return {Promise<number>}
  */
 Storage.prototype.getHeadersCount = function () {
   return Q.reject(new NotImplementedError('Storage.getHeadersCount'))
@@ -187,7 +199,7 @@ Storage.prototype.getHeadersCount = function () {
  *
  * @abstract
  * @param {number} index
- * @return {Q.Promise<string>}
+ * @return {Promise<string>}
  */
 Storage.prototype.getHeader = function () {
   return Q.reject(new NotImplementedError('Storage.getHeader'))
@@ -197,7 +209,7 @@ Storage.prototype.getHeader = function () {
  * Put hex header to storage
  *
  * @param {string} rawHexHeader
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Storage.prototype.putHeader = function (rawHexHeader) {
   return this.putHeaders([rawHexHeader])
@@ -208,7 +220,7 @@ Storage.prototype.putHeader = function (rawHexHeader) {
  *
  * @abstract
  * @param {string[]} rawHexHeaders
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Storage.prototype.putHeaders = function () {
   return Q.reject(new NotImplementedError('Storage.putHeaders'))
@@ -219,7 +231,7 @@ Storage.prototype.putHeaders = function () {
  *
  * @abstract
  * @param {number} limit
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Storage.prototype.truncateHeaders = function () {
   return Q.reject(new NotImplementedError('Storage.truncateBlockHashes'))
@@ -229,7 +241,7 @@ Storage.prototype.truncateHeaders = function () {
  * Remove all data
  *
  * @abstract
- * @return {Q.Promise}
+ * @return {Promise}
  */
 Storage.prototype.clear = function () {
   return Q.reject(new NotImplementedError('Storage.clear'))

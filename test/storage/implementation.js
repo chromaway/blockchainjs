@@ -66,7 +66,8 @@ function implementationTest(opts) {
           .then(function (lastHash) {
             expect(lastHash).to.equal(newHash)
             return storage.clear()
-          }).then(function () {
+          })
+          .then(function () {
             return storage.getLastHash()
           })
           .then(function (lastHash) {
@@ -207,7 +208,8 @@ function implementationTest(opts) {
           .then(function (lastHash) {
             expect(lastHash).to.equal(newHash)
             return storage.clear()
-          }).then(function () {
+          })
+          .then(function () {
             return storage.getLastHash()
           })
           .then(function (lastHash) {
