@@ -1,12 +1,12 @@
-var expect = require('chai').expect
+/* global describe, it, afterEach, beforeEach */
 
-var Q = require('q')
 var _ = require('lodash')
+var expect = require('chai').expect
+var Q = require('q')
 
 var blockchainjs = require('../../src')
 var errors = blockchainjs.errors
 var zfill = blockchainjs.util.zfill
-
 
 /**
  * @param {Object} opts
@@ -16,7 +16,7 @@ var zfill = blockchainjs.util.zfill
  * @param {boolean} [opts.testFullMode=true]
  * @param {boolean} [opts.testCompactMode=true]
  */
-function implementationTest(opts) {
+function implementationTest (opts) {
   opts = _.extend({
     describe: describe,
     description: opts.class.name,
@@ -24,6 +24,7 @@ function implementationTest(opts) {
   }, opts)
 
   describe(opts.description, function () {
+    var Storage = opts.class
     var storage
 
     afterEach(function () {
@@ -36,7 +37,7 @@ function implementationTest(opts) {
 
     describe('compact mode', function () {
       beforeEach(function (done) {
-        storage = new opts.class({useCompactMode: true})
+        storage = new Storage({useCompactMode: true})
         storage.once('ready', done)
       })
 
@@ -178,7 +179,7 @@ function implementationTest(opts) {
     var describeFunc = opts.testFullMode ? describe : describe.skip
     describeFunc('full mode', function () {
       beforeEach(function (done) {
-        storage = new opts.class({useCompactMode: false})
+        storage = new Storage({useCompactMode: false})
         storage.once('ready', done)
       })
 
@@ -295,6 +296,5 @@ function implementationTest(opts) {
     })
   })
 }
-
 
 module.exports = implementationTest

@@ -8,7 +8,6 @@ var CompactModeError = errors.CompactModeError
 var NotImplementedError = errors.NotImplementedError
 var yatc = require('../yatc')
 
-
 /**
  * @event Storage#ready
  */
@@ -53,7 +52,7 @@ var yatc = require('../yatc')
  * @param {string} [opts.networkName=bitcoin]
  * @param {boolean} [opts.useCompactMode=false]
  */
-function Storage(opts) {
+function Storage (opts) {
   opts = _.extend({
     networkName: 'bitcoin',
     useCompactMode: false
@@ -248,6 +247,5 @@ Storage.prototype.truncateHeaders = function () {
 Storage.prototype.clear = function () {
   return Q.reject(new NotImplementedError('Storage.clear'))
 }
-
 
 module.exports = Storage

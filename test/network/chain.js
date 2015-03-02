@@ -1,6 +1,6 @@
+var blockchainjs = require('../../src')
 var implementationTest = require('./implementation.js')
 
-
 implementationTest({
-  class: require('../../src').network.Chain
+  class: blockchainjs.network.Chain
 })

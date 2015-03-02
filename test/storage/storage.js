@@ -1,10 +1,11 @@
+/* global describe, it */
+
 var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
 
 var blockchainjs = require('../../src')
 var errors = blockchainjs.errors
 var Storage = blockchainjs.storage.Storage
-
 
 var NOT_IMPLEMENTED_METHODS = [
   'getLastHash',

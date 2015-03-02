@@ -1,3 +1,5 @@
+/* global describe, it, afterEach, beforeEach */
+
 var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
 
@@ -12,13 +14,18 @@ var notImplementedMethods = [
   'subscribeAddress'
 ]
 
-
 describe('blockchain.Blockchain', function () {
+  var network
   var blockchain
 
   beforeEach(function () {
-    var network = new blockchainjs.network.Network()
+    network = new blockchainjs.network.Network()
     blockchain = new blockchainjs.blockchain.Blockchain(network)
+  })
+
+  afterEach(function () {
+    network = null
+    blockchain = null
   })
 
   it('inherits EventEmitter', function () {
@@ -41,8 +48,8 @@ describe('blockchain.Blockchain', function () {
         .catch(function (e) { return e })
         .then(function (result) {
           expect(result).to.be.instanceof(blockchainjs.errors.NotImplementedError)
-          done()
         })
+        .done(done, done)
     })
   })
 })

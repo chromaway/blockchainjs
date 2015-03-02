@@ -6,7 +6,6 @@ var Network = require('./network')
 var util = require('../util')
 var yatc = require('../yatc')
 
-
 /**
  * @event Switcher#switchNetwork
  * @param {Network} newNetwork
@@ -25,7 +24,7 @@ var yatc = require('../yatc')
  * @param {string} [opts.networkName=bitcoin]
  * @param {boolean} [opts.useSPV=false] Value of supportSPV
  */
-function Switcher(networks, opts) {
+function Switcher (networks, opts) {
   var self = this
   Network.call(self, opts)
 
@@ -120,7 +119,7 @@ function Switcher(networks, opts) {
     network.on('connect', function () {
       connectedCount += 1
       if (connectedCount === 1) {
-        self._setReadyState(Network.OPEN)
+        self._setReadyState(self.OPEN)
       }
     })
 
@@ -128,7 +127,7 @@ function Switcher(networks, opts) {
     network.on('disconnect', function () {
       connectedCount -= 1
       if (connectedCount === 0) {
-        self._setReadyState(Network.CLOSED)
+        self._setReadyState(self.CLOSED)
       }
     })
   })
@@ -136,7 +135,7 @@ function Switcher(networks, opts) {
     return network.isConnected()
   })
   if (isConnected) {
-    self._setReadyState(Network.OPEN)
+    self._setReadyState(self.OPEN)
   }
 
   // newHeight event
@@ -206,7 +205,7 @@ Switcher.prototype._callMethod = function (methodName, args) {
 
   return self._currentNetwork
     .then(function (network) {
-      function onRejected(error) {
+      function onRejected (error) {
         return self._currentNetwork
           .then(function (newNetwork) {
             // re-throw if error not related with network
@@ -341,6 +340,5 @@ Switcher.prototype.subscribeAddress = util.makeSerial(function (address) {
 
   return Q.any(promises)
 })
-
 
 module.exports = Switcher

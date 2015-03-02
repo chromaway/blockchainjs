@@ -7,19 +7,23 @@ var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
-
 /**
  * @return {boolean}
  */
-function isLocalStorageSupported() {
-  try { return ('localStorage' in window && window.localStorage) }
-  catch (err) { return false }
+function isLocalStorageSupported () {
+  try {
+    return ('localStorage' in window && window.localStorage)
+
+  } catch (err) {
+    return false
+
+  }
 }
 
 /**
  * @return {Object}
  */
-function getStorage() {
+function getStorage () {
   var data = {}
   var storage = {
     getItem: function (keyName) { return data[keyName] },
@@ -46,8 +50,13 @@ function getStorage() {
         return undefined
       }
 
-      try { return JSON.parse(value) }
-      catch (err) { return value }
+      try {
+        return JSON.parse(value)
+
+      } catch (err) {
+        return value
+
+      }
     },
 
     remove: function (key) {
@@ -67,7 +76,7 @@ function getStorage() {
  * @param {boolean} [opts.useCompactMode=false]
  * @param {string} [opts.keyName] Recommended for use with network name
  */
-function LocalStorage(opts) {
+function LocalStorage (opts) {
   if (!isLocalStorageSupported()) {
     console.warn('localStorage not supported! (data will be stored in memory)')
   }
@@ -291,6 +300,5 @@ LocalStorage.prototype.clear = function () {
     self._init()
   })
 }
-
 
 module.exports = LocalStorage

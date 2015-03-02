@@ -6,7 +6,6 @@ var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
-
 /**
  * @class Memory
  * @extends Storage
@@ -15,7 +14,7 @@ var yatc = require('../yatc')
  * @param {string} [opts.networkName=bitcoin]
  * @param {boolean} [opts.useCompactMode=false]
  */
-function Memory(opts) {
+function Memory (opts) {
   var self = this
   Storage.call(self, opts)
 
@@ -181,6 +180,5 @@ Memory.prototype.clear = function () {
     }
   })
 }
-
 
 module.exports = Memory

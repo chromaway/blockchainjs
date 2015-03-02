@@ -1,7 +1,6 @@
 var base58check = require('bs58check')
 var yatc = require('yatc')
 
-
 var isBitcoinHeader = yatc.create([
   '{',
     'version:       UnsignedInt32,',
@@ -82,7 +81,6 @@ var isElectrumUnspent = yatc.create([
 
 var isHexString = yatc.create('HexString').is
 
-
 yatc.extend({
   BitcoinAddress: {
     typeOf: 'String',
@@ -96,7 +94,7 @@ yatc.extend({
       }
     }
   },
-  BitcoinHexChunk: {
+  BitcoinChunkHex: {
     typeOf: 'String',
     validate: function (obj) {
       return obj.length % 160 === 0 &&
@@ -187,6 +185,5 @@ yatc.extend({
     }
   }
 })
-
 
 module.exports = yatc

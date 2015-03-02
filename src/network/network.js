@@ -8,7 +8,6 @@ var NotImplementedError = require('../errors').NotImplementedError
 var util = require('../util')
 var yatc = require('../yatc')
 
-
 /**
  * @event Network#connect
  */
@@ -46,7 +45,7 @@ var yatc = require('../yatc')
  * @param {Object} [opts]
  * @param {string} [opts.networkName=bitcoin]
  */
-function Network(opts) {
+function Network (opts) {
   opts = _.extend({networkName: 'bitcoin'}, opts)
   yatc.verify('{networkName: String, ...}', opts)
 
@@ -66,9 +65,10 @@ inherits(Network, EventEmitter)
  * Ready States
  */
 _.forEach(['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'], function (state, index) {
-  var descriptor = {enumerable: true, value: index}
-  Object.defineProperty(Network.prototype, state, descriptor)
-  Object.defineProperty(Network, state, descriptor)
+  Object.defineProperty(Network.prototype, state, {
+    enumerable: true,
+    value: index
+  })
 })
 
 /**
@@ -109,7 +109,7 @@ Network.prototype._setCurrentHeight = util.makeSerial(function (newHeight) {
       self._currentHeight = newHeight
       self.emit('newHeight', newHeight)
     })
-    .done(null, function (error) { self.emit('error', error) })
+    .catch(function (error) { self.emit('error', error) })
 })
 
 /**
@@ -158,7 +158,8 @@ Network.prototype._updateDesiredReadyState = function (desiredReadyState) {
   if (desiredReadyState === this.OPEN) {
     // wait CLOSED state and call _doOpen in `newReadyState` handler
     if (this.readyState === this.CLOSING) {
-      return this._desiredReadyState = this.OPEN
+      this._desiredReadyState = this.OPEN
+      return
     }
 
     this._desiredReadyState = null
@@ -170,7 +171,8 @@ Network.prototype._updateDesiredReadyState = function (desiredReadyState) {
   if (desiredReadyState === this.CLOSED) {
     // wait OPEN state and call _doClose in `newReadyState` handler
     if (this.readyState === this.CONNECTING) {
-      return this._desiredReadyState = this.CLOSED
+      this._desiredReadyState = this.CLOSED
+      return
     }
 
     this._desiredReadyState = null
@@ -210,14 +212,14 @@ Network.prototype.disconnect = function () {
  * @return {boolean}
  */
 Network.prototype.isConnected = function () {
-  return this.readyState === Network.OPEN
+  return this.readyState === this.OPEN
 }
 
 /**
  * @return {string}
  */
 Network.prototype.getNetworkName = function () {
-  return this._networkName.slice()
+  return this._networkName
 }
 
 /**
@@ -298,6 +300,20 @@ Network.prototype.getTx = function () {
 }
 
 /**
+ * Return tx status and block hash for given txId, may return:
+ *  {status: 'invalid', height: null}
+ *  {status: 'unconfirmed', height: null}
+ *  {status: 'confirmed', height: number}
+ *
+ * @abstract
+ * @param {string} txId
+ * @return {Promise<{status: string, height: ?number>}
+ */
+Network.prototype.getTxStatus = function () {
+  return Q.reject(new NotImplementedError('Network.getTxStatus'))
+}
+
+/**
  * @typedef {Object} Network~MerkleObject
  * @property {number} height
  * @property {string[]} merkle
@@ -374,6 +390,5 @@ Network.prototype.getUnspent = function () {
 Network.prototype.subscribeAddress = function () {
   return Q.reject(new NotImplementedError('Network.subscribeAddress'))
 }
-
 
 module.exports = Network

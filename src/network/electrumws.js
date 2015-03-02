@@ -9,7 +9,6 @@ var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
-
 /**
  * [Electrum api (WebSocket)]{@link https://github.com/fanatid/electrumjs-server}
  *
@@ -21,7 +20,7 @@ var yatc = require('../yatc')
  * @param {string} [opts.url]
  * @param {string[]} [opts.transports] Socket.IO transports (polling, websocket)
  */
-function ElectrumWS(opts) {
+function ElectrumWS (opts) {
   var self = this
   Network.call(self, opts)
 
@@ -181,10 +180,6 @@ ElectrumWS.getURLs = function (network) {
  * @private
  */
 ElectrumWS.prototype._doOpen = function () {
-  if (this.readyState !== this.CLOSED) {
-    return
-  }
-
   this._setReadyState(this.CONNECTING)
   this._socket.connect()
 }
@@ -193,10 +188,6 @@ ElectrumWS.prototype._doOpen = function () {
  * @private
  */
 ElectrumWS.prototype._doClose = function () {
-  if (this.readyState === this.CLOSING || this.readyState === this.CLOSED) {
-    return
-  }
-
   this._setReadyState(this.CLOSING)
   this._socket.disconnect()
 }
@@ -271,13 +262,13 @@ ElectrumWS.prototype.getHeader = function (height) {
 
   return this._request('blockchain.block.get_header', [height])
     .then(function (response) {
-      if (yatc.is('{block_height: ZeroNumber, ...}', response)) {
-        response.prev_block_hash = util.zfill('', 64)
-      }
-
       if (response.block_height !== height) {
         var errMsg = 'Chain: requested - ' + height + ', got - ' + response.block_height
         throw new errors.GetHeaderError(errMsg)
+      }
+
+      if (response.block_height === 0) {
+        response.prev_block_hash = util.zfill('', 64)
       }
 
       yatc.verify('ElectrumHeader', response)
@@ -302,7 +293,7 @@ ElectrumWS.prototype.getChunk = function (index) {
 
   return this._request('blockchain.block.get_chunk', [index])
     .then(function (chunkHex) {
-      yatc.verify('BitcoinHexChunk', chunkHex)
+      yatc.verify('BitcoinChunkHex', chunkHex)
       return chunkHex
     })
 }
@@ -315,12 +306,13 @@ ElectrumWS.prototype.getTx = function (txId) {
   yatc.verify('SHA256Hex', txId)
 
   return this._request('blockchain.transaction.get', [txId])
-    .then(function (rawTx) {
-      yatc.verify('HexString', rawTx)
+    .then(function (txHex) {
+      yatc.verify('HexString', txHex)
 
-      var responseTxId = util.hashEncode(util.sha256x2(new Buffer(rawTx, 'hex')))
+      var rawTx = new Buffer(txHex, 'hex')
+      var responseTxId = util.hashEncode(util.sha256x2(rawTx))
       if (responseTxId === txId) {
-        return rawTx
+        return txHex
       }
 
       throw new errors.GetTxError('Expected: ' + txId + ', got: ' + responseTxId)
@@ -432,6 +424,5 @@ ElectrumWS.prototype.subscribeAddress = util.makeSerial(function (address) {
 
   return Q.resolve()
 })
-
 
 module.exports = ElectrumWS

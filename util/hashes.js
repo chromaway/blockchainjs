@@ -33,7 +33,7 @@ var optimist = require('optimist')
   })
   .check(function (argv) {
     if (/\.js$/.test(argv.out) === false) {
-      throw 'Output file must have js extension'
+      throw new Error('Output file must have js extension')
     }
 
     fs.writeFileSync(argv.out, '')

@@ -1,6 +1,5 @@
 var createError = require('errno').create
 
-
 /**
  * Error
  *  +-- BlockchainJSError
@@ -43,7 +42,6 @@ var StorageError = createError('StorageError', BlockchainJSError)
 var CompactModeError = createError('CompactModeError', StorageError)
 
 var NotImplementedError = createError('NotImplementedError', BlockchainJSError)
-
 
 module.exports = {
   BlockchainJSError: BlockchainJSError,

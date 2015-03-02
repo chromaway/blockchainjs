@@ -1,16 +1,13 @@
 var inherits = require('util').inherits
-
 var _ = require('lodash')
 var Q = require('q')
 var WS = require('ws')
+var request = Q.denodeify(require('request'))
 
 var Network = require('./network')
 var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
-
-var request = Q.denodeify(require('request'))
-
 
 /**
  * [Chain.com API]{@link https://chain.com/docs}
@@ -23,13 +20,13 @@ var request = Q.denodeify(require('request'))
  * @param {string} [opts.apiKeyId=DEMO-4a5e1e4]
  * @param {number} [opts.requestTimeout=10000]
  */
-function Chain(opts) {
+function Chain (opts) {
   var self = this
   Network.call(self, opts)
 
   opts = _.extend({
     apiKeyId: 'DEMO-4a5e1e4',
-    requestTimeout: 10000,
+    requestTimeout: 10000
   }, opts)
   yatc.verify('{apiKeyId: String, requestTimeout: PositiveNumber, ...}', opts)
 
@@ -131,7 +128,6 @@ Chain.prototype._doOpen = function () {
           return self.emit('touchAddress', payload.address)
         }
       }
-
     } catch (error) {
       self.emit('error', error)
 
@@ -148,7 +144,7 @@ Chain.prototype._doOpen = function () {
     self.emit('error', error)
   }
 
-  self._connectTimeout = setTimeout(function () {
+  function onConnectionTimeout () {
     var savedReadyState = self.readyState
 
     self._ws.close()
@@ -158,8 +154,9 @@ Chain.prototype._doOpen = function () {
       var errMsg = 'Chain: WebSocket connection timeout'
       self.emit('error', new errors.ConnectionTimeout(errMsg))
     }
+  }
 
-  }, 2000)
+  self._connectTimeout = setTimeout(onConnectionTimeout, 2000)
 }
 
 /**
@@ -184,7 +181,6 @@ Chain.prototype._doClose = function () {
       if (this._autoReconnect) {
         this.connect()
       }
-
     }.bind(this), 10000)
   }
 
@@ -206,7 +202,6 @@ Chain.prototype._updateIdleTimeout = function () {
       self._ws.close()
       self.emit('error', new errors.IdleTimeout('Chain: WebSocket timeout'))
     }
-
   }, 25000)
 }
 
@@ -228,7 +223,9 @@ Chain.prototype._request = function (path, data) {
     json: true
   }
 
+  /** @todo Pagination */
   // by default, /addresses/{address}/transaction return only 50 records!
+  // but now max 500, pagination needed
   if (requestOpts.uri.indexOf('/transactions?api') !== -1) {
     requestOpts.uri += '&limit=10000'
   }
@@ -475,6 +472,5 @@ Chain.prototype.subscribeAddress = util.makeSerial(function (address) {
 
   return Q.resolve()
 })
-
 
 module.exports = Chain

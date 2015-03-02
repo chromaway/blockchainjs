@@ -1,5 +1,6 @@
-var EventEmitter = require('events').EventEmitter
+/* global describe, it, afterEach, beforeEach */
 
+var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
 var Q = require('q')
 
@@ -14,6 +15,7 @@ var notImplementedMethods = [
   'getHeader',
   'getChunk',
   'getTx',
+  'getTxStatus',
   'getMerkle',
   'sendTx',
   'getHistory',
@@ -21,12 +23,15 @@ var notImplementedMethods = [
   'subscribeAddress'
 ]
 
-
 describe('network.Network', function () {
   var network
 
   beforeEach(function () {
     network = new blockchainjs.network.Network()
+  })
+
+  afterEach(function () {
+    network = null
   })
 
   it('inherits events.EventEmitter', function () {
@@ -53,7 +58,7 @@ describe('network.Network', function () {
 
   notImplementedMethods.forEach(function (method) {
     it(method, function (done) {
-      function getPromise() {
+      function getPromise () {
         try {
           var promise = network[method]()
           if (promise instanceof Q.Promise) {

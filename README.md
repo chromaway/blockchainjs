@@ -21,7 +21,7 @@ In addition to Verified blockchainjs has Storage interface for store headers. Me
 
 ### Show UTXO on address touched
 ```js
-var blockchainjs = require('./src')
+var blockchainjs = require('blockchainjs')
 var network = new blockchainjs.network.Chain({networkName: 'testnet'})
 var address = 'mxv3G1hM6o2TXrWBusu9Fnycqk58rEgpAP'
 

@@ -7,7 +7,6 @@ var NotImplementedError = require('../errors').NotImplementedError
 var util = require('../util')
 var yatc = require('../yatc')
 
-
 /**
  * @event Blockchain#error
  * @param {Error} error
@@ -31,7 +30,7 @@ var yatc = require('../yatc')
  * @param {Object} [opts]
  * @param {string} [opts.networkName=bitcoin]
  */
-function Blockchain(network, opts) {
+function Blockchain (network, opts) {
   opts = _.extend({networkName: 'bitcoin'}, opts)
   yatc.verify('Network', network)
   yatc.verify('{networkName: String, ...}', opts)
@@ -123,6 +122,5 @@ Blockchain.prototype.getUnspent = function () {
 Blockchain.prototype.subscribeAddress = function () {
   return Q.reject(new NotImplementedError('Blockchain.subscribeAddress'))
 }
-
 
 module.exports = Blockchain

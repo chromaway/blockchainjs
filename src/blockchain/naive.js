@@ -1,12 +1,10 @@
-var inherits = require('util').inherits
-
 var _ = require('lodash')
+var inherits = require('util').inherits
 var LRU = require('lru-cache')
 var Q = require('q')
 
 var Blockchain = require('./blockchain')
 var yatc = require('../yatc')
-
 
 /**
  * @class Naive
@@ -18,7 +16,7 @@ var yatc = require('../yatc')
  * @param {number} [opts.headerCacheSize=50]
  * @param {number} [opts.txCacheSize=100]
  */
-function Naive(network, opts) {
+function Naive (network, opts) {
   var self = this
   Blockchain.call(self, network, opts)
 
@@ -114,6 +112,5 @@ Naive.prototype.getUnspent = function (address) {
 Naive.prototype.subscribeAddress = function (address) {
   return this.network.subscribeAddress(address)
 }
-
 
 module.exports = Naive

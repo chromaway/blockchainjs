@@ -6,11 +6,10 @@ var request = Q.denodeify(require('request'))
 var blockchainjs = require('../src')
 var errors = blockchainjs.errors
 
-
 /**
  * @return {Promise}
  */
-function createTx() {
+function createTx () {
   // thanks helloblock.io for programmatic faucet
   var opts = {
     uri: 'https://testnet.helloblock.io/v1/faucet?type=1',
@@ -51,7 +50,7 @@ function createTx() {
  * @param {Error} error
  * @throws {Error}
  */
-function ignoreNetworkErrors(error) {
+function ignoreNetworkErrors (error) {
   if (error.message === 'Network unreachable') {
     return
   }
@@ -62,7 +61,6 @@ function ignoreNetworkErrors(error) {
 
   throw error
 }
-
 
 module.exports = {
   createTx: createTx,

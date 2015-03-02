@@ -1,5 +1,5 @@
-build
 coverage
 node_modules
 
+test/blockchainjs.test.js
 npm-debug.log

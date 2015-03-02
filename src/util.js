@@ -5,11 +5,10 @@ var Q = require('q')
 
 var yatc = require('./yatc')
 
-
 /**
  * @throws {TypeError}
  */
-function isBufferCheck(buffer) {
+function isBufferCheck (buffer) {
   if (!Buffer.isBuffer(buffer)) {
     throw new TypeError('Expect buffer, got ' + Object.prototype.toString.call(buffer))
   }
@@ -19,7 +18,7 @@ function isBufferCheck(buffer) {
  * @param {Buffer} buffer
  * @return {Buffer}
  */
-function sha256(buffer) {
+function sha256 (buffer) {
   isBufferCheck(buffer)
   return crypto.createHash('sha256').update(buffer).digest()
 }
@@ -28,7 +27,7 @@ function sha256(buffer) {
  * @param {Buffer} buffer
  * @return {Buffer}
  */
-function sha256x2(buffer) {
+function sha256x2 (buffer) {
   return sha256(sha256(buffer))
 }
 
@@ -36,7 +35,7 @@ function sha256x2(buffer) {
  * @param {Buffer} buffer
  * @return {Buffer}
  */
-function reverse(buffer) {
+function reverse (buffer) {
   isBufferCheck(buffer)
   return Array.prototype.reverse.call(new Buffer(buffer))
 }
@@ -47,7 +46,7 @@ function reverse(buffer) {
  * @param {Buffer} s
  * @return {string}
  */
-function hashEncode(s) {
+function hashEncode (s) {
   isBufferCheck(s)
   return Array.prototype.reverse.call(new Buffer(s)).toString('hex')
 }
@@ -58,7 +57,7 @@ function hashEncode(s) {
  * @param {string} s
  * @return {Buffer}
  */
-function hashDecode(s) {
+function hashDecode (s) {
   yatc.verify('HexString', s)
   return Array.prototype.reverse.call(new Buffer(s, 'hex'))
 }
@@ -69,7 +68,7 @@ function hashDecode(s) {
  * @param {string} s
  * @return {string}
  */
-function revHex(s) {
+function revHex (s) {
   return hashDecode(s).toString('hex')
 }
 
@@ -87,7 +86,7 @@ function revHex(s) {
  * @param {BitcoinHeader} header
  * @return {Buffer}
  */
-function header2buffer(header) {
+function header2buffer (header) {
   yatc.verify('BitcoinHeader', header)
 
   var buffer = new Buffer(80)
@@ -105,7 +104,7 @@ function header2buffer(header) {
  * @param {Buffer} buffer
  * @return {BitcoinHeader}
  */
-function buffer2header(buffer) {
+function buffer2header (buffer) {
   if (!Buffer.isBuffer(buffer) || buffer.length !== 80) {
     throw new TypeError('Expect buffer with length 80, got ' + Object.prototype.toString.call(buffer))
   }
@@ -120,12 +119,11 @@ function buffer2header(buffer) {
   }
 }
 
-
 /**
  * @param {function} fn
  * @return {function}
  */
-function makeSerial(fn) {
+function makeSerial (fn) {
   yatc.verify('Function', fn)
 
   var queue = []
@@ -152,13 +150,12 @@ function makeSerial(fn) {
   }
 }
 
-
 /**
  * @param {*} obj
  * @param {number} size
  * @return {string}
  */
-function zfill(obj, size) {
+function zfill (obj, size) {
   yatc.verify('PositiveNumber', size)
 
   var result = obj.toString()
@@ -168,7 +165,6 @@ function zfill(obj, size) {
 
   return result
 }
-
 
 module.exports = {
   sha256: sha256,

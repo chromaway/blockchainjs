@@ -1,3 +1,5 @@
+/* global describe, it, afterEach, beforeEach */
+
 var expect = require('chai').expect
 var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
@@ -5,14 +7,13 @@ var Q = require('q')
 var blockchainjs = require('../../src')
 var helpers = require('../helpers')
 
-
 describe('blockchain.Naive', function () {
   var network
   var blockchain
 
   beforeEach(function (done) {
     network = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
-    //network = new blockchainjs.network.Chain({networkName: 'testnet'})
+    // network = new blockchainjs.network.Chain({networkName: 'testnet'})
     network.on('error', helpers.ignoreNetworkErrors)
     network.once('connect', done)
     network.connect()

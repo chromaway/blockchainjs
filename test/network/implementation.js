@@ -1,3 +1,5 @@
+/* global describe, it, afterEach, beforeEach */
+
 var crypto = require('crypto')
 var expect = require('chai').expect
 var _ = require('lodash')
@@ -7,17 +9,16 @@ var Q = require('q')
 var blockchainjs = require('../../src')
 var helpers = require('../helpers')
 
-
 /**
  * @param {Object} [opts]
  * @param {function} [opts.describe]
  * @param {string} [opts.description]
  * @param {function} [opts.getNetworkOpts]
  */
-function implementationTest(opts) {
+function implementationTest (opts) {
   opts = _.extend({
-    describe:       describe,
-    description:    'network.' + opts.class.name,
+    describe: describe,
+    description: 'network.' + opts.class.name,
     getNetworkOpts: _.constant({networkName: 'testnet'})
   }, opts)
 
@@ -34,18 +35,18 @@ function implementationTest(opts) {
     })
 
     afterEach(function (done) {
-      function tryClearNetwork() {
+      function tryClearNetwork () {
         if (network.getCurrentActiveRequests() > 0) {
           return setTimeout(tryClearNetwork, 25)
         }
 
-        function onNewReadyState() {
+        function onNewReadyState () {
           if (network.readyState !== network.CLOSED) {
             return
           }
 
           network.removeAllListeners()
-          //network.removeListener('newReadyState', onNewReadyState)
+          // network.removeListener('newReadyState', onNewReadyState)
           network.on('error', function () {})
           network = null
           done()
@@ -175,6 +176,10 @@ function implementationTest(opts) {
         .done(done, done)
     })
 
+    it('getTxStatus', function (done) {
+      done()
+    })
+
     it('getMerkle', function (done) {
       if (!network.supportSPV()) {
         return done()
@@ -200,6 +205,8 @@ function implementationTest(opts) {
         })
         .done(done, done)
     })
+
+    it.skip('getMerkle BlockNotFound', function () {})
 
     it('getMerkle TransactionNotFound', function (done) {
       if (!network.supportSPV()) {
@@ -296,6 +303,5 @@ function implementationTest(opts) {
     })
   })
 }
-
 
 module.exports = implementationTest

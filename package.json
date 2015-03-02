@@ -11,6 +11,7 @@
   "bugs": {
     "url": "https://github.com/chromaway/blockchainjs/issues"
   },
+  "license": "MIT",
   "keywords": [
     "bitcoin",
     "blockchain",
@@ -23,12 +24,19 @@
     "LICENSE",
     "README.md"
   ],
+  "scripts": {
+    "compile_test": "browserify test/**/*.js >test/blockchainjs.test.js",
+    "coverage": "istanbul cover _mocha -- --timeout 20000 test/**/*.js",
+    "coveralls": "npm run-script coverage && coveralls <coverage/lcov.info",
+    "standard": "standard",
+    "test": "istanbul test mocha -- --reporter spec --timeout 20000 test/**/*.js"
+  },
   "dependencies": {
     "bigi": "1.4.0",
     "browser-request": "0.3.3",
     "bs58check": "1.0.4",
     "errno": "0.1.1",
-    "lodash": "3.0.0",
+    "lodash": "3.3.1",
     "lru-cache": "2.5.0",
     "q": "1.2.0",
     "request": "2.51.0",
@@ -38,26 +46,21 @@
   },
   "devDependencies": {
     "bitcoinjs-lib": "1.4.3",
+    "browserify": "9.0.3",
     "chai": "1.10.0",
     "coveralls": "2.11.2",
-    "grunt": "0.4.5",
-    "grunt-browserify": "3.3.0",
-    "grunt-contrib-clean": "0.6.0",
-    "grunt-contrib-jshint": "0.10.0",
-    "grunt-contrib-uglify": "0.7.0",
-    "grunt-jscs": "1.2.0",
-    "grunt-mocha-istanbul": "2.3.0",
-    "grunt-mocha-test": "0.12.6",
     "istanbul": "0.3.5",
-    "jscs": "1.10.0",
-    "jscs-jsdoc": "0.4.0",
-    "jshint-stylish": "1.0.0",
     "mocha": "2.1.0",
-    "optimist": "^0.6.1",
-    "progress": "^1.1.8"
+    "optimist": "0.6.1",
+    "progress": "1.1.8",
+    "standard": "2.10.0"
   },
   "browser": {
     "request": "browser-request"
   },
-  "license": "MIT"
+  "standard": {
+    "ignore": [
+      "test/blockchainjs.test.js"
+    ]
+  }
 }

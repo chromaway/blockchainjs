@@ -1,3 +1,5 @@
+/* global describe, it, afterEach, beforeEach */
+
 var expect = require('chai').expect
 var _ = require('lodash')
 var ProgressBar = require('progress')
@@ -7,13 +9,12 @@ var Q = require('q')
 var blockchainjs = require('../../src')
 var helpers = require('../helpers')
 
-
 describe('blockchain.Verified', function () {
   var network
   var storage
   var blockchain
 
-  function createBeforeEachFunction(Storage, storageOpts, blockchainOpts) {
+  function createBeforeEachFunction (Storage, storageOpts, blockchainOpts) {
     return function (done) {
       network = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
       network.on('error', helpers.ignoreNetworkErrors)
@@ -64,7 +65,7 @@ describe('blockchain.Verified', function () {
     network.disconnect()
   })
 
-  function runTests() {
+  function runTests () {
     it('inherits Blockchain', function () {
       expect(blockchain).to.be.instanceof(blockchainjs.blockchain.Blockchain)
       expect(blockchain).to.be.instanceof(blockchainjs.blockchain.Verified)

@@ -11,7 +11,6 @@ var errors = require('../errors')
 var util = require('../util')
 var yatc = require('../yatc')
 
-
 var MAX_BITS = 0x1d00ffff
 var MAX_TARGET = '00000000FFFF0000000000000000000000000000000000000000000000000000'
 var MAX_TARGET_BI = BigInteger.fromHex(MAX_TARGET)
@@ -24,7 +23,7 @@ var MAX_TARGET_BI = BigInteger.fromHex(MAX_TARGET)
  * @param {function} getHeader
  * @return {Promise<{bits: number, target: string}>}
  */
-function getTarget(index, headersChain, getHeader) {
+function getTarget (index, headersChain, getHeader) {
   if (index === 0) {
     return Q.resolve({bits: MAX_BITS, target: MAX_TARGET})
   }
@@ -86,7 +85,7 @@ function getTarget(index, headersChain, getHeader) {
  * @param {string} target
  * @return {Boolean}
  */
-function isGoodHash(hash, target) {
+function isGoodHash (hash, target) {
   hash = new Buffer(hash, 'hex')
   target = new Buffer(target, 'hex')
 
@@ -106,7 +105,7 @@ function isGoodHash(hash, target) {
  * @param {Boolean} isTestnet
  * @throws {VerifyHeaderError}
  */
-function verifyHeader(currentHash, currentHeader, prevHash, prevHeader, target, isTestnet) {
+function verifyHeader (currentHash, currentHeader, prevHash, prevHeader, target, isTestnet) {
   try {
     // check prevHash
     assert.equal(prevHash, currentHeader.prevBlockHash)
@@ -131,7 +130,6 @@ function verifyHeader(currentHash, currentHeader, prevHash, prevHeader, target, 
       assert.equal(currentHeader.bits, MAX_BITS)
       assert.equal(isGoodHash(currentHash, MAX_TARGET), true)
     }
-
   } catch (error) {
     if (error instanceof assert.AssertionError) {
       throw new errors.VerifyHeaderError('HeaderHash: ' + currentHash)
@@ -140,7 +138,6 @@ function verifyHeader(currentHash, currentHeader, prevHash, prevHeader, target, 
     throw error
   }
 }
-
 
 /**
  * @event Verified#syncStart
@@ -164,7 +161,7 @@ function verifyHeader(currentHash, currentHeader, prevHash, prevHeader, target, 
  * @param {number} [opts.headerCacheSize=10000] ~1.5MB
  * @param {number} [opts.txCacheSize=100]
  */
-function Verified(network, opts) {
+function Verified (network, opts) {
   var self = this
   Blockchain.call(self, network, opts)
 
@@ -364,7 +361,7 @@ Verified.prototype._sync = function () {
   /**
    * chunk: download, verify, save, change index, repeat
    */
-  function syncThroughChunks() {
+  function syncThroughChunks () {
     // all already synced?
     if (index > networkIndex) {
       return deferred.resolve()
@@ -477,7 +474,7 @@ Verified.prototype._sync = function () {
   /**
    * headers: verify, save and return promise
    */
-  function syncThroughHeaders(prevHeaderHash, prevHeader) {
+  function syncThroughHeaders (prevHeaderHash, prevHeader) {
     // calculate last header hash of headersChain
     var lastRawHeader = util.header2buffer(_.last(headersChain).header)
     var lastHash = util.hashEncode(util.sha256x2(lastRawHeader))
@@ -500,7 +497,7 @@ Verified.prototype._sync = function () {
           var chunkIndex = Math.floor(data.height / 2016)
 
           // verify header and assign new values for prevHeaderHash & prevHeader
-          function verifyAndAssign(target) {
+          function verifyAndAssign (target) {
             var rawHeader = util.header2buffer(data.header)
             var currentHeaderHash = util.hashEncode(util.sha256x2(rawHeader))
 
@@ -551,7 +548,7 @@ Verified.prototype._sync = function () {
           var deferred = Q.defer()
 
           var chunkHeaders = []
-          function readHeader(index) {
+          function readHeader (index) {
             Q.fcall(function () {
               // all headers are obtained from storage,
               //  now add headers from headersChain
@@ -769,7 +766,7 @@ Verified.prototype.getTx = function (txId) {
 
   return self.network.getTx(txId)
     .then(function (txHex) {
-      function onFulfilled(merkleObj) {
+      function onFulfilled (merkleObj) {
         // decode txId and calc merkle root by dint of merkle tree and tx index
         var hash = util.hashDecode(txId)
         merkleObj.merkle.forEach(function (txId, i) {
@@ -799,7 +796,7 @@ Verified.prototype.getTx = function (txId) {
           })
       }
 
-      function onRejected(error) {
+      function onRejected (error) {
         // tx not in mempool
         if (error.message !== 'BlockNotFound') {
           throw error
@@ -853,6 +850,5 @@ Verified.prototype.getUnspent = function (address) {
 Verified.prototype.subscribeAddress = function (address) {
   return this.network.subscribeAddress(address)
 }
-
 
 module.exports = Verified

@@ -1,13 +1,11 @@
 var _ = require('lodash')
 
 var blockchainjs = require('../../src')
-
 var implementationTest = require('./implementation.js')
 
-
 implementationTest({
-  class:          blockchainjs.network.Switcher,
-  description:    'network.Switcher: One source (ElectrumWS)',
+  class: blockchainjs.network.Switcher,
+  description: 'network.Switcher: One source (ElectrumWS)',
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
     return [[electrumNetwork], {networkName: 'testnet'}]
@@ -15,8 +13,8 @@ implementationTest({
 })
 
 implementationTest({
-  class:          blockchainjs.network.Switcher,
-  description:    'network.Switcher: One source (Chain)',
+  class: blockchainjs.network.Switcher,
+  description: 'network.Switcher: One source (Chain)',
   getNetworkOpts: function () {
     var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
     return [[chainNetwork], {networkName: 'testnet'}]
@@ -24,8 +22,8 @@ implementationTest({
 })
 
 implementationTest({
-  class:          blockchainjs.network.Switcher,
-  description:    'network.Switcher: Two sources (ElectrumWS, Chain)',
+  class: blockchainjs.network.Switcher,
+  description: 'network.Switcher: Two sources (ElectrumWS, Chain)',
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
     var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
@@ -34,8 +32,8 @@ implementationTest({
 })
 
 implementationTest({
-  class:          blockchainjs.network.Switcher,
-  description:    'network.Switcher: Two sources (ElectrumWS, Chain) (first doesn\'t work)',
+  class: blockchainjs.network.Switcher,
+  description: 'network.Switcher: Two sources (ElectrumWS, Chain) (first doesn\'t work)',
   getNetworkOpts: function () {
     var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
     var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
