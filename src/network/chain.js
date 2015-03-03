@@ -208,31 +208,45 @@ Chain.prototype._updateIdleTimeout = function () {
 /**
  * @private
  * @param {string} path
- * @param {Object} [data] Data for POST request
+ * @param {Object} opts
+ * @return {string}
+ */
+Chain.prototype._getURI = function (path, opts) {
+  opts = _({'api-key-id': this._apiKeyId})
+    .extend(opts)
+    .pairs()
+    .map(function (pair) { return pair.join('=') })
+    .join('&')
+
+  return 'https://api.chain.com/v2/' + this._blockChain + path + '?' + opts
+}
+
+/**
+ * @private
+ * @param {string} path
+ * @param {Object} [opts]
+ * @param {Object} [opts.data] Data for POST
+ * @param {Object} [opts.headers] Custom headers
  * @return {Promise<string>}
  */
-Chain.prototype._request = function (path, data) {
-  yatc.verify('Arguments{0: String, 1: Object|Undefined}', arguments)
+Chain.prototype._request = function (uri, opts) {
+  opts = _.extend({headers: {}}, opts)
+  yatc.verify('String', uri)
+  yatc.verify('{data: Object|Undefined, headers: Object}', opts)
 
   var self = this
   var requestOpts = {
     method: 'GET',
-    uri: 'https://api.chain.com/v2/' + this._blockChain + path + '?api-key-id=' + this._apiKeyId,
+    uri: uri,
+    headers: opts.headers,
     timeout: this._requestTimeout,
     zip: true,
     json: true
   }
 
-  /** @todo Pagination */
-  // by default, /addresses/{address}/transaction return only 50 records!
-  // but now max 500, pagination needed
-  if (requestOpts.uri.indexOf('/transactions?api') !== -1) {
-    requestOpts.uri += '&limit=10000'
-  }
-
-  if (!_.isUndefined(data)) {
+  if (typeof opts.data !== 'undefined') {
     requestOpts.method = 'POST'
-    requestOpts.json = data
+    requestOpts.json = opts.data
   }
 
   if (!self.isConnected()) {
@@ -251,7 +265,7 @@ Chain.prototype._request = function (path, data) {
       }
 
       self._lastResponse = Date.now()
-      return body
+      return response
     })
     .finally(function () {
       delete self._requests[requestId]
@@ -281,12 +295,14 @@ Chain.prototype.disconnect = function () {
 Chain.prototype.refresh = function () {
   var self = this
 
-  return self._request('/blocks/latest')
+  var uri = this._getURI('/blocks/latest')
+  return self._request(uri)
     .then(function (response) {
-      yatc.verify('{height: PositiveNumber|ZeroNumber, ...}', response)
+      var height = response.body.height
+      yatc.verify('PositiveNumber|ZeroNumber', height)
 
-      if (self.getCurrentHeight() !== response.height) {
-        return self._setCurrentHeight(response.height)
+      if (self.getCurrentHeight() !== height) {
+        return self._setCurrentHeight(height)
       }
     })
 }
@@ -312,26 +328,28 @@ Chain.prototype.getTimeFromLastResponse = function () {
 Chain.prototype.getHeader = function (height) {
   yatc.verify('PositiveNumber|ZeroNumber', height)
 
-  return this._request('/blocks/' + height)
+  var uri = this._getURI('/blocks/' + height)
+  return this._request(uri)
     .then(function (response) {
-      if (yatc.is('{height: ZeroNumber, ...}', response)) {
-        response.previous_block_hash = util.zfill('', 64)
-      }
-
-      if (response.height !== height) {
-        var errMsg = 'Chain: requested - ' + height + ', got - ' + response.height
+      var header = response.body
+      if (header.height !== height) {
+        var errMsg = 'Chain: requested - ' + height + ', got - ' + header.height
         throw new errors.GetHeaderError(errMsg)
       }
 
-      yatc.verify('ChainHeader', response)
+      if (header.height === 0) {
+        header.previous_block_hash = util.zfill('', 64)
+      }
+
+      yatc.verify('ChainHeader', header)
 
       return {
-        version: response.version,
-        prevBlockHash: response.previous_block_hash,
-        merkleRoot: response.merkle_root,
-        timestamp: Date.parse(response.time) / 1000,
-        bits: parseInt(response.bits, 16),
-        nonce: response.nonce
+        version: header.version,
+        prevBlockHash: header.previous_block_hash,
+        merkleRoot: header.merkle_root,
+        timestamp: Date.parse(header.time) / 1000,
+        bits: parseInt(header.bits, 16),
+        nonce: header.nonce
       }
     })
 }
@@ -343,13 +361,16 @@ Chain.prototype.getHeader = function (height) {
 Chain.prototype.getTx = function (txId) {
   yatc.verify('SHA256Hex', txId)
 
-  return this._request('/transactions/' + txId + '/hex')
+  var uri = this._getURI('/transactions/' + txId + '/hex')
+  return this._request(uri)
     .then(function (response) {
-      yatc.verify('{hex: HexString, ...}', response)
+      var txHex = response.body.hex
+      yatc.verify('HexString', txHex)
 
-      var responseTxId = util.hashEncode(util.sha256x2(new Buffer(response.hex, 'hex')))
+      var rawTx = new Buffer(txHex, 'hex')
+      var responseTxId = util.hashEncode(util.sha256x2(rawTx))
       if (responseTxId === txId) {
-        return response.hex
+        return txHex
       }
 
       throw new errors.GetTxError('Expected: ' + txId + ', got: ' + responseTxId)
@@ -363,15 +384,19 @@ Chain.prototype.getTx = function (txId) {
 Chain.prototype.sendTx = function (txHex) {
   yatc.verify('HexString', txHex)
 
-  return this._request('/transactions', {'hex': txHex})
+  var uri = this._getURI('/transactions')
+  return this._request(uri, {data: {'hex': txHex}})
     .then(function (response) {
-      yatc.verify('{transaction_hash: SHA256Hex}', response)
+      var responseTxId = response.body.transaction_hash
+      yatc.verify('SHA256Hex', responseTxId)
+
       var txId = util.hashEncode(util.sha256x2(new Buffer(txHex, 'hex')))
-      if (txId === response.transaction_hash) {
+      if (txId === responseTxId) {
         return txId
       }
 
-      throw new errors.SendTxError('Expected: ' + txId + ', got: ' + response.transaction_hash)
+      var errMsg = 'Expected: ' + txId + ', got: ' + responseTxId
+      throw new errors.SendTxError(errMsg)
     })
 }
 
@@ -382,18 +407,40 @@ Chain.prototype.sendTx = function (txHex) {
 Chain.prototype.getHistory = function (address) {
   yatc.verify('BitcoinAddress', address)
 
-  return this._request('/addresses/' + address + '/transactions')
-    .then(function (response) {
-      yatc.verify('[ChainHistoryEntry]', response)
+  var self = this
 
-      return _.chain(response)
-        .map(function (entry) {
+  var deferred = Q.defer()
+  var uri = self._getURI('/addresses/' + address + '/transactions', {limit: 500})
+  var transactions = []
+
+  /**
+   * @param {string} range
+   */
+  function getPage (range) {
+    self._request(uri, {headers: {'range': range}})
+      .then(function (response) {
+        yatc.verify('[ChainHistoryEntry]', response.body)
+
+        transactions = transactions.concat(response.body.map(function (entry) {
           return {txId: entry.hash, height: entry.block_height}
-        })
-        .sortBy(function (entry) {
-          return [entry.height === null ? Infinity : entry.height, entry.txId]
-        })
-        .value()
+        }))
+
+        if (typeof response.headers['next-range'] === 'undefined') {
+          return deferred.resolve()
+        }
+
+        getPage(response.headers['next-range'])
+      })
+      .done(null, deferred.reject)
+  }
+  getPage('')
+
+  return deferred.promise
+    .then(function () {
+      return _.sortBy(transactions, function (entry) {
+        return [entry.height === null ? Infinity : entry.height, entry.txId]
+      })
+
     })
 }
 
@@ -423,10 +470,12 @@ Chain.prototype.getUnspent = function (address) {
 
   return deferred.promise
     .then(function () {
-      return self._request('/addresses/' + address + '/unspents')
+      var uri = self._getURI('/addresses/' + address + '/unspents')
+      return self._request(uri)
 
     })
     .then(function (response) {
+      response = response.body
       yatc.verify('[ChainUnspent]', response)
 
       var currentHeight = self.getCurrentHeight()
