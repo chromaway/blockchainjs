@@ -28,8 +28,8 @@
     "compile_test": "browserify test/**/*.js >test/blockchainjs.test.js",
     "coverage": "istanbul cover _mocha -- --timeout 20000 test/**/*.js",
     "coveralls": "npm run-script coverage && coveralls <coverage/lcov.info",
-    "standard": "standard",
-    "test": "istanbul test mocha -- --reporter spec --timeout 20000 test/**/*.js"
+    "lint": "standard",
+    "test": "istanbul test mocha -- --reporter spec test/**/*.js"
   },
   "dependencies": {
     "bigi": "1.4.0",
