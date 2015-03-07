@@ -4,7 +4,7 @@ var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
 var Q = require('q')
 
-var blockchainjs = require('../../src')
+var blockchainjs = require('../../lib')
 
 var notImplementedMethods = [
   '_doOpen',
@@ -23,7 +23,7 @@ var notImplementedMethods = [
   'subscribeAddress'
 ]
 
-describe('network.Network', function () {
+describe.skip('network.Network', function () {
   var network
 
   beforeEach(function () {

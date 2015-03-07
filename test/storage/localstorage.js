@@ -1,7 +1,7 @@
-var blockchainjs = require('../../src')
+var blockchainjs = require('../../lib')
 var implementationTest = require('./implementation')
 
 implementationTest({
   class: blockchainjs.storage.LocalStorage,
-  testFullMode: false
+  skipFullMode: true
 })

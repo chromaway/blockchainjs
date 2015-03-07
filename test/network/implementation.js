@@ -6,7 +6,7 @@ var _ = require('lodash')
 var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
 
-var blockchainjs = require('../../src')
+var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
 
 /**
@@ -22,7 +22,7 @@ function implementationTest (opts) {
     getNetworkOpts: _.constant({networkName: 'testnet'})
   }, opts)
 
-  opts.describe(opts.description, function () {
+  opts.describe.skip(opts.description, function () {
     var network
 
     beforeEach(function (done) {

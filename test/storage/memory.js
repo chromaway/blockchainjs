@@ -1,4 +1,4 @@
-var blockchainjs = require('../../src')
+var blockchainjs = require('../../lib')
 var implementationTest = require('./implementation')
 
 implementationTest({

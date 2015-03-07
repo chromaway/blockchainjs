@@ -9,13 +9,14 @@
     * [getLastHash](#getlasthash)
     * [setLastHash](#setlasthash)
     * [getChunkHashesCount](#getchunkhashescount)
-    * [getChunkHashes](#getchunkhashes)
+    * [getChunkHash](#getchunkhash)
     * [putChunkHashes](#putchunkhashes)
     * [truncateChunkHashes](#truncatechunkhashes)
     * [getHeadersCount](#getheaderscount)
-    * [getHeaders](#getheaders)
+    * [getHeader](#getheader)
     * [putHeaders](#putheaders)
     * [truncateHeaders](#truncateheaders)
+    * [clear](#clear)
   * Properties
     * networkName
     * compactMode
@@ -59,19 +60,19 @@
 
 ### getChunkHashes
 
-  * `Array.<number>`
+  * `Array.<number>` indices
 
 **return**: `Promise<string>`
 
 ### putChunkHashes
 
-  * `Array.<string>`
+  * `Array.<string>` chunkHashes
 
 **return**: `Promise`
 
 ### truncateChunkHashes
 
-  * `number`
+  * `number` limit
 
 **return**: `Promise`
 
@@ -81,19 +82,23 @@
 
 ### getHeaders
 
-  * `Array.<number>`
+  * `Array.<number>` indices
 
 **return**: `Promise<string>`
 
 ### putHeaders
 
-  * `Array.<string>`
+  * `Array.<string>` headers
 
 **return**: `Promise`
 
 ### truncateHeaders
 
-  * `number`
+  * `number` limit
+
+**return**: `Promise`
+
+### clear
 
 **return**: `Promise`
 

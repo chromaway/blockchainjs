@@ -4,10 +4,10 @@ var expect = require('chai').expect
 var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
 
-var blockchainjs = require('../../src')
+var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
 
-describe('blockchain.Naive', function () {
+describe.skip('blockchain.Naive', function () {
   var network
   var blockchain
 

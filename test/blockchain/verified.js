@@ -6,10 +6,10 @@ var ProgressBar = require('progress')
 var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
 
-var blockchainjs = require('../../src')
+var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
 
-describe('blockchain.Verified', function () {
+describe.skip('blockchain.Verified', function () {
   var network
   var storage
   var blockchain

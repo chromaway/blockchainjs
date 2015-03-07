@@ -4,7 +4,7 @@ var _ = require('lodash')
 var expect = require('chai').expect
 var Q = require('q')
 
-var blockchainjs = require('../../src')
+var blockchainjs = require('../../lib')
 var errors = blockchainjs.errors
 var zfill = blockchainjs.util.zfill
 
@@ -13,17 +13,16 @@ var zfill = blockchainjs.util.zfill
  * @param {function} opts.class
  * @param {function} [opts.describe]
  * @param {string} [opts.description] By default opts.class.name
- * @param {boolean} [opts.testFullMode=true]
- * @param {boolean} [opts.testCompactMode=true]
+ * @param {boolean} [opts.skipFullMode=false]
  */
 function implementationTest (opts) {
   opts = _.extend({
     describe: describe,
     description: opts.class.name,
-    testFullMode: true
+    skipFullMode: false
   }, opts)
 
-  describe(opts.description, function () {
+  opts.describe(opts.description, function () {
     var Storage = opts.class
     var storage
 
@@ -37,7 +36,7 @@ function implementationTest (opts) {
 
     describe('compact mode', function () {
       beforeEach(function (done) {
-        storage = new Storage({useCompactMode: true})
+        storage = new Storage({compactMode: true})
         storage.once('ready', done)
       })
 
@@ -47,7 +46,7 @@ function implementationTest (opts) {
       })
 
       it('compact mode is true', function () {
-        expect(storage.isUsedCompactMode()).to.be.true
+        expect(storage.compactMode).to.be.true
       })
 
       it('isReady', function () {
@@ -81,10 +80,11 @@ function implementationTest (opts) {
         storage.getChunkHashesCount()
           .then(function (chunkHashesCount) {
             expect(chunkHashesCount).to.equal(0)
-            return storage.putChunkHash(zfill('', 64))
-          })
-          .then(function () {
-            return storage.putChunkHashes([zfill('1', 64), zfill('2', 64)])
+            return storage.putChunkHashes([
+              zfill('0', 64),
+              zfill('1', 64),
+              zfill('2', 64)
+            ])
           })
           .then(function () {
             return storage.getChunkHashesCount()
@@ -127,10 +127,11 @@ function implementationTest (opts) {
         storage.getHeadersCount()
           .then(function (headersCount) {
             expect(headersCount).to.equal(0)
-            return storage.putHeader(zfill('', 160))
-          })
-          .then(function () {
-            return storage.putHeaders([zfill('1', 160), zfill('2', 160)])
+            return storage.putHeaders([
+              zfill('0', 160),
+              zfill('1', 160),
+              zfill('2', 160)
+            ])
           })
           .then(function () {
             return storage.getHeadersCount()
@@ -176,10 +177,10 @@ function implementationTest (opts) {
       })
     })
 
-    var describeFunc = opts.testFullMode ? describe : describe.skip
-    describeFunc('full mode', function () {
+    var describeFn = opts.skipFullMode ? describe.skip : describe
+    describeFn('full mode', function () {
       beforeEach(function (done) {
-        storage = new Storage({useCompactMode: false})
+        storage = new Storage({compactMode: false})
         storage.once('ready', done)
       })
 
@@ -189,7 +190,7 @@ function implementationTest (opts) {
       })
 
       it('compact mode is false', function () {
-        expect(storage.isUsedCompactMode()).to.be.false
+        expect(storage.compactMode).to.be.false
       })
 
       it('isReady', function () {
@@ -223,7 +224,6 @@ function implementationTest (opts) {
         var chunkMethods = [
           'getHeadersCount',
           'getHeader',
-          'putHeader',
           'putHeaders',
           'truncateHeaders'
         ]
@@ -244,10 +244,11 @@ function implementationTest (opts) {
         storage.getHeadersCount()
           .then(function (headersCount) {
             expect(headersCount).to.equal(0)
-            return storage.putHeader(zfill('', 160))
-          })
-          .then(function () {
-            return storage.putHeaders([zfill('1', 160), zfill('2', 160)])
+            return storage.putHeaders([
+              zfill('0', 160),
+              zfill('1', 160),
+              zfill('2', 160)
+            ])
           })
           .then(function () {
             return storage.getHeadersCount()

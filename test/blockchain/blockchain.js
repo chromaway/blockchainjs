@@ -3,7 +3,7 @@
 var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
 
-var blockchainjs = require('../../src')
+var blockchainjs = require('../../lib')
 
 var notImplementedMethods = [
   'getHeader',
@@ -14,7 +14,7 @@ var notImplementedMethods = [
   'subscribeAddress'
 ]
 
-describe('blockchain.Blockchain', function () {
+describe.skip('blockchain.Blockchain', function () {
   var network
   var blockchain
 
