@@ -3,7 +3,7 @@ var bitcoin = require('bitcoinjs-lib')
 var Q = require('q')
 var request = Q.denodeify(require('request'))
 
-var blockchainjs = require('../src')
+var blockchainjs = require('../lib')
 var errors = blockchainjs.errors
 
 /**

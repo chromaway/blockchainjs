@@ -17,6 +17,19 @@ Blockchain implements a common interface between network and your wallet. You ca
 
 In addition to Verified blockchainjs has Storage interface for store headers. Memory and LocalStorage available for now.
 
+## API
+
+  * [Network](https://github.com/chromaway/blockchainjs/blob/master/docs/networkapi.md)
+    * [Chain](https://github.com/chromaway/blockchainjs/blob/master/docs/networkapi.md#chain)
+    * [ChromaInsight](https://github.com/chromaway/blockchainjs/blob/master/docs/networkapi.md#chromainsight)
+    * [Switcher](https://github.com/chromaway/blockchainjs/blob/master/docs/networkapi.md#switcher)
+  * [Blockchain](https://github.com/chromaway/blockchainjs/blob/master/docs/blockchainapi.md)
+    * [Naive](https://github.com/chromaway/blockchainjs/blob/master/docs/blockchainapi.md#naive)
+    * [Verified](https://github.com/chromaway/blockchainjs/blob/master/docs/blockchainapi.md#verified)
+  * [Storage](https://github.com/chromaway/blockchainjs/blob/master/docs/storageapi.md)
+    * [Memory](https://github.com/chromaway/blockchainjs/blob/master/docs/storageapi.md#memory)
+    * [LocalStorage](https://github.com/chromaway/blockchainjs/blob/master/docs/storageapi.md#localstorage)
+
 ## Examples
 
 ### Show UTXO on address touched
