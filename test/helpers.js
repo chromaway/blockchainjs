@@ -1,7 +1,7 @@
 var _ = require('lodash')
 var bitcoin = require('bitcoinjs-lib')
+var faucet = require('helloblock-faucet')
 var Q = require('q')
-var request = Q.denodeify(require('request'))
 
 var blockchainjs = require('../lib')
 var errors = blockchainjs.errors
@@ -10,24 +10,7 @@ var errors = blockchainjs.errors
  * @return {Promise}
  */
 function createTx () {
-  // thanks helloblock.io for programmatic faucet
-  var opts = {
-    uri: 'https://testnet.helloblock.io/v1/faucet?type=1',
-    json: true,
-    zip: true
-  }
-
-  return request(opts)
-    .spread(function (response, body) {
-      if (response.statusCode !== 200) {
-        throw new Error(response.statusMessage)
-      }
-
-      if (body.status !== 'success') {
-        throw new Error('Status: ' + body.status)
-      }
-      return body.data
-    })
+  return Q.nfcall(faucet.getUnspents, 1)
     .then(function (data) {
       var privKey = bitcoin.ECKey.fromWIF(data.privateKeyWIF)
       var total = 0

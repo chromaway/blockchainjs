@@ -1,9 +1,9 @@
 # Network
 
   * [Events](#events)
-    * [error](#error)
     * [connect](#connect)
     * [disconnect](#disconnect)
+    * [error](#error)
     * [newBlock](#newblock)
     * [touchAddress](#touchaddress)
   * [Methods](#methods)
@@ -14,7 +14,7 @@
     * [isConnected](#isconnected)
     * [getCurrentActiveRequests](#getcurrentactiverequests)
     * [getTimeFromLastResponse](#gettimefromlastresponse)
-    * [refresh](#refresh)
+    * [getHeader](#getheader)
     * [getHeaders](#getheaders)
     * [getTx](#gettx)
     * [getTxBlockHash](#gettxblockhash)
@@ -25,6 +25,8 @@
     * [subscribe](#subscribe)
   * Properties
     * networkName
+    * READY_STATE
+    * readyState
   * Inheritance
     * [Chain](#chain)
     * [ChromaInsight](#chromainsight)
@@ -76,15 +78,20 @@
 
 **return**: `number`
 
-### refresh
+### getHeader
 
-**return**: `Promise`
+  * `(number|string)` headerId blockHash, height or special keyword latest
+
+**return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
 
 ### getHeaders
 
-  * `Array.<(number|string)>` headers Array of heights or blockHashes
+Like [getheaders in protocol](https://en.bitcoin.it/wiki/Protocol_documentation#getheaders). Available only in SPV supported networks. Return max 2000 objects.
 
-**return**: `Promise<Array.<string>>` Array of hex strings (length is 160)
+  * `string` fromBlockHash
+  * `string` toBlockHash
+
+**return**: `Promise<Array.<Object>>` Array of [HeaderObject](#headerobject)
 
 ### getTx
 
@@ -96,13 +103,7 @@
 
   * `string` txHash
 
-**return**: `Promise<?string>` blockHash for confirmed and `null` for unconfirmed
-
-### getMerkle
-
-  * `string` txHash
-
-**return**: `Promise<?{blockHash: string, merkle: string[], index: number}>` `null` for unconfirmed
+**return**: `Promise<?Object>` `null` for unconfirmed or [TxBlockHashObject](#txblockhashobject) for confirmed
 
 ### sendTx
 
@@ -114,18 +115,18 @@
 
   * `string` address
 
-**return**: `Promise<Array.<{txHash: string, outIndex: number, value: number>>`
+**return**: `Promise<Object[]>` `Object` is [UnspentObject](#unspentobject)
 
 ### getHistory
 
   * `string` address
 
-**return**: `Promise<Array.<string>>` Array of txHashes
+**return**: `Promise<string[]>` Array of txHashes
 
 ### subscribe
 
   * `Object` opts
-    * `string` type May be block and address
+    * `string` type May be new-block or address
     * `string` address Only for address type
 
 **return**: `Promise`
@@ -150,3 +151,29 @@
   * `Object` opts
     * `Network[]` networks
     * `boolean` spv
+
+## Objects
+
+### HeaderObject
+
+  * `number` height
+  * `string` hash
+  * `number` version
+  * `string` prevBlockHash
+  * `string` merkleRoot
+  * `number` time
+  * `number` bits
+  * `number` nonce
+
+### TxBlockHashObject
+
+  * `number` blockHeight
+  * `string` blockHash
+  * `(undefined|number)` index
+  * `(undefined|string[])` transactionHashes
+
+### UnspentObject
+
+  * `string` txHash
+  * `number` outIndex
+  * `number` value

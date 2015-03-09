@@ -1,3 +1,4 @@
+/*
 var _ = require('lodash')
 
 var blockchainjs = require('../../lib')
@@ -49,3 +50,4 @@ implementationTest({
     return [[electrumNetwork, chainNetwork], {networkName: 'testnet'}]
   }
 })
+*/

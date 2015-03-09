@@ -60,7 +60,7 @@
 
   * `Array.<(number|string)>` headers Array of heights or blockHashes
 
-**return**: `Promise<Array.<string>>` Array of hex strings (length is 160)
+**return**: `Promise<Array.<string>>` Array of objects with version, prevBlockHash, merkleRoot, ...
 
 ### getTx
 

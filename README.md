@@ -1,9 +1,9 @@
-blockchainjs
-============
+# blockchainjs
 
 [![Version](http://img.shields.io/npm/v/blockchainjs.svg?style=flat-square)](https://www.npmjs.org/package/blockchainjs)
 [![build status](https://img.shields.io/travis/chromaway/blockchainjs.svg?branch=master&style=flat-square)](http://travis-ci.org/chromaway/blockchainjs)
 [![Coverage Status](https://img.shields.io/coveralls/chromaway/blockchainjs.svg?style=flat-square)](https://coveralls.io/r/chromaway/blockchainjs)
+[![Dependency status](https://img.shields.io/david/chromaway/blockchainjs.svg?style=flat-square)](https://david-dm.org/chromaway/blockchainjs#info=dependencies)
 
 A pure JavaScript library for node.js and browsers for easy data exchange between wallets and bitcoin network.
 

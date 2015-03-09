@@ -5,7 +5,7 @@ var _ = require('lodash')
 var ProgressBar = require('progress')
 var Q = require('q')
 
-var blockchainjs = require('../src')
+var blockchainjs = require('../lib')
 var ElectrumWS = blockchainjs.network.ElectrumWS
 var util = blockchainjs.util
 

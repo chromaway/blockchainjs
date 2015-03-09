@@ -9,21 +9,19 @@ var blockchainjs = require('../../lib')
 var notImplementedMethods = [
   '_doOpen',
   '_doClose',
-  'refresh',
   'getCurrentActiveRequests',
   'getTimeFromLastResponse',
   'getHeader',
-  'getChunk',
+  'getHeaders',
   'getTx',
-  'getTxStatus',
-  'getMerkle',
+  'getTxBlockHash',
   'sendTx',
-  'getHistory',
   'getUnspent',
-  'subscribeAddress'
+  'getHistory',
+  'subscribe'
 ]
 
-describe.skip('network.Network', function () {
+describe('network.Network', function () {
   var network
 
   beforeEach(function () {
@@ -39,21 +37,12 @@ describe.skip('network.Network', function () {
     expect(network).to.be.instanceof(blockchainjs.network.Network)
   })
 
-  it('supportSPV', function () {
-    expect(network.supportSPV()).to.be.false
+  it('isSupportSPV', function () {
+    expect(network.isSupportSPV()).to.be.false
   })
 
   it('isConnected', function () {
     expect(network.isConnected()).to.be.false
-  })
-
-  it('getCurrentHeight', function () {
-    expect(network.getCurrentHeight()).to.equal(-1)
-  })
-
-  it('getCurrentBlockHash', function () {
-    var result = network.getCurrentBlockHash().toString('hex')
-    expect(result).to.equal(blockchainjs.util.zfill('', 64))
   })
 
   notImplementedMethods.forEach(function (method) {
