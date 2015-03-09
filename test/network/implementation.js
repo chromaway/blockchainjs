@@ -148,8 +148,17 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it.skip('getTx (unconfirmed tx)', function (done) {
-      done()
+    it('getTx (unconfirmed tx)', function (done) {
+      helpers.getUnconfirmedTxHash()
+        .then(function (txHash) {
+          return network.getTx(txHash)
+            .then(function (txHex) {
+              var responseTxHash = blockchainjs.util.hashEncode(
+                blockchainjs.util.sha256x2(new Buffer(txHex, 'hex')))
+              expect(responseTxHash).to.equal(txHash)
+            })
+        })
+        .done(done, done)
     })
 
     it('getTx (not-exists tx)', function (done) {
@@ -180,8 +189,15 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it.skip('getTxBlockHash (unconfirmed tx)', function (done) {
-      done()
+    it('getTxBlockHash (unconfirmed tx)', function (done) {
+      helpers.getUnconfirmedTxHash()
+        .then(function (txHash) {
+          return network.getTxBlockHash(txHash)
+        })
+        .then(function (response) {
+          expect(response).to.be.null
+        })
+        .done(done, done)
     })
 
     it('getTxBlockHash (non-exists tx)', function (done) {

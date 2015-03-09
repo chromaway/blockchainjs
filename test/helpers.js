@@ -2,12 +2,14 @@ var _ = require('lodash')
 var bitcoin = require('bitcoinjs-lib')
 var faucet = require('helloblock-faucet')
 var Q = require('q')
+var io = require('socket.io-client')
+var request = require('request')
 
 var blockchainjs = require('../lib')
 var errors = blockchainjs.errors
 
 /**
- * @return {Promise}
+ * @return {Promise<string>}
  */
 function createTx () {
   return Q.nfcall(faucet.getUnspents, 1)
@@ -29,6 +31,42 @@ function createTx () {
     })
 }
 
+var lastUnconfirmedTxHash = Q.defer()
+
+var socket = io('https://test-insight.bitpay.com/', {forceNew: true})
+socket.emit('subscribe', 'inv')
+socket.on('tx', function (data) {
+  if (lastUnconfirmedTxHash.promise.isFulfilled()) {
+    lastUnconfirmedTxHash = Q.defer()
+  }
+
+  lastUnconfirmedTxHash.resolve(data.txid)
+})
+
+Q.delay(25000)
+  .then(function () {
+    if (lastUnconfirmedTxHash.promise.isFulfilled()) {
+      return
+    }
+
+    return createTx()
+      .then(function (tx) {
+        return Q.nfcall(request, {
+          uri: 'https://testnet.helloblock.io/v1/transactions',
+          method: 'POST',
+          json: {rawTxHex: tx.toHex()}
+        })
+      })
+  })
+  .done()
+
+/**
+ * @return {Promise<string>}
+ */
+function getUnconfirmedTxHash () {
+  return lastUnconfirmedTxHash.promise
+}
+
 /**
  * @param {Error} error
  * @throws {Error}
@@ -47,5 +85,6 @@ function ignoreNetworkErrors (error) {
 
 module.exports = {
   createTx: createTx,
+  getUnconfirmedTxHash: getUnconfirmedTxHash,
   ignoreNetworkErrors: ignoreNetworkErrors
 }
