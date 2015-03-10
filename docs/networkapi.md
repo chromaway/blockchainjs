@@ -18,7 +18,6 @@
     * [getHeaders](#getheaders)
     * [getTx](#gettx)
     * [getTxBlockHash](#gettxblockhash)
-    * [getMerkle](#getmerkle)
     * [sendTx](#sendtx)
     * [getUnspent](#getunspent)
     * [getHistory](#gethistory)
@@ -26,6 +25,10 @@
   * Properties
     * networkName
     * READY_STATE
+      * CONNECTING
+      * OPEN
+      * CLOSING
+      * CLOSED
     * readyState
   * Inheritance
     * [Chain](#chain)
