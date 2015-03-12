@@ -83,18 +83,18 @@
 
 ### getHeader
 
-  * `(number|string)` headerId blockHash, height or special keyword latest
+  * `(number|string)` id blockHash, height or special keyword latest
 
 **return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
 
 ### getHeaders
 
-Like [getheaders in protocol](https://en.bitcoin.it/wiki/Protocol_documentation#getheaders). Available only in SPV supported networks. Return max 2000 objects.
+Available only in SPV supported networks. Return max 2016 objects.
 
-  * `string` fromBlockHash
-  * `string` toBlockHash
+  * `string` from
+  * `string` to
 
-**return**: `Promise<Array.<Object>>` Array of [HeaderObject](#headerobject)
+**return**: `Promise<string>` Concatenated headers in raw format encoded in hex. See [Block hashing algorithm](https://en.bitcoin.it/wiki/Block_hashing_algorithm) for details.
 
 ### getTx
 
@@ -106,7 +106,7 @@ Like [getheaders in protocol](https://en.bitcoin.it/wiki/Protocol_documentation#
 
   * `string` txHash
 
-**return**: `Promise<?Object>` `null` for unconfirmed or [TxBlockHashObject](#txblockhashobject) for confirmed
+**return**: `Promise<Object>` [TxBlockHashObject](#txblockhashobject)
 
 ### sendTx
 
@@ -118,7 +118,7 @@ Like [getheaders in protocol](https://en.bitcoin.it/wiki/Protocol_documentation#
 
   * `string` address
 
-**return**: `Promise<Object[]>` `Object` is [UnspentObject](#unspentobject)
+**return**: `Promise<Object[]>` Array of [UnspentObject](#unspentobject)'s
 
 ### getHistory
 
@@ -139,10 +139,21 @@ Like [getheaders in protocol](https://en.bitcoin.it/wiki/Protocol_documentation#
 ### constructor
 
   * `Object` opts
+    * `string` networkName
     * `string` apiKeyId
     * `number` requestTimeout
 
 ## ChromaInsight
+
+  * Static properties
+    * `Object` SOURCES keys is networkName, value is array of urls
+
+### constructor
+
+  * `Object` opts
+    * `string` networkName
+    * `string` url
+    * `number` requestTimeout
 
 ## Switcher
 
@@ -152,6 +163,7 @@ Like [getheaders in protocol](https://en.bitcoin.it/wiki/Protocol_documentation#
 ### constructor
 
   * `Object` opts
+    * `string` networkName
     * `Network[]` networks
     * `boolean` spv
 
@@ -170,10 +182,12 @@ Like [getheaders in protocol](https://en.bitcoin.it/wiki/Protocol_documentation#
 
 ### TxBlockHashObject
 
-  * `number` blockHeight
-  * `string` blockHash
-  * `(undefined|number)` index
-  * `(undefined|string[])` transactionHashes
+  * `string` status May be confirmed, unconfirmed or invalid
+  * `?Object` data `null` for unconfirmed and invalid
+    * `number` blockHeight
+    * `string` blockHash
+    * `(undefined|number)` index available only in SPV supported networks
+    * `(undefined|string[])` merkle  available only in SPV supported networks
 
 ### UnspentObject
 

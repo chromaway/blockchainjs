@@ -21,7 +21,7 @@ var notImplementedMethods = [
   'subscribe'
 ]
 
-describe.skip('network.Network', function () {
+describe('network.Network', function () {
   var network
 
   beforeEach(function () {
@@ -65,7 +65,7 @@ describe.skip('network.Network', function () {
       getPromise()
         .catch(function (e) { return e })
         .then(function (result) {
-          expect(result).to.be.instanceof(blockchainjs.errors.NotImplementedError)
+          expect(result).to.be.instanceof(blockchainjs.errors.NotImplemented)
           done()
         })
         .done()
