@@ -40,13 +40,13 @@ describe('storage.Storage', function () {
   it('compactMode, default is false', function () {
     var storage = new Storage()
     expect(storage.compactMode).to.be.false
-    expect(storage._compactModeCheck.bind(storage)).to.throw(errors.CompactModeError)
+    expect(storage._compactModeCheck.bind(storage)).to.throw(errors.Storage.CompactMode.Forbidden)
   })
 
   it('compactMode is true', function () {
     var storage = new Storage({compactMode: true})
     expect(storage.compactMode).to.be.true
-    expect(storage._compactModeCheck.bind(storage)).not.to.throw(errors.CompactModeError)
+    expect(storage._compactModeCheck.bind(storage)).not.to.throw(errors.Storage.CompactMode.Forbidden)
   })
 
   it('isReady', function () {
@@ -63,7 +63,7 @@ describe('storage.Storage', function () {
       fn()
         .then(function () { throw new Error('Unexpected response') })
         .done(null, function (error) {
-          expect(error).to.be.instanceof(errors.NotImplementedError)
+          expect(error).to.be.instanceof(errors.NotImplemented)
           done()
         })
     })

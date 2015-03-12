@@ -154,7 +154,7 @@ function implementationTest (opts) {
           })
           .then(function () { throw new Error('Unexpected response') })
           .catch(function (error) {
-            expect(error).to.be.instanceof(errors.CompactModeError)
+            expect(error).to.be.instanceof(errors.Storage.CompactMode.Limitation)
             return storage.getHeader(-1)
           })
           .then(function () { throw new Error('Unexpected response') })
@@ -233,7 +233,7 @@ function implementationTest (opts) {
             return storage[method].call(storage)
               .then(function () { throw new Error('Unexpected response') })
               .catch(function (error) {
-                expect(error).to.be.instanceof(errors.CompactModeError)
+                expect(error).to.be.instanceof(errors.Storage.CompactMode.Forbidden)
               })
           })
           .reduce(Q.when, Q.resolve())
