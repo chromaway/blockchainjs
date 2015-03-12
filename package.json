@@ -25,10 +25,14 @@
     "README.md"
   ],
   "scripts": {
-    "compile_test": "browserify test/**/*.js >test/blockchainjs.test.js",
+    "build": "npm run-script compile && npm run-script uglify",
+    "compile": "browserify lib/index.js -s BlockchainJS -o blockchainjs.js",
+    "compile_test": "browserify test/**/*.js >blockchainjs.test.js",
     "coverage": "istanbul cover _mocha -- test/**/*.js",
     "coveralls": "npm run-script coverage && coveralls <coverage/lcov.info",
+    "clean": "rm -f blockchainjs.js blockchainjs.min.js blockchainjs.test.js",
     "lint": "standard",
+    "uglify": "uglify -s blockchainjs.js -o blockchainjs.min.js",
     "test": "istanbul test mocha -- --reporter spec test/**/*.js"
   },
   "dependencies": {
@@ -54,14 +58,17 @@
     "mocha": "2.1.0",
     "optimist": "0.6.1",
     "progress": "1.1.8",
-    "standard": "2.10.0"
+    "standard": "2.10.0",
+    "uglify": "0.1.1"
   },
   "browser": {
     "request": "browser-request"
   },
   "standard": {
     "ignore": [
-      "test/blockchainjs.test.js"
+      "blockchainjs.js",
+      "blockchainjs.min.js",
+      "blockchainjs.test.js"
     ]
   }
 }

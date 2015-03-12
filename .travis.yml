@@ -2,6 +2,7 @@ language: node_js
 node_js:
   - "0.10"
 env:
+  - TEST_SUITE=build
   - TEST_SUITE=coveralls
   - TEST_SUITE=lint
 script: "npm run-script $TEST_SUITE"

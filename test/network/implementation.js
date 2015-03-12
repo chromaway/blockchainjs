@@ -17,7 +17,7 @@ var fixtures = require('../data/network.json')
  */
 function implementationTest (opts) {
   opts = _.extend({
-    describe: describe,
+    describe: describe.skip,
     description: 'network.' + opts.class.name,
     getNetworkOpts: _.constant({networkName: 'testnet'})
   }, opts)
