@@ -44,7 +44,7 @@
 ### touchAddress
 
   * `string` address
-  * `string` txHash
+  * `string` txId
 
 ## Methods
 
@@ -64,13 +64,13 @@
 
 ### getTx
 
-  * `string` txHash
+  * `string` txId
 
 **return**: `Promise<string>` Raw transaction as hex string
 
 ### getTxStatus
 
-  * `string` txHash
+  * `string` txId
 
 **return**: `Promise<?string>` blockHash for confirmed and `null` for unconfirmed
 
@@ -78,19 +78,19 @@
 
   * `string` txHex
 
-**return**: `Promise<string>` txHash
+**return**: `Promise<string>` txId
 
 ### getUnspent
 
   * `string` address
 
-**return**: `Promise<Array.<{txHash: string, outIndex: number, value: number>>`
+**return**: `Promise<Array.<{txId: string, outIndex: number, value: number>>`
 
 ### getHistory
 
   * `string` address
 
-**return**: `Promise<Array.<string>>` Array of txHashes
+**return**: `Promise<Array.<string>>` Array of txIds
 
 ### subscribe
 

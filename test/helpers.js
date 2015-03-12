@@ -19,7 +19,7 @@ function createTx () {
       var txb = new bitcoin.TransactionBuilder()
       data.unspents.forEach(function (unspent) {
         total += unspent.value
-        txb.addInput(unspent.txHash, unspent.index)
+        txb.addInput(unspent.txId, unspent.index)
       })
       // send all satoshi (exclude 10000) to faucet.xeno-genesis.com
       txb.addOutput('mp8XoMWnJzQwovninMdChQutPuhyHokJNc', total - 10000)
@@ -31,21 +31,21 @@ function createTx () {
     })
 }
 
-var lastUnconfirmedTxHash = Q.defer()
+var lastUnconfirmedTxId = Q.defer()
 
 var socket = io('https://test-insight.bitpay.com/', {forceNew: true})
 socket.emit('subscribe', 'inv')
 socket.on('tx', function (data) {
-  if (lastUnconfirmedTxHash.promise.isFulfilled()) {
-    lastUnconfirmedTxHash = Q.defer()
+  if (lastUnconfirmedTxId.promise.isFulfilled()) {
+    lastUnconfirmedTxId = Q.defer()
   }
 
-  lastUnconfirmedTxHash.resolve(data.txid)
+  lastUnconfirmedTxId.resolve(data.txid)
 })
 
 Q.delay(25000)
   .then(function () {
-    if (lastUnconfirmedTxHash.promise.isFulfilled()) {
+    if (lastUnconfirmedTxId.promise.isFulfilled()) {
       return
     }
 
@@ -63,8 +63,8 @@ Q.delay(25000)
 /**
  * @return {Promise<string>}
  */
-function getUnconfirmedTxHash () {
-  return lastUnconfirmedTxHash.promise
+function getUnconfirmedTxId () {
+  return lastUnconfirmedTxId.promise
 }
 
 /**
@@ -85,6 +85,6 @@ function ignoreNetworkErrors (error) {
 
 module.exports = {
   createTx: createTx,
-  getUnconfirmedTxHash: getUnconfirmedTxHash,
+  getUnconfirmedTxId: getUnconfirmedTxId,
   ignoreNetworkErrors: ignoreNetworkErrors
 }

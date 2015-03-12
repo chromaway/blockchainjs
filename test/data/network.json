@@ -35,12 +35,12 @@
       "address": "mn675cxzUzM8hyd7TYApCvGBhQ8v69kgGb",
       "unspents": [
         {
-          "txHash": "d56e75eedb9e9e49a8ae81c3d4781312c4d343bea811219d3eb4184ae6b34639",
+          "txId": "d56e75eedb9e9e49a8ae81c3d4781312c4d343bea811219d3eb4184ae6b34639",
           "outIndex": 0,
           "value": 5025150000
         },
         {
-          "txHash": "548be1cc68780cbe0ce7e4b46c06dbe38ecd509a3f448e5ca68cc294679c27b1",
+          "txId": "548be1cc68780cbe0ce7e4b46c06dbe38ecd509a3f448e5ca68cc294679c27b1",
           "outIndex": 0,
           "value": 5025050000
         }

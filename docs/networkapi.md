@@ -49,10 +49,15 @@
 
   * `string` blockHash
 
+### newReadyState
+
+  * `number` readyState
+  * `number` prevReadyState
+
 ### touchAddress
 
   * `string` address
-  * `string` txHash
+  * `string` txId
 
 ## Methods
 
@@ -98,13 +103,13 @@ Available only in SPV supported networks. Return max 2016 objects.
 
 ### getTx
 
-  * `string` txHash
+  * `string` txId
 
 **return**: `Promise<string>` Raw transaction as hex string
 
 ### getTxBlockHash
 
-  * `string` txHash
+  * `string` txId
 
 **return**: `Promise<Object>` [TxBlockHashObject](#txblockhashobject)
 
@@ -112,7 +117,7 @@ Available only in SPV supported networks. Return max 2016 objects.
 
   * `string` txHex
 
-**return**: `Promise<string>` txHash
+**return**: `Promise<string>` txId
 
 ### getUnspent
 
@@ -124,7 +129,7 @@ Available only in SPV supported networks. Return max 2016 objects.
 
   * `string` address
 
-**return**: `Promise<string[]>` Array of txHashes
+**return**: `Promise<string[]>` Array of txIds
 
 ### subscribe
 
@@ -191,6 +196,6 @@ Available only in SPV supported networks. Return max 2016 objects.
 
 ### UnspentObject
 
-  * `string` txHash
+  * `string` txId
   * `number` outIndex
   * `number` value

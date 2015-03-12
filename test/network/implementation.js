@@ -130,6 +130,7 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
+    /** @todo SPV */
     it('getHeaders', function (done) {
       if (!network.isSupportSPV()) {
         return done()
@@ -137,52 +138,56 @@ function implementationTest (opts) {
     })
 
     it('getTx (confirmed tx)', function (done) {
-      var txHash = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
+      var txId = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
 
-      network.getTx(txHash)
+      network.getTx(txId)
         .then(function (txHex) {
-          var responseTxHash = blockchainjs.util.hashEncode(
+          var responseTxId = blockchainjs.util.hashEncode(
             blockchainjs.util.sha256x2(new Buffer(txHex, 'hex')))
-          expect(responseTxHash).to.equal(txHash)
+          expect(responseTxId).to.equal(txId)
         })
         .done(done, done)
     })
 
     it('getTx (unconfirmed tx)', function (done) {
-      helpers.getUnconfirmedTxHash()
-        .then(function (txHash) {
-          return network.getTx(txHash)
+      helpers.getUnconfirmedTxId()
+        .then(function (txId) {
+          return network.getTx(txId)
             .then(function (txHex) {
-              var responseTxHash = blockchainjs.util.hashEncode(
+              var responseTxId = blockchainjs.util.hashEncode(
                 blockchainjs.util.sha256x2(new Buffer(txHex, 'hex')))
-              expect(responseTxHash).to.equal(txHash)
+              expect(responseTxId).to.equal(txId)
             })
         })
         .done(done, done)
     })
 
     it('getTx (not-exists tx)', function (done) {
-      var txHash = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
+      var txId = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-      network.getTx(txHash)
+      network.getTx(txId)
         .then(function () {
           throw new Error('Unexpected Behavior')
         })
         .catch(function (error) {
-          expect(error).to.be.instanceof(blockchainjs.errors.TransactionNotFoundError)
-          expect(error.message).to.be.equal(txHash)
+          expect(error).to.be.instanceof(blockchainjs.errors.Transaction.NotFound)
+          expect(error.message).to.be.equal(txId)
         })
         .done(done, done)
     })
 
+    /** @todo SPV */
     it('getTxBlockHash (confirmed tx)', function (done) {
-      var txHash = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
+      var txId = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
       var expected = {
-        blockHeight: 279774,
-        blockHash: '00000000ba81453dd2839b8f91b61be98ee82bee5b7697f6dab1f6149885f1ff'
+        status: 'confirmed',
+        data: {
+          blockHeight: 279774,
+          blockHash: '00000000ba81453dd2839b8f91b61be98ee82bee5b7697f6dab1f6149885f1ff'
+        }
       }
 
-      network.getTxBlockHash(txHash)
+      network.getTxBlockHash(txId)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
@@ -190,26 +195,22 @@ function implementationTest (opts) {
     })
 
     it('getTxBlockHash (unconfirmed tx)', function (done) {
-      helpers.getUnconfirmedTxHash()
-        .then(function (txHash) {
-          return network.getTxBlockHash(txHash)
+      helpers.getUnconfirmedTxId()
+        .then(function (txId) {
+          return network.getTxBlockHash(txId)
         })
         .then(function (response) {
-          expect(response).to.be.null
+          expect(response).to.deep.equal({status: 'unconfirmed'})
         })
         .done(done, done)
     })
 
     it('getTxBlockHash (non-exists tx)', function (done) {
-      var txHash = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
+      var txId = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-      network.getTxBlockHash(txHash)
-        .then(function () {
-          throw new Error('Unexpected Behavior')
-        })
-        .catch(function (error) {
-          expect(error).to.be.instanceof(blockchainjs.errors.TransactionNotFoundError)
-          expect(error.message).to.be.equal(txHash)
+      network.getTxBlockHash(txId)
+        .then(function (response) {
+          expect(response).to.deep.equal({status: 'invalid'})
         })
         .done(done, done)
     })
@@ -218,7 +219,7 @@ function implementationTest (opts) {
       helpers.createTx()
         .then(function (tx) {
           return network.sendTx(tx.toHex())
-            .then(function (txHash) { expect(txHash).to.equal(tx.getId()) })
+            .then(function (txId) { expect(txId).to.equal(tx.getId()) })
         })
         .done(done, done)
     })
@@ -226,8 +227,8 @@ function implementationTest (opts) {
     it('getUnspent', function (done) {
       network.getUnspent(fixtures.unspents[0].address)
         .then(function (unspents) {
-          var expected = _.sortBy(fixtures.unspents[0].unspents, 'txHash')
-          expect(_.sortBy(unspents, 'txHash')).to.deep.equal(expected)
+          var expected = _.sortBy(fixtures.unspents[0].unspents, 'txId')
+          expect(_.sortBy(unspents, 'txId')).to.deep.equal(expected)
         })
         .done(done, done)
     })
@@ -265,8 +266,8 @@ function implementationTest (opts) {
             .then(function () {
               return network.sendTx(tx.toHex())
             })
-            .then(function (txHash) {
-              expect(txHash).to.equal(tx.getId())
+            .then(function (txId) {
+              expect(txId).to.equal(tx.getId())
             })
             .catch(deferred.reject)
             .done()
