@@ -37,27 +37,17 @@ function implementationTest (opts) {
     })
 
     afterEach(function (done) {
-      function tryClearNetwork () {
-        if (network.getCurrentActiveRequests() > 0) {
-          return setTimeout(tryClearNetwork, 25)
+      network.on('newReadyState', function (newState) {
+        if (newState !== network.READY_STATE.CLOSED) {
+          return
         }
 
-        function onNewReadyState () {
-          if (network.readyState !== network.READY_STATE.CLOSED) {
-            return
-          }
-
-          network.removeAllListeners()
-          network.on('error', function () {})
-          network = null
-          done()
-        }
-
-        network.on('newReadyState', onNewReadyState)
-        network.disconnect()
-      }
-
-      tryClearNetwork()
+        network.removeAllListeners()
+        network.on('error', function () {})
+        network = null
+        done()
+      })
+      network.disconnect()
     })
 
     it('inherits Network', function () {
@@ -376,13 +366,13 @@ function implementationTest (opts) {
           var address = cAddress.toBase58Check()
 
           var deferred = Q.defer()
-
-          function onTouchAddress (touchedAddress) {
-            if (touchedAddress === address) {
+          deferred.promise.done(done, done)
+          network.on('touchAddress', function (touchedAddress, txId) {
+            if (touchedAddress === address && txId === tx.getId()) {
               deferred.resolve()
             }
-          }
-          network.on('touchAddress', onTouchAddress)
+          })
+
           network.subscribe({event: 'touchAddress', address: address})
             .then(function () {
               return network.sendTx(tx.toHex())
@@ -392,12 +382,6 @@ function implementationTest (opts) {
             })
             .catch(deferred.reject)
             .done()
-
-          deferred.promise
-            .finally(function () {
-              network.removeListener('touchAddress', onTouchAddress)
-            })
-            .done(done, done)
         })
         .done()
     })
