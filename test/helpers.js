@@ -19,7 +19,7 @@ function createTx () {
       var txb = new bitcoin.TransactionBuilder()
       data.unspents.forEach(function (unspent) {
         total += unspent.value
-        txb.addInput(unspent.txId, unspent.index)
+        txb.addInput(unspent.txHash, unspent.index)
       })
       // send all satoshi (exclude 10000) to faucet.xeno-genesis.com
       txb.addOutput('mp8XoMWnJzQwovninMdChQutPuhyHokJNc', total - 10000)
@@ -31,40 +31,46 @@ function createTx () {
     })
 }
 
-var lastUnconfirmedTxId = Q.defer()
+var lastUnconfirmedTxIds = []
 
 var socket = io('https://test-insight.bitpay.com/', {forceNew: true})
 socket.emit('subscribe', 'inv')
 socket.on('tx', function (data) {
-  if (lastUnconfirmedTxId.promise.isFulfilled()) {
-    lastUnconfirmedTxId = Q.defer()
+  lastUnconfirmedTxIds.push({txid: data.txid, time: Date.now()})
+  if (lastUnconfirmedTxIds.length > 20) {
+    lastUnconfirmedTxIds.shift()
   }
-
-  lastUnconfirmedTxId.resolve(data.txid)
 })
 
-Q.delay(25000)
-  .then(function () {
-    if (lastUnconfirmedTxId.promise.isFulfilled()) {
-      return
-    }
-
-    return createTx()
-      .then(function (tx) {
-        return Q.nfcall(request, {
-          uri: 'https://testnet.helloblock.io/v1/transactions',
-          method: 'POST',
-          json: {rawTxHex: tx.toHex()}
-        })
-      })
+createTx()
+  .then(function (tx) {
+    return Q.nfcall(request, {
+      uri: 'https://testnet.helloblock.io/v1/transactions',
+      method: 'POST',
+      json: {rawTxHex: tx.toHex()}
+    })
   })
-  .done()
 
 /**
  * @return {Promise<string>}
  */
 function getUnconfirmedTxId () {
-  return lastUnconfirmedTxId.promise
+  return new Q.Promise(function (resolve) {
+    function tryGet () {
+      var txid = _.chain(lastUnconfirmedTxIds)
+        .filter(function (data) { return Date.now() - data.time > 2000 })
+        .pluck('txid')
+        .first()
+        .value()
+
+      if (typeof txid === 'undefined') {
+        return setTimeout(tryGet, 100)
+      }
+
+      resolve(txid)
+    }
+    tryGet()
+  })
 }
 
 /**
@@ -72,11 +78,11 @@ function getUnconfirmedTxId () {
  * @throws {Error}
  */
 function ignoreNetworkErrors (error) {
-  if (error.message === 'Network unreachable') {
+  if (error instanceof errors.Network.Unreachable) {
     return
   }
 
-  if (error instanceof errors.NotConnectedError) {
+  if (error instanceof errors.Network.NotConnected) {
     return
   }
 

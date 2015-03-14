@@ -88,9 +88,11 @@
 
 ### getHeader
 
-  * `(number|string)` id blockHash, height or special keyword latest
+  * `(number|string)` id blockHash, height or special keyword `latest` for best block
 
 **return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
+
+**return**: `Promise<errors.Header.NotFound>` if couldn't find block
 
 ### getHeaders
 
@@ -101,17 +103,23 @@ Available only in SPV supported networks. Return max 2016 objects.
 
 **return**: `Promise<string>` Concatenated headers in raw format encoded in hex. See [Block hashing algorithm](https://en.bitcoin.it/wiki/Block_hashing_algorithm) for details.
 
+**return**: `Promise<errors.Header.NotFound>` if couldn't find block for `from` blockHash
+
 ### getTx
 
   * `string` txId
 
 **return**: `Promise<string>` Raw transaction as hex string
 
+**return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txId`
+
 ### getTxBlockHash
 
   * `string` txId
 
 **return**: `Promise<Object>` [TxBlockHashObject](#txblockhashobject)
+
+**return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txId`
 
 ### sendTx
 
@@ -134,7 +142,7 @@ Available only in SPV supported networks. Return max 2016 objects.
 ### subscribe
 
   * `Object` opts
-    * `string` type May be new-block or address
+    * `string` event May be newBlock or touchAddress
     * `string` address Only for address type
 
 **return**: `Promise`
@@ -150,8 +158,13 @@ Available only in SPV supported networks. Return max 2016 objects.
 
 ## ChromaInsight
 
+```bash
+export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
+```
+
   * Static properties
     * `Object` SOURCES keys is networkName, value is array of urls
+    * `function` getSources return array of sources for given networkName
 
 ### constructor
 
@@ -187,12 +200,12 @@ Available only in SPV supported networks. Return max 2016 objects.
 
 ### TxBlockHashObject
 
-  * `string` status May be confirmed, unconfirmed or invalid
-  * `?Object` data `null` for unconfirmed and invalid
-    * `number` blockHeight
+  * `string` status May be confirmed (in main chain), unconfirmed (in mempool) or invalid (in orphaned blocks)
+  * `?Object` data `null` for unconfirmed transactions
+    * `number` blockHeight -1 for invalid
     * `string` blockHash
-    * `(undefined|number)` index available only in SPV supported networks
-    * `(undefined|string[])` merkle  available only in SPV supported networks
+    * `?number` index available only in SPV supported networks
+    * `?string[]` merkle available only in SPV supported networks
 
 ### UnspentObject
 
