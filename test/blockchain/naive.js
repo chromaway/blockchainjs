@@ -118,7 +118,7 @@ describe.skip('blockchain.Naive', function () {
       .done(done, done)
   })
 
-  it('getUnspent', function (done) {
+  it('getUnspents', function (done) {
     var address = 'n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'
     var addressCoins = [
       {
@@ -129,7 +129,7 @@ describe.skip('blockchain.Naive', function () {
       }
     ]
 
-    blockchain.getUnspent(address)
+    blockchain.getUnspents(address)
       .then(function (coins) {
         expect(coins).to.deep.equal(addressCoins)
       })

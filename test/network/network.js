@@ -16,7 +16,7 @@ var notImplementedMethods = [
   'getTx',
   'getTxBlockHash',
   'sendTx',
-  'getUnspent',
+  'getUnspents',
   'getHistory',
   'subscribe'
 ]

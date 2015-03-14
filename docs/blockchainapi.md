@@ -2,20 +2,17 @@
 
   * [Events](#events)
     * [error](#error)
-    * [syncStart](#syncstart)
-    * [syncStop](#syncstop)
-    * [reorg](#reorg)
     * [newBlock](#newblock)
     * [touchAddress](#touchAddress)
   * [Methods](#methods)
     * [constructor](#constructor)
-    * [getHeaders](#getheaders)
+    * [getHeader](#getheader)
     * [getTx](#gettx)
-    * [getTxStatus](#gettxstatus)
+    * [getTxBlockHash](#gettxblockhash)
     * [sendTx](#sendtx)
-    * [getUnspent](#getunspent)
+    * [getUnspents](#getUnspents)
     * [getHistory](#gethistory)
-    * [subscribe](#subscribe)
+    * [subscribeAddress](#subscribeaddress)
   * Properties
     * network
     * networkName
@@ -31,15 +28,10 @@
 
   * `Error` error
 
-### syncStart
-
-### syncStop
-
-### reorg
-
 ### newBlock
 
   * `string` blockHash
+  * `number` height
 
 ### touchAddress
 
@@ -56,11 +48,13 @@
     * `number` opts.headersCacheSize
     * `number` opts.txCacheSize
 
-### getHeaders
+### getHeader
 
-  * `Array.<(number|string)>` headers Array of heights or blockHashes
+  * `(number|string)` id Height or blockHash
 
-**return**: `Promise<Array.<string>>` Array of objects with version, prevBlockHash, merkleRoot, ...
+**return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
+
+**return**: `Promise<errors.Header.NotFound>` if couldn't find block
 
 ### getTx
 
@@ -68,11 +62,15 @@
 
 **return**: `Promise<string>` Raw transaction as hex string
 
-### getTxStatus
+**return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txId`
+
+### getTxBlockHash
 
   * `string` txId
 
-**return**: `Promise<?string>` blockHash for confirmed and `null` for unconfirmed
+**return**: `Promise<Object>` [TxBlockHashObject](#txblockhashobject)
+
+**return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txId`
 
 ### sendTx
 
@@ -80,23 +78,21 @@
 
 **return**: `Promise<string>` txId
 
-### getUnspent
+### getUnspents
 
   * `string` address
 
-**return**: `Promise<Array.<{txId: string, outIndex: number, value: number>>`
+**return**: `Promise<Object[]>` Array of [UnspentObject](#unspentobject)'s
 
 ### getHistory
 
   * `string` address
 
-**return**: `Promise<Array.<string>>` Array of txIds
+**return**: `Promise<string[]>` Array of txIds
 
-### subscribe
+### subscribeAddress
 
-  * `Object` opts
-    * `string` type May be block and address
-    * `string` address Only for address type
+  * `string` address
 
 **return**: `Promise`
 
@@ -112,9 +108,35 @@
 
   * `Network` network
   * `Object` opts
-    * `string` opts.networkName
-    * `number` opts.headersCacheSize
-    * `number` opts.txCacheSize
-    * `boolean` opts.isTestnet
-    * `boolean` opts.compactMode
-    * `boolean` opts.preSavedChunkHashes
+    * `string` networkName
+    * `number` headersCacheSize
+    * `number` txCacheSize
+    * `boolean` isTestnet
+    * `boolean` compactMode
+    * `boolean` preSavedChunkHashes
+
+## Objects
+
+### HeaderObject
+
+  * `number` height
+  * `string` hash
+  * `number` version
+  * `string` prevBlockHash
+  * `string` merkleRoot
+  * `number` time
+  * `number` bits
+  * `number` nonce
+
+### TxBlockHashObject
+
+  * `string` status May be confirmed (in main chain), unconfirmed (in mempool) or invalid (in orphaned blocks)
+  * `?Object` data `null` for unconfirmed transactions
+    * `number` blockHeight -1 for invalid
+    * `string` blockHash
+
+### UnspentObject
+
+  * `string` txId
+  * `number` outIndex
+  * `number` value

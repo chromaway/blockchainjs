@@ -344,8 +344,8 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getUnspent', function (done) {
-      network.getUnspent(fixtures.unspents[0].address)
+    it('getUnspents', function (done) {
+      network.getUnspents(fixtures.unspents[0].address)
         .then(function (unspents) {
           var expected = _.sortBy(fixtures.unspents[0].unspents, 'txId')
           expect(_.sortBy(unspents, 'txId')).to.deep.equal(expected)

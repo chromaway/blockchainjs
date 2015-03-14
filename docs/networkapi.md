@@ -19,7 +19,7 @@
     * [getTx](#gettx)
     * [getTxBlockHash](#gettxblockhash)
     * [sendTx](#sendtx)
-    * [getUnspent](#getunspent)
+    * [getUnspents](#getUnspents)
     * [getHistory](#gethistory)
     * [subscribe](#subscribe)
   * Properties
@@ -127,7 +127,7 @@ Available only in SPV supported networks. Return max 2016 objects.
 
 **return**: `Promise<string>` txId
 
-### getUnspent
+### getUnspents
 
   * `string` address
 

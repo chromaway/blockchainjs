@@ -8,13 +8,14 @@ var blockchainjs = require('../../lib')
 var notImplementedMethods = [
   'getHeader',
   'getTx',
+  'getTxBlockHash',
   'sendTx',
+  'getUnspents',
   'getHistory',
-  'getUnspent',
   'subscribeAddress'
 ]
 
-describe.skip('blockchain.Blockchain', function () {
+describe('blockchain.Blockchain', function () {
   var network
   var blockchain
 
@@ -34,20 +35,20 @@ describe.skip('blockchain.Blockchain', function () {
   })
 
   it('getCurrentHeight', function () {
-    expect(blockchain.getCurrentHeight()).to.equal(-1)
+    expect(blockchain.currentHeight).to.equal(-1)
   })
 
   it('getCurrentBlockHash', function () {
-    var result = blockchain.getCurrentBlockHash().toString('hex')
-    expect(result).to.equal(blockchainjs.util.zfill('', 64))
+    var expectedBlockHash = blockchainjs.util.zfill('', 64)
+    expect(blockchain.currentBlockHash).to.equal(expectedBlockHash)
   })
 
   notImplementedMethods.forEach(function (method) {
     it(method, function (done) {
       blockchain[method]()
-        .catch(function (e) { return e })
-        .then(function (result) {
-          expect(result).to.be.instanceof(blockchainjs.errors.NotImplementedError)
+        .then(function () { throw new Error('Unexpected behavior') })
+        .catch(function (err) {
+          expect(err).to.be.instanceof(blockchainjs.errors.NotImplemented)
         })
         .done(done, done)
     })
