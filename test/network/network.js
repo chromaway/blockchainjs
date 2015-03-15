@@ -1,8 +1,9 @@
 /* global describe, it, afterEach, beforeEach */
+/* globals Promise:true */
 
 var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
-var Q = require('q')
+var Promise = require('bluebird')
 
 var blockchainjs = require('../../lib')
 
@@ -49,16 +50,9 @@ describe('network.Network', function () {
     it(method, function (done) {
       function getPromise () {
         try {
-          var promise = network[method]()
-          if (promise instanceof Q.Promise) {
-            return promise
-          }
-
-          return Q.resolve(promise)
-
+          return Promise.resolve(network[method]())
         } catch (reason) {
-          return Q.reject(reason)
-
+          return Promise.reject(reason)
         }
       }
 
@@ -68,7 +62,6 @@ describe('network.Network', function () {
           expect(result).to.be.instanceof(blockchainjs.errors.NotImplemented)
           done()
         })
-        .done()
     })
   })
 })

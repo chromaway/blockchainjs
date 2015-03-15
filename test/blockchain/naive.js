@@ -1,8 +1,9 @@
 /* global describe, it, afterEach, beforeEach */
+/* globals Promise:true */
 
 var expect = require('chai').expect
 var bitcoin = require('bitcoinjs-lib')
-var Q = require('q')
+var Promise = require('bluebird')
 
 var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
@@ -231,7 +232,7 @@ describe('blockchain.Naive', function () {
         var address = bitcoin.Address.fromOutputScript(
           tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
 
-        var deferred = Q.defer()
+        var deferred = Promise.defer()
         deferred.promise.done(done, done)
         blockchain.on('touchAddress', function (touchedAddress, txId) {
           if (touchedAddress === address && txId === tx.getId()) {
@@ -246,8 +247,8 @@ describe('blockchain.Naive', function () {
           .then(function (txId) {
             expect(txId).to.equal(tx.getId())
           })
-          .done()
+          .catch(function () { deferred.reject() })
       })
-      .done()
+      .catch(done)
   })
 })

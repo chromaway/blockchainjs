@@ -1,9 +1,11 @@
+/* globals Promise:true */
+
 var _ = require('lodash')
 var bitcoin = require('bitcoinjs-lib')
-var faucet = require('helloblock-faucet')
-var Q = require('q')
+var Promise = require('bluebird')
 var io = require('socket.io-client')
-var request = require('request')
+var request = Promise.promisify(require('request'))
+var getUnspents = Promise.promisify(require('helloblock-faucet').getUnspents)
 
 var blockchainjs = require('../lib')
 var errors = blockchainjs.errors
@@ -12,7 +14,7 @@ var errors = blockchainjs.errors
  * @return {Promise<string>}
  */
 function createTx () {
-  return Q.nfcall(faucet.getUnspents, 1)
+  return getUnspents(1)
     .then(function (data) {
       var privKey = bitcoin.ECKey.fromWIF(data.privateKeyWIF)
       var total = 0
@@ -44,7 +46,7 @@ socket.on('tx', function (data) {
 
 createTx()
   .then(function (tx) {
-    return Q.nfcall(request, {
+    return request({
       uri: 'https://testnet.helloblock.io/v1/transactions',
       method: 'POST',
       json: {rawTxHex: tx.toHex()}
@@ -55,7 +57,7 @@ createTx()
  * @return {Promise<string>}
  */
 function getUnconfirmedTxId () {
-  return new Q.Promise(function (resolve) {
+  return new Promise(function (resolve) {
     function tryGet () {
       var txid = _.chain(lastUnconfirmedTxIds)
         .filter(function (data) { return Date.now() - data.time > 2000 })

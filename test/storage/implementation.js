@@ -1,8 +1,9 @@
 /* global describe, it, afterEach, beforeEach */
+/* globals Promise:true */
 
 var _ = require('lodash')
 var expect = require('chai').expect
-var Q = require('q')
+var Promise = require('bluebird')
 
 var blockchainjs = require('../../lib')
 var errors = blockchainjs.errors
@@ -222,22 +223,23 @@ function implementationTest (opts) {
 
       it('chunkHashes', function (done) {
         var chunkMethods = [
-          'getHeadersCount',
-          'getHeader',
-          'putHeaders',
-          'truncateHeaders'
+          'getChunkHashesCount',
+          'getChunkHash',
+          'putChunkHashes',
+          'truncateChunkHashes'
         ]
 
-        chunkMethods
-          .map(function (method) {
-            return storage[method].call(storage)
-              .then(function () { throw new Error('Unexpected response') })
-              .catch(function (error) {
-                expect(error).to.be.instanceof(errors.Storage.CompactMode.Forbidden)
-              })
-          })
-          .reduce(Q.when, Q.resolve())
-          .done(done, done)
+        var promises = chunkMethods.map(function (method) {
+          return storage[method].call(storage)
+            .then(function () { throw new Error('Unexpected response') })
+            .catch(function (error) {
+              expect(error).to.be.instanceof(errors.Storage.CompactMode.Forbidden)
+            })
+        })
+
+        Promise.all(promises)
+          .then(function () { done() })
+          .catch(done)
       })
 
       it('headers', function (done) {

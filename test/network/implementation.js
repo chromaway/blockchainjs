@@ -1,9 +1,10 @@
 /* global describe, it, afterEach, beforeEach */
+/* globals Promise:true */
 
 var expect = require('chai').expect
 var _ = require('lodash')
 var bitcoin = require('bitcoinjs-lib')
-var Q = require('q')
+var Promise = require('bluebird')
 
 var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
@@ -163,7 +164,7 @@ function implementationTest (opts) {
 
       network.getHeader('latest')
         .then(function (lastHeader) {
-          return Q.all([lastHeader.hash, network.getHeaders(lastHeader.hash)])
+          return Promise.all([lastHeader.hash, network.getHeaders(lastHeader.hash)])
         })
         .spread(function (hash, headers) {
           var headersHash = blockchainjs.util.hashEncode(
@@ -366,7 +367,7 @@ function implementationTest (opts) {
             tx.outs[0].script, bitcoin.networks.testnet)
           var address = cAddress.toBase58Check()
 
-          var deferred = Q.defer()
+          var deferred = Promise.defer()
           deferred.promise.done(done, done)
           network.on('touchAddress', function (touchedAddress, txId) {
             if (touchedAddress === address && txId === tx.getId()) {
@@ -375,17 +376,16 @@ function implementationTest (opts) {
           })
 
           network.subscribe({event: 'touchAddress', address: address})
-            .then(function () { return Q.delay(1000) })
+            .then(function () { return Promise.delay(1000) })
             .then(function () {
               return network.sendTx(tx.toHex())
             })
             .then(function (txId) {
               expect(txId).to.equal(tx.getId())
             })
-            .catch(deferred.reject)
-            .done()
+            .catch(function () { deferred.reject() })
         })
-        .done()
+        .catch(done)
     })
   })
 }
