@@ -358,7 +358,8 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('subscribe on address and wait event', function (done) {
+    // skip for chain... (testnet notification not working on March 15?)
+    it.skip('subscribe on address and wait event', function (done) {
       helpers.createTx()
         .then(function (tx) {
           var cAddress = bitcoin.Address.fromOutputScript(
@@ -374,6 +375,7 @@ function implementationTest (opts) {
           })
 
           network.subscribe({event: 'touchAddress', address: address})
+            .then(function () { return Q.delay(1000) })
             .then(function () {
               return network.sendTx(tx.toHex())
             })
