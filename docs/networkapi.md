@@ -48,6 +48,7 @@
 ### newBlock
 
   * `string` blockHash
+  * `number` height
 
 ### newReadyState
 
