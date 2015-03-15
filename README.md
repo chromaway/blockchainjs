@@ -36,10 +36,10 @@ In addition to Verified blockchainjs has Storage interface for store headers. Me
 ```js
 var blockchainjs = require('blockchainjs')
 var network = new blockchainjs.network.Chain({networkName: 'testnet'})
-var address = 'mxv3G1hM6o2TXrWBusu9Fnycqk58rEgpAP'
+var address = 'mp8XoMWnJzQwovninMdChQutPuhyHokJNc'
 
 function showUTXO(address) {
-  network.getUnspent(address)
+  network.getUnspents(address)
     .then(function (utxo) {
       console.log('UTXO for ' + address + ':')
       utxo.forEach(function (unspent) {
@@ -51,12 +51,11 @@ function showUTXO(address) {
       }
       console.log('')
     })
-    .done()
 }
 
 network.on('touchAddress', showUTXO)
 network.connect()
-network.subscribeAddress(address).done()
+network.subscribe({event: 'touchAddress', address: address})
 showUTXO(address)
 ```
 
@@ -80,15 +79,12 @@ var blockchain = new blockchainjs.blockchain.Verified(network, {
   usePreSavedChunkHashes: true
 })
 
-blockchain.on('syncStop', function () {
-  var currentHeight = blockchain.getCurrentHeight()
-  blockchain.getHeader(currentHeight)
+blockchain.on('syncStop', blockchainjs.util.makeSerial(function () {
+  return blockchain.getHeader(blockchain.currentHeight)
     .then(function (header) {
-      console.log('Header#' + currentHeight + ':')
-      console.log(header)
+      console.log('Current header: ', header)
     })
-    .done()
-})
+}))
 ```
 
 ## License

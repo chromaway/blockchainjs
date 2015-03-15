@@ -175,14 +175,23 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 
 ## Switcher
 
+  * [Events](#events)
+    * [networkChanged](#networkchanged)
   * Properties
     * `Network[]` networks
 
+### Events
+
+#### networkChanged
+
+  * `?Network` newNetwork
+  * `?Network` prevNetwork
+
 ### constructor
 
+  * `Network[]` networks
   * `Object` opts
     * `string` networkName
-    * `Network[]` networks
     * `boolean` spv
 
 ## Objects

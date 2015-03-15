@@ -70,7 +70,7 @@ function implementationTest (opts) {
 
     it('getCurrentActiveRequests', function (done) {
       if (network instanceof blockchainjs.network.Switcher) {
-        return
+        return done()
       }
 
       network.getHeader('latest').done()

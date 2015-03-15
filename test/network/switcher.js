@@ -1,4 +1,3 @@
-/*
 var _ = require('lodash')
 
 var blockchainjs = require('../../lib')
@@ -6,10 +5,10 @@ var implementationTest = require('./implementation.js')
 
 implementationTest({
   class: blockchainjs.network.Switcher,
-  description: 'network.Switcher: One source (ElectrumWS)',
+  description: 'network.Switcher: One source (ChromaInsight)',
   getNetworkOpts: function () {
-    var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
-    return [[electrumNetwork], {networkName: 'testnet'}]
+    var chromaNetwork = new blockchainjs.network.ChromaInsight({networkName: 'testnet'})
+    return [[chromaNetwork], {networkName: 'testnet'}]
   }
 })
 
@@ -24,30 +23,29 @@ implementationTest({
 
 implementationTest({
   class: blockchainjs.network.Switcher,
-  description: 'network.Switcher: Two sources (ElectrumWS, Chain)',
+  description: 'network.Switcher: Two sources (ChromaInsight, Chain)',
   getNetworkOpts: function () {
-    var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
+    var chromaNetwork = new blockchainjs.network.ChromaInsight({networkName: 'testnet'})
     var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
-    return [[electrumNetwork, chainNetwork], {networkName: 'testnet'}]
+    return [[chromaNetwork, chainNetwork], {networkName: 'testnet'}]
   }
 })
 
 implementationTest({
   class: blockchainjs.network.Switcher,
-  description: 'network.Switcher: Two sources (ElectrumWS, Chain) (first doesn\'t work)',
+  description: 'network.Switcher: Two sources (ChromaInsight, Chain) (first doesn\'t work)',
   getNetworkOpts: function () {
-    var electrumNetwork = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
+    var chromaNetwork = new blockchainjs.network.ChromaInsight({networkName: 'testnet'})
     var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
     // not connected
-    electrumNetwork.isConnected = function () { return false }
+    chromaNetwork.isConnected = function () { return false }
     // not emit `connect` & `disconnect`
-    electrumNetwork.emit = function (eventName) {
+    chromaNetwork.emit = function (eventName) {
       if (eventName !== 'connect' && eventName !== 'disconnect') {
         Object.getPrototypeOf(this).emit.apply(this, _.slice(arguments))
       }
     }
 
-    return [[electrumNetwork, chainNetwork], {networkName: 'testnet'}]
+    return [[chromaNetwork, chainNetwork], {networkName: 'testnet'}]
   }
 })
-*/
