@@ -7,6 +7,14 @@ var blockchainjs = require('../lib')
 var expect = require('chai').expect;
 
 
+var testAddress = 'n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj';
+var testTxId = '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
+var testTxRs = [ {
+        status: 'confirmed',
+        blockHeight: 159233, blockHash: '0000000010e57aa253fbeead71e9a9dfc7e16e67643653902453367d1d0ad8ec',
+        txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e' 
+      } ];
+
 describe('TxStateSet', function () {
   this.timeout(30000);
 
@@ -24,20 +32,13 @@ describe('TxStateSet', function () {
   })
 
   afterEach(function (done) {
-    console.log('afterEach');
     network.on('newReadyState', function (newState) {
-      if (newState !== network.READY_STATE.CLOSED) {
-        return
-      }
-
+      if (newState !== network.READY_STATE.CLOSED) {  return   }
       network.removeAllListeners()
       network.on('error', function () {})
-
       blockchain.removeAllListeners()
       blockchain.on('error', function () {})
-
       network = blockchain = null
-
       done()
     })
     network.disconnect()
@@ -50,6 +51,90 @@ describe('TxStateSet', function () {
          done();
        }, done);
   })
-  
+
+  it('syncAddressFromEmpty', function (done) {
+    var tSS = new TxStateSet();
+    tSS.autoSync(blockchain, [testAddress]).done(function (newTSS) {
+      expect(newTSS.getTxRecords()).to.deep.equal(testTxRs);
+      done();
+    }, done);
+  })
+
+  it('syncTxIdFromEmpty', function (done) {
+    var tSS = new TxStateSet();
+    tSS.autoSync(blockchain, [], [testTxId]).done(function (newTSS) {
+      console.log(newTSS.getState())
+      expect(newTSS.getTxRecords()).to.deep.equal(testTxRs);
+      done();
+    }, done);
+  })
+
+  it('syncAddressUnconfirmed', function (done) {
+       var state = { trackedAddresses: ['n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'],
+                     syncMethod: 'unspent',
+                     txRecords: [ { 
+                         status: 'unconfirmed',
+                         txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
+                     } ],
+                     stateVersion: 1 };
+       var tSS = new TxStateSet(state)
+       tSS.autoSync(blockchain, [testAddress]).done(function (newTSS) {
+           expect(newTSS.getTxRecords()).to.deep.equal(testTxRs);
+           done();
+       }, done);                                                     
+  })
+
+  it('syncAddressFakeReorg', function (done) {
+       var state = { trackedAddresses: ['n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'],
+                     syncMethod: 'unspent',
+                     txRecords: [ { 
+                         status: 'confirmed',
+                         // fake block hash should be detected and changed to the real one
+                         blockHeight: 159233, blockHash: '0000000011111111111111111111111111111111111111111111111111111111',
+                         txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
+                     } ],
+                     stateVersion: 1 };
+       var tSS = new TxStateSet(state)
+       tSS.autoSync(blockchain, [testAddress]).done(function (newTSS) {
+           expect(newTSS.getTxRecords()).to.deep.equal(testTxRs);
+           done();
+       }, done);                                                     
+  })
+
+  it('syncAddressInvalid', function (done) {
+       var state = { trackedAddresses: ['n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'],
+                     syncMethod: 'unspent',
+                     txRecords: [ 
+                       { // this invalid transaction should be detected
+                         status: 'confirmed',
+                         blockHeight: 159234, blockHash: '0000000077777777777777777777777777777777777777777777777777777777',
+                         txId: '7777777777777777777777777777777777777777777777777777777777777777'
+                       },
+                       { 
+                         status: 'confirmed',
+                         blockHeight: 159233, blockHash: '0000000010e57aa253fbeead71e9a9dfc7e16e67643653902453367d1d0ad8ec',
+                         txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
+                       },
+                       // but this one should remain because we assume that everything below block 159233 remains unchanged
+                       { 
+                         status: 'confirmed',
+                         blockHeight: 159232, blockHash: '000000002222222222222222222222222222222222222222222222222222222222',
+                         txId: '2222222222222222222222222222222222222222222222222222222222222222'
+                       }],
+                     stateVersion: 1 };
+       var tSS = new TxStateSet(state)
+       tSS.autoSync(blockchain, [testAddress]).done(function (newTSS) {
+           var txrs = newTSS.getTxRecords();
+           expect(txrs.length).to.equal(3);
+           expect(txrs[0].status).to.equal('invalid');
+           expect(txrs[1].status).to.equal('confirmed');
+           expect(txrs[2].status).to.equal('confirmed');
+           done();
+       }, done);                                                     
+  })
+
+           
+
+
 
 });
