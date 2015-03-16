@@ -56,6 +56,7 @@ describe('TxStateSet', function () {
     var tSS = new TxStateSet();
     tSS.autoSync(blockchain, [testAddress]).done(function (newTSS) {
       expect(newTSS.getTxRecords()).to.deep.equal(testTxRs);
+      expect(newTSS.getChanges()).to.deep.equal(testTxRs);
       done();
     }, done);
   })
@@ -63,8 +64,8 @@ describe('TxStateSet', function () {
   it('syncTxIdFromEmpty', function (done) {
     var tSS = new TxStateSet();
     tSS.autoSync(blockchain, [], [testTxId]).done(function (newTSS) {
-      console.log(newTSS.getState())
       expect(newTSS.getTxRecords()).to.deep.equal(testTxRs);
+      expect(newTSS.getChanges()).to.deep.equal(testTxRs);
       done();
     }, done);
   })
@@ -80,6 +81,7 @@ describe('TxStateSet', function () {
        var tSS = new TxStateSet(state)
        tSS.autoSync(blockchain, [testAddress]).done(function (newTSS) {
            expect(newTSS.getTxRecords()).to.deep.equal(testTxRs);
+           expect(newTSS.getChanges()).to.deep.equal(testTxRs);
            done();
        }, done);                                                     
   })
@@ -97,6 +99,7 @@ describe('TxStateSet', function () {
        var tSS = new TxStateSet(state)
        tSS.autoSync(blockchain, [testAddress]).done(function (newTSS) {
            expect(newTSS.getTxRecords()).to.deep.equal(testTxRs);
+           expect(newTSS.getChanges()).to.deep.equal(testTxRs);
            done();
        }, done);                                                     
   })
@@ -129,12 +132,10 @@ describe('TxStateSet', function () {
            expect(txrs[0].status).to.equal('invalid');
            expect(txrs[1].status).to.equal('confirmed');
            expect(txrs[2].status).to.equal('confirmed');
+           var changes = newTSS.getChanges();
+           expect(changes.length).to.equal(1);
+           expect(changes[0]).to.deep.equal(txrs[0]);
            done();
        }, done);                                                     
   })
-
-           
-
-
-
 });
