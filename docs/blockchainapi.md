@@ -100,11 +100,24 @@
 
 ## Verified
 
+  * [Events](#events)
+    * [syncStart](#syncstart)
+    * [syncStop](#syncstop)
+  * [Methods](#methods)
+    * [isSyncing](#issyncing)
   * Properties
     * compactMode
     * preSavedChunkHashes
 
-### constructor
+### Events
+
+#### syncStart
+
+#### syncStop
+
+### Methods
+
+#### constructor
 
   * `Network` network
   * `Object` opts
@@ -114,6 +127,10 @@
     * `boolean` isTestnet
     * `boolean` compactMode
     * `boolean` preSavedChunkHashes
+
+#### isSyncing
+
+**return**: `boolean`
 
 ## Objects
 
@@ -131,8 +148,8 @@
 ### TxBlockHashObject
 
   * `string` status May be confirmed (in main chain), unconfirmed (in mempool) or invalid (in orphaned blocks)
-  * `?Object` data `null` for unconfirmed transactions
-    * `number` blockHeight -1 for invalid
+  * `?Object` data `null` for unconfirmed and invalid transactions
+    * `number` blockHeight
     * `string` blockHash
 
 ### UnspentObject

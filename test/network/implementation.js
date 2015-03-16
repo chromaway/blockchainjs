@@ -291,21 +291,7 @@ function implementationTest (opts) {
     /** @todo Find tx in orphaned block */
     it.skip('getTxBlockHash (invalid tx)', function (done) {
       var txId = 'ea9ed2900c8548d3eaf44d147fec5097f62ac52866cd5f1f8d640ab72d20c028'
-      var expected = {
-        status: 'invalid',
-        data: {
-          blockHeight: 325675,
-          blockHash: '00000000000004ef7097849f18d5d2486eec6985dce9362c694ffd5c015442ec'
-        }
-      }
-
-      if (network.isSupportSPV()) {
-        expected.data.index = 1
-        expected.data.merkle = [
-          'f2a256fa4eee62ab42dceef461505d2ae0b6c7a56d877fbf53a93d4d1cc8ca1b',
-          '9f21a86b30aa70064172ab07cc214911c8c44ab8d4e95822bece3b2d198dec40'
-        ]
-      }
+      var expected = {status: 'invalid', data: null}
 
       network.getTxBlockHash(txId)
         .then(function (response) {

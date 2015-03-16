@@ -211,8 +211,8 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 ### TxBlockHashObject
 
   * `string` status May be confirmed (in main chain), unconfirmed (in mempool) or invalid (in orphaned blocks)
-  * `?Object` data `null` for unconfirmed transactions
-    * `number` blockHeight -1 for invalid
+  * `?Object` data `null` for unconfirmed and invalid transactions
+    * `number` blockHeight
     * `string` blockHash
     * `?number` index available only in SPV supported networks
     * `?string[]` merkle available only in SPV supported networks

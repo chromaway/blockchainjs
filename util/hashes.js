@@ -1,12 +1,14 @@
 #!/usr/bin/env node
+/* globals Promise: true */
+
 var fs = require('fs')
 
 var _ = require('lodash')
 var ProgressBar = require('progress')
-var Q = require('q')
+var Promise = require('bluebird')
 
 var blockchainjs = require('../lib')
-var ElectrumWS = blockchainjs.network.ElectrumWS
+var ChromaInsight = blockchainjs.network.ChromaInsight
 var util = blockchainjs.util
 
 var optimist = require('optimist')
@@ -23,8 +25,8 @@ var optimist = require('optimist')
     ]
 
     if (availableNetworks.indexOf(argv.network) === -1) {
-      var errMsg = 'Network ' + argv.network + ' not allowed. You can use only: ' + availableNetworks.join(', ')
-      throw errMsg
+      var msg = 'Network ' + argv.network + ' not allowed. You can use only: ' + availableNetworks.join(', ')
+      throw new Error(msg)
     }
   })
   .options('o', {
@@ -50,8 +52,11 @@ if (argv.help) {
   process.exit(0)
 }
 
-var network = new ElectrumWS({url: ElectrumWS.getURLs(argv.network)[0]})
-network.once('newHeight', function (height) {
+var network = new ChromaInsight({networkName: argv.network, requestTimeout: 30000})
+new Promise(function (resolve) { network.once('connect', resolve) })
+.then(function () { return network.getHeader('latest') })
+.then(function (header) {
+  var height = header.height
   var chunksTotal = Math.floor(height / 2016)
   var barFmt = 'Progress: :percent (:current/:total), :elapseds elapsed, eta :etas'
   var bar = new ProgressBar(barFmt, {total: chunksTotal})
@@ -59,23 +64,30 @@ network.once('newHeight', function (height) {
   var lastHash
   var hashes = []
 
-  var fns = _.range(chunksTotal).map(function (chunkIndex) {
-    return function () {
-      return network.getChunk(chunkIndex)
-        .then(function (chunkHex) {
-          var rawChunk = new Buffer(chunkHex, 'hex')
+  var promise = Promise.resolve()
+  _.range(chunksTotal).forEach(function (chunkIndex) {
+    promise = promise
+      .then(function () {
+        var first = network.getHeader(chunkIndex * 2016)
+        var last = network.getHeader(chunkIndex * 2016 + 2015)
+        return Promise.all([first, last])
+      })
+      .spread(function (firstHeader, lastHeader) {
+        return network.getHeaders(firstHeader.hash, lastHeader.hash)
+      })
+      .then(function (headers) {
+        var rawChunk = new Buffer(headers, 'hex')
 
-          if (chunkIndex === chunksTotal - 1) {
-            lastHash = util.hashEncode(util.sha256x2(rawChunk.slice(-80)))
-          }
+        if (chunkIndex === chunksTotal - 1) {
+          lastHash = util.hashEncode(util.sha256x2(rawChunk.slice(-80)))
+        }
 
-          hashes.push(util.hashEncode(util.sha256x2(rawChunk)))
-          bar.tick()
-        })
-    }
+        hashes.push(util.hashEncode(util.sha256x2(rawChunk)))
+        bar.tick()
+      })
   })
 
-  fns.reduce(Q.when, Q.resolve())
+  promise
     .finally(network.disconnect.bind(network))
     .then(function () {
       var data = {lastHash: lastHash, chunkHashes: hashes}
@@ -89,4 +101,5 @@ network.once('newHeight', function (height) {
       process.exit(0)
     })
 })
+
 network.connect()
