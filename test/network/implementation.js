@@ -227,28 +227,13 @@ function implementationTest (opts) {
     })
 
     it('getTxBlockHash (confirmed tx)', function (done) {
-      var txId = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
-      var expected = {
-        status: 'confirmed',
-        data: {
-          blockHeight: 279774,
-          blockHash: '00000000ba81453dd2839b8f91b61be98ee82bee5b7697f6dab1f6149885f1ff'
-        }
+      var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[0].result)
+      if (!network.supportsSPV()) {
+        delete expected.data.index
+        delete expected.data.merkle
       }
 
-      if (network.supportsSPV()) {
-        expected.data.index = 4
-        expected.data.merkle = [
-          '289eb5dab9aad256a7f508377f8cec7df4c3eae07572a8d7273e303a81313e03',
-          'fb27fb6ebf46eda58831ca296736d82eec0b51d194f6f6c94c6788ea400a0c8d',
-          'f43b287ff722b4ab4d14043f732c23071a86a2ae0ea72acb4277ef0a4e250d8f',
-          '2ea9db3d74a1d9a50cd87931ae455e7c037033ba734981c078b5f4dcd39c14c5',
-          'b4bd6a5685959e13446d3de03f1375ee3cf37fa9c1488d25c14fb6bbdedc51dc',
-          'f3ebd6145c5c8d2144e1641eb0bb4a9315cc83d7ebb2ab2199e47f344e37fc28'
-        ]
-      }
-
-      network.getTxBlockHash(txId)
+      network.getTxBlockHash(fixtures.txBlockHash.confirmed[0].txId)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
@@ -256,21 +241,13 @@ function implementationTest (opts) {
     })
 
     it('getTxBlockHash (confirmed tx, coinbase)', function (done) {
-      var txId = '8acc4825f5563dc2969b81661acc6b65f3cb0e1649a7d4ee91d4acfc613d8bf2'
-      var expected = {
-        status: 'confirmed',
-        data: {
-          blockHeight: 5432,
-          blockHash: '000000002697b6db85bb0748f47212e0c1eb1f4bccfe89379b07f98033a9282f'
-        }
+      var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[1].result)
+      if (!network.supportsSPV()) {
+        delete expected.data.index
+        delete expected.data.merkle
       }
 
-      if (network.supportsSPV()) {
-        expected.data.index = 0
-        expected.data.merkle = []
-      }
-
-      network.getTxBlockHash(txId)
+      network.getTxBlockHash(fixtures.txBlockHash.confirmed[1].txId)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
@@ -324,8 +301,8 @@ function implementationTest (opts) {
     it('getUnspents', function (done) {
       network.getUnspents(fixtures.unspents[0].address)
         .then(function (unspents) {
-          var expected = _.sortBy(fixtures.unspents[0].unspents, 'txId')
-          expect(_.sortBy(unspents, 'txId')).to.deep.equal(expected)
+          var expected = _.cloneDeep(fixtures.unspents[0].result)
+          expect(_.sortBy(unspents, 'txId')).to.deep.equal(_.sortBy(expected, 'txId'))
         })
         .done(done, done)
     })
@@ -333,8 +310,8 @@ function implementationTest (opts) {
     it('getHistory', function (done) {
       network.getHistory(fixtures.history[0].address)
         .then(function (transactions) {
-          var expected = fixtures.history[0].transactions.sort()
-          expect(transactions.sort()).to.deep.equal(expected)
+          var expected = _.cloneDeep(fixtures.history[0].result)
+          expect(transactions.sort()).to.deep.equal(expected.sort())
         })
         .done(done, done)
     })

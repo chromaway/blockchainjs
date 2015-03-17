@@ -202,8 +202,8 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
   * `number` height
   * `string` hash
   * `number` version
-  * `string` prevBlockHash
-  * `string` merkleRoot
+  * `string` hashPrevBlock
+  * `string` hashMerkleRoot
   * `number` time
   * `number` bits
   * `number` nonce

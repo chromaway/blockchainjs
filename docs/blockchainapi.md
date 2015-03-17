@@ -138,8 +138,8 @@
   * `number` height
   * `string` hash
   * `number` version
-  * `string` prevBlockHash
-  * `string` merkleRoot
+  * `string` hashPrevBlock
+  * `string` hashMerkleRoot
   * `number` time
   * `number` bits
   * `number` nonce

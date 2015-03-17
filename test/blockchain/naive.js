@@ -227,28 +227,29 @@ describe('blockchain.Naive', function () {
   })
 
   it('subscribeAddress', function (done) {
+    var deferred = Promise.defer()
+    deferred.promise.done(done, done)
+
     helpers.createTx()
       .then(function (tx) {
         var address = bitcoin.Address.fromOutputScript(
           tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
 
-        var deferred = Promise.defer()
-        deferred.promise.done(done, done)
         blockchain.on('touchAddress', function (touchedAddress, txId) {
           if (touchedAddress === address && txId === tx.getId()) {
             deferred.resolve()
           }
         })
 
-        blockchain.subscribeAddress(address)
+        return blockchain.subscribeAddress(address)
           .then(function () {
             return blockchain.sendTx(tx.toHex())
           })
           .then(function (txId) {
             expect(txId).to.equal(tx.getId())
           })
-          .catch(function () { deferred.reject() })
       })
-      .catch(done)
+      .then(function () { deferred.resolve() })
+      .catch(function (err) { deferred.reject(err) })
   })
 })

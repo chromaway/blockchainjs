@@ -79,16 +79,13 @@ function getUnconfirmedTxId () {
  * @param {Error} error
  * @throws {Error}
  */
-function ignoreNetworkErrors (error) {
-  if (error instanceof errors.Network.Unreachable) {
+function ignoreNetworkErrors (err) {
+  if (err instanceof errors.Network.NotConnected ||
+      err instanceof errors.Network.Unreachable) {
     return
   }
 
-  if (error instanceof errors.Network.NotConnected) {
-    return
-  }
-
-  throw error
+  throw err
 }
 
 module.exports = {

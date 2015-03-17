@@ -1,5 +1,3 @@
-var _ = require('lodash')
-
 var blockchainjs = require('../../lib')
 var implementationTest = require('./implementation.js')
 
@@ -42,7 +40,7 @@ implementationTest({
     // not emit `connect` & `disconnect`
     chainNetwork.emit = function (eventName) {
       if (eventName !== 'connect' && eventName !== 'disconnect') {
-        Object.getPrototypeOf(this).emit.apply(this, _.slice(arguments))
+        Object.getPrototypeOf(this).emit.apply(this, arguments)
       }
     }
 
