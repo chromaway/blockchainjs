@@ -38,8 +38,8 @@ describe('network.Network', function () {
     expect(network).to.be.instanceof(blockchainjs.network.Network)
   })
 
-  it('isSupportSPV', function () {
-    expect(network.isSupportSPV()).to.be.false
+  it('supportsSPV', function () {
+    expect(network.supportsSPV()).to.be.false
   })
 
   it('isConnected', function () {

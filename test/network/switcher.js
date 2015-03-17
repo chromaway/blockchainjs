@@ -33,19 +33,19 @@ implementationTest({
 
 implementationTest({
   class: blockchainjs.network.Switcher,
-  description: 'network.Switcher: Two sources (ChromaInsight, Chain) (first doesn\'t work)',
+  description: 'network.Switcher: Two sources (Chain, ChromaInsight) (first doesn\'t work)',
   getNetworkOpts: function () {
-    var chromaNetwork = new blockchainjs.network.ChromaInsight({networkName: 'testnet'})
     var chainNetwork = new blockchainjs.network.Chain({networkName: 'testnet'})
+    var chromaNetwork = new blockchainjs.network.ChromaInsight({networkName: 'testnet'})
     // not connected
-    chromaNetwork.isConnected = function () { return false }
+    chainNetwork.isConnected = function () { return false }
     // not emit `connect` & `disconnect`
-    chromaNetwork.emit = function (eventName) {
+    chainNetwork.emit = function (eventName) {
       if (eventName !== 'connect' && eventName !== 'disconnect') {
         Object.getPrototypeOf(this).emit.apply(this, _.slice(arguments))
       }
     }
 
-    return [[chromaNetwork, chainNetwork], {networkName: 'testnet'}]
+    return [[chainNetwork, chromaNetwork], {networkName: 'testnet'}]
   }
 })

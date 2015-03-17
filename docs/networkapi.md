@@ -8,7 +8,7 @@
     * [touchAddress](#touchaddress)
   * [Methods](#methods)
     * [constructor](#constructor)
-    * [isSupportSPV](#issupportspv)
+    * [supportsSPV](#supportsspv)
     * [connect](#connect)
     * [disconnect](#disconnect)
     * [isConnected](#isconnected)
@@ -67,7 +67,7 @@
   * `Object` opts
     * `string` networkName
 
-### isSupportSPV
+### supportsSPV
 
 **return**: `boolean`
 

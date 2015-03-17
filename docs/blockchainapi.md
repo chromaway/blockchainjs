@@ -45,7 +45,6 @@
   * `Network` network
   * `Object` opts
     * `string` opts.networkName
-    * `number` opts.headersCacheSize
     * `number` opts.txCacheSize
 
 ### getHeader
@@ -107,7 +106,7 @@
     * [isSyncing](#issyncing)
   * Properties
     * compactMode
-    * preSavedChunkHashes
+    * storage
 
 ### Events
 
@@ -122,11 +121,11 @@
   * `Network` network
   * `Object` opts
     * `string` networkName
-    * `number` headersCacheSize
+    * `Storage` storage
     * `number` txCacheSize
     * `boolean` isTestnet
     * `boolean` compactMode
-    * `boolean` preSavedChunkHashes
+    * `boolean` chunkHashes
 
 #### isSyncing
 

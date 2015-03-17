@@ -73,7 +73,7 @@ function implementationTest (opts) {
         return done()
       }
 
-      network.getHeader('latest').done()
+      network.getHeader('latest')
       setTimeout(function () {
         expect(network.getCurrentActiveRequests()).to.equal(1)
         done()
@@ -143,7 +143,7 @@ function implementationTest (opts) {
     })
 
     it('getHeaders (first chunk)', function (done) {
-      if (!network.isSupportSPV()) {
+      if (!network.supportsSPV()) {
         return done()
       }
 
@@ -158,7 +158,7 @@ function implementationTest (opts) {
     })
 
     it('getHeaders (only latest)', function (done) {
-      if (!network.isSupportSPV()) {
+      if (!network.supportsSPV()) {
         return done()
       }
 
@@ -175,7 +175,7 @@ function implementationTest (opts) {
     })
 
     it('getHeaders (not found)', function (done) {
-      if (!network.isSupportSPV()) {
+      if (!network.supportsSPV()) {
         return done()
       }
 
@@ -236,7 +236,7 @@ function implementationTest (opts) {
         }
       }
 
-      if (network.isSupportSPV()) {
+      if (network.supportsSPV()) {
         expected.data.index = 4
         expected.data.merkle = [
           '289eb5dab9aad256a7f508377f8cec7df4c3eae07572a8d7273e303a81313e03',
@@ -265,7 +265,7 @@ function implementationTest (opts) {
         }
       }
 
-      if (network.isSupportSPV()) {
+      if (network.supportsSPV()) {
         expected.data.index = 0
         expected.data.merkle = []
       }
@@ -345,8 +345,14 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    // skip for chain... (testnet notification not working on March 15?)
-    it.skip('subscribe on address and wait event', function (done) {
+    it('subscribe on address and wait event', function (done) {
+      // temporary skip for chain... (testnet notification not working on March 15?)
+      if (network instanceof blockchainjs.network.Chain ||
+          network._lastNetworkValue instanceof blockchainjs.network.Chain) {
+        console.warn('skip for Chain (temporary)')
+        return done()
+      }
+
       helpers.createTx()
         .then(function (tx) {
           var cAddress = bitcoin.Address.fromOutputScript(
