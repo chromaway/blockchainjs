@@ -9,15 +9,17 @@ var Promise = require('bluebird')
 
 var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
+var fixtures = require('../data/network.json')
 
-describe.skip('blockchain.Verified', function () {
+describe('blockchain.Verified', function () {
   var network
   var storage
   var blockchain
+  var timeoutId
 
   function createBeforeEachFunction (Storage, storageOpts, blockchainOpts) {
     return function (done) {
-      network = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
+      network = new blockchainjs.network.ChromaInsight({networkName: 'testnet'})
       network.on('error', helpers.ignoreNetworkErrors)
 
       storage = new Storage(storageOpts)
@@ -31,23 +33,33 @@ describe.skip('blockchain.Verified', function () {
       blockchain.on('error', helpers.ignoreNetworkErrors)
 
       // for using syncThroughHeaders in syncing process
-      var blockchainNewHeightListener = network._events.newHeight
-      network._events.newHeight = function (realHeight) {
-        network._events.newHeight = blockchainNewHeightListener
-        network._setCurrentHeight(realHeight - 10)
-        network.once('newHeight', function () {
-          network.refresh()
-            .catch(helpers.ignoreNetworkErrors)
-            .done()
-          done()
-        })
-      }
+      var getHeader = Object.getPrototypeOf(network).getHeader
+      network.getHeader = function (id) {
+        if (id !== 'latest') {
+          return getHeader.call(network, id)
+        }
 
+        return getHeader.call(network, 'latest')
+          .then(function (lastHeader) {
+            return getHeader.call(network, lastHeader.height - 10)
+          })
+      }
+      timeoutId = setTimeout(function () {
+        network.getHeader = getHeader.bind(network)
+        network.getHeader('latest')
+          .then(function (header) {
+            network.emit('newBlock', header.hash, header.height)
+          })
+          .catch(function () {})
+      }, 2500)
+
+      network.once('connect', done)
       network.connect()
     }
   }
 
   afterEach(function (done) {
+    clearTimeout(timeoutId)
     network.once('disconnect', function () {
       network.removeAllListeners()
       network.on('error', function () {})
@@ -72,27 +84,8 @@ describe.skip('blockchain.Verified', function () {
       expect(blockchain).to.be.instanceof(blockchainjs.blockchain.Verified)
     })
 
-    it('full sync / get verified header / get verified tx', function (done) {
-      this.timeout(20 * 60 * 1000)
-
-      var header300k = {
-        version: 2,
-        prevBlockHash: '00000000dfe970844d1bf983d0745f709368b5c66224837a17ed633f0dabd300',
-        merkleRoot: 'ca7c7b64204eaa4b0a1632a7d326d4d8255bfd0fa1f5d66f8def8fa72e5b2f32',
-        timestamp: 1412899877,
-        bits: 453050367,
-        nonce: 733842077
-      }
-
-      var txId = 'b850a8bccc4d8da39e8fe95396011501e1ab152a74be985af11227458a7deaea'
-      var expectedTxHex = [
-        '0100000001ae857b1721e98bae4c139785f05f2d041d3bb872d026e09e3e6601752f72526e000000',
-        '006a47304402201f09c10fa777266c7ca1257980b36a3e9f1b9967ba9ed59b1ada86b83961fdf702',
-        '201b4b76b098e3e3207c1e0f3ad69da48b42fb25fa6708621eaf75df1353c4f66e012102fee381c9',
-        '0149e22ae182156c16316c24fe680a0e617646c3d58531112ac82e29ffffffff0176f20000000000',
-        '001976a914b96b816f378babb1fe585b7be7a2cd16eb99b3e488ac00000000'
-      ].join('')
-
+    it('wait syncStop / getHeader / getTxBlockHash', function (done) {
+      var barFmt = 'Syncing: :percent (:current/:total), :elapseds elapsed, eta :etas'
       var stream = process.stderr
       if (typeof window !== 'undefined') {
         stream = {
@@ -104,40 +97,75 @@ describe.skip('blockchain.Verified', function () {
         }
       }
 
-      var barFmt = 'Syncing: :percent (:current/:total), :elapseds elapsed, eta :etas'
-      var bar = new ProgressBar(barFmt, {
-        total: network.getCurrentHeight(),
-        stream: stream
-      })
-      // bar.render = function () {}
-
-      network.on('newHeight', function (newHeight) {
-        bar.total = newHeight
-      })
-
-      if (blockchain.getCurrentHeight() !== -1) {
-        bar.tick(blockchain.getCurrentHeight())
-      }
-
-      blockchain.on('newHeight', function (newHeight) {
-        bar.tick(newHeight - bar.curr)
-      })
-
-      blockchain.on('syncStop', function () {
-        if (network.getCurrentHeight() !== blockchain.getCurrentHeight()) {
-          return
-        }
-
-        blockchain.getHeader(300000)
-          .then(function (header) {
-            expect(header).to.deep.equal(header300k)
-            return blockchain.getTx(txId)
+      Object.getPrototypeOf(network).getHeader.call(network, 'latest')
+        .then(function (header) {
+          var bar = new ProgressBar(barFmt, {
+            total: header.height,
+            stream: stream
           })
-          .then(function (txHex) {
-            expect(txHex).to.equal(expectedTxHex)
+
+          network.on('newBlock', function (newBlockHash, newHeight) {
+            bar.total = newHeight
           })
-          .done(done, done)
-      })
+
+          if (blockchain.currentHeight !== -1) {
+            bar.tick(blockchain.currentHeight)
+          }
+
+          blockchain.on('newBlock', function (newBlockHash, newHeight) {
+            bar.tick(newHeight - bar.curr)
+          })
+
+          return new Promise(function (resolve) {
+            blockchain.on('syncStop', function () {
+              if (bar.total === blockchain.currentHeight) { resolve() }
+            })
+          })
+        })
+        .then(function () {
+          return blockchain.getHeader(fixtures.headers[300000].height)
+        })
+        .then(function (header) {
+          expect(header).to.deep.equal(fixtures.headers[300000])
+          return blockchain.getHeader(fixtures.headers[300000].hash)
+        })
+        .then(function (header) {
+          expect(header).to.deep.equal(fixtures.headers[300000])
+          return blockchain.getTxBlockHash(fixtures.txBlockHash.confirmed[0].txId)
+        })
+        .then(function (txBlockHash) {
+          var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[0].result)
+          delete expected.data.index
+          delete expected.data.merkle
+          expect(txBlockHash).to.deep.equal(expected)
+          return helpers.getUnconfirmedTxId()
+        }).then(function (txId) {
+          return blockchain.getTxBlockHash(txId)
+        })
+        .then(function (txBlockHash) {
+          expect(txBlockHash).to.deep.equal({status: 'unconfirmed', data: null})
+          var txId = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
+          return blockchain.getTxBlockHash(txId)
+            .then(function () { throw new Error('Unexpected behavior') })
+            .catch(function (err) {
+              expect(err).to.be.instanceof(blockchainjs.errors.Transaction.NotFound)
+              expect(err.message).to.match(new RegExp(txId))
+            })
+        })
+        .done(done, done)
+    })
+
+    it('getTx (unconfirmed)', function (done) {
+      helpers.getUnconfirmedTxId()
+        .then(function (txId) {
+          return blockchain.getTx(txId)
+            .then(function (rawTx) {
+              var responseTxId = blockchainjs.util.hashEncode(
+                blockchainjs.util.sha256x2(new Buffer(rawTx, 'hex')))
+              expect(responseTxId).to.equal(txId)
+            })
+        })
+        .done(done, done)
     })
 
     it('sendTx', function (done) {
@@ -149,54 +177,40 @@ describe.skip('blockchain.Verified', function () {
         .done(done, done)
     })
 
-    it('getHistory', function (done) {
-      var address = 'n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'
-
-      blockchain.getHistory(address)
-        .then(function (entries) {
-          expect(entries).to.deep.equal([
-            {
-              txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e',
-              height: 159233
-            }
-          ])
+    it('getUnspents', function (done) {
+      blockchain.getUnspents(fixtures.unspents[0].address)
+        .then(function (unspents) {
+          var expected = _.cloneDeep(fixtures.unspents[0].result)
+          expect(_.sortBy(unspents, 'txId')).to.deep.equal(_.sortBy(expected, 'txId'))
         })
         .done(done, done)
     })
 
-    it('getUnspents', function (done) {
-      var address = 'n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'
-      var addressCoins = [
-        {
-          txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e',
-          outIndex: 0,
-          value: 5000000000,
-          height: 159233
-        }
-      ]
-
-      blockchain.getUnspents(address)
-        .then(function (coins) {
-          expect(coins).to.deep.equal(addressCoins)
+    it('getHistory', function (done) {
+      blockchain.getHistory(fixtures.history[0].address)
+        .then(function (transactions) {
+          var expected = _.cloneDeep(fixtures.history[0].result)
+          expect(transactions.sort()).to.deep.equal(expected.sort())
         })
         .done(done, done)
     })
 
     it('subscribeAddress', function (done) {
+      var deferred = Promise.defer()
+      deferred.promise.done(done, done)
+
       helpers.createTx()
         .then(function (tx) {
           var address = bitcoin.Address.fromOutputScript(
             tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
 
-          var deferred = Promise.defer()
-          deferred.promise.done(done, done)
-          blockchain.on('touchAddress', function (touchedAddress) {
-            if (touchedAddress === address) {
+          blockchain.on('touchAddress', function (touchedAddress, txId) {
+            if (touchedAddress === address && txId === tx.getId()) {
               deferred.resolve()
             }
           })
 
-          blockchain.subscribeAddress(address)
+          return blockchain.subscribeAddress(address)
             .then(function () {
               return blockchain.sendTx(tx.toHex())
             })
@@ -204,42 +218,40 @@ describe.skip('blockchain.Verified', function () {
               expect(txId).to.equal(tx.getId())
             })
         })
-        .done()
+        .then(function () { deferred.resolve() })
+        .catch(function (err) { deferred.reject(err) })
     })
   }
 
   describe('full mode (memory storage)', function () {
+    this.timeout(15 * 60 * 1000)
+
     beforeEach(createBeforeEachFunction(
       blockchainjs.storage.Memory,
-      {useCompactMode: false},
-      {useCompactMode: false}))
+      {compactMode: false},
+      {compactMode: false}))
 
     runTests()
   })
 
   describe('compact mode without pre-saved data (memory storage)', function () {
+    this.timeout(15 * 60 * 1000)
+
     beforeEach(createBeforeEachFunction(
       blockchainjs.storage.Memory,
-      {useCompactMode: true},
-      {useCompactMode: true, usePreSavedChunkHashes: false}))
+      {compactMode: true},
+      {compactMode: true}))
 
     runTests()
   })
 
   describe('compact mode with pre-saved data (memory storage)', function () {
+    this.timeout(30 * 1000)
+
     beforeEach(createBeforeEachFunction(
       blockchainjs.storage.Memory,
-      {useCompactMode: true},
-      {useCompactMode: true, usePreSavedChunkHashes: true}))
-
-    runTests()
-  })
-
-  describe('compact mode with pre-saved data (localStorage storage)', function () {
-    beforeEach(createBeforeEachFunction(
-      blockchainjs.storage.LocalStorage,
-      {useCompactMode: true},
-      {useCompactMode: true, usePreSavedChunkHashes: true}))
+      {compactMode: true},
+      {compactMode: true, chunkHashes: blockchainjs.chunkHashes.testnet}))
 
     runTests()
   })
