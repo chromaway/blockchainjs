@@ -59,17 +59,17 @@ createTx()
 function getUnconfirmedTxId () {
   return new Promise(function (resolve) {
     function tryGet () {
-      var txid = _.chain(lastUnconfirmedTxIds)
+      var data = _.chain(lastUnconfirmedTxIds)
         .filter(function (data) { return Date.now() - data.time > 2000 })
-        .pluck('txid')
-        .first()
+        .sortBy('time')
+        .last()
         .value()
 
-      if (typeof txid === 'undefined') {
+      if (typeof data === 'undefined') {
         return setTimeout(tryGet, 100)
       }
 
-      resolve(txid)
+      resolve(data.txid)
     }
     tryGet()
   })
