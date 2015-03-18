@@ -62,8 +62,8 @@ describe('storage.Storage', function () {
     it(method, function (done) {
       fn()
         .then(function () { throw new Error('Unexpected response') })
-        .done(null, function (error) {
-          expect(error).to.be.instanceof(errors.NotImplemented)
+        .done(null, function (err) {
+          expect(err).to.be.instanceof(errors.NotImplemented)
           done()
         })
     })

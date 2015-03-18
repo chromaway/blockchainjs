@@ -3,6 +3,12 @@
   "version": "0.2.0",
   "description": "Bitcoin blockchain for wallets.",
   "author": "Fomichev Kirill <fanatid@ya.ru>",
+  "contributors": [
+    {
+      "name": "Alex Mizrahi",
+      "email": "alex.mizrahi@gmail.com"
+    }
+  ],
   "main": "lib/index.js",
   "repository": {
     "type": "git",
@@ -27,20 +33,20 @@
   "scripts": {
     "build": "npm run-script compile && npm run-script uglify",
     "compile": "browserify lib/index.js -s BlockchainJS -o blockchainjs.js",
-    "compile_test": "browserify test/**/*.js >blockchainjs.test.js",
-    "coverage": "istanbul cover _mocha -- test/**/*.js",
+    "compile_test": "browserify test/*.js test/**/*.js >blockchainjs.test.js",
+    "coverage": "istanbul cover _mocha -- test/*.js test/**/*.js",
     "coveralls": "npm run-script coverage && coveralls <coverage/lcov.info",
     "clean": "rm -f blockchainjs.js blockchainjs.min.js blockchainjs.test.js",
     "lint": "standard",
     "uglify": "uglify -s blockchainjs.js -o blockchainjs.min.js",
-    "test": "istanbul test mocha -- --reporter spec test/**/*.js"
+    "test": "istanbul test mocha -- --reporter spec test/**/*.js test/*.js"
   },
   "dependencies": {
     "bigi": "1.4.0",
     "bluebird": "2.9.14",
     "browser-request": "0.3.3",
     "bs58check": "1.0.4",
-    "error-system": "0.0.2",
+    "error-system": "0.1.0",
     "lodash": "3.4.0",
     "lru-cache": "2.5.0",
     "request": "2.53.0",

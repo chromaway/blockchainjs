@@ -106,13 +106,13 @@ function implementationTest (opts) {
             return storage.getChunkHash(-1)
           })
           .then(function () { throw new Error('Unexpected response') })
-          .catch(function (error) {
-            expect(error).to.be.instanceof(RangeError)
+          .catch(function (err) {
+            expect(err).to.be.instanceof(RangeError)
             return storage.getChunkHash(2)
           })
           .then(function () { throw new Error('Unexpected response') })
-          .catch(function (error) {
-            expect(error).to.be.instanceof(RangeError)
+          .catch(function (err) {
+            expect(err).to.be.instanceof(RangeError)
             return storage.clear()
           })
           .then(function () {
@@ -154,18 +154,18 @@ function implementationTest (opts) {
             return storage.putHeaders(headers)
           })
           .then(function () { throw new Error('Unexpected response') })
-          .catch(function (error) {
-            expect(error).to.be.instanceof(errors.Storage.CompactMode.Limitation)
+          .catch(function (err) {
+            expect(err).to.be.instanceof(errors.Storage.CompactMode.Limitation)
             return storage.getHeader(-1)
           })
           .then(function () { throw new Error('Unexpected response') })
-          .catch(function (error) {
-            expect(error).to.be.instanceof(RangeError)
+          .catch(function (err) {
+            expect(err).to.be.instanceof(RangeError)
             return storage.getHeader(2)
           })
           .then(function () { throw new Error('Unexpected response') })
-          .catch(function (error) {
-            expect(error).to.be.instanceof(RangeError)
+          .catch(function (err) {
+            expect(err).to.be.instanceof(RangeError)
             return storage.clear()
           })
           .then(function () {
@@ -232,8 +232,8 @@ function implementationTest (opts) {
         var promises = chunkMethods.map(function (method) {
           return storage[method].call(storage)
             .then(function () { throw new Error('Unexpected response') })
-            .catch(function (error) {
-              expect(error).to.be.instanceof(errors.Storage.CompactMode.Forbidden)
+            .catch(function (err) {
+              expect(err).to.be.instanceof(errors.Storage.CompactMode.Forbidden)
             })
         })
 
@@ -279,13 +279,13 @@ function implementationTest (opts) {
             return storage.getHeader(-1)
           })
           .then(function () { throw new Error('Unexpected response') })
-          .catch(function (error) {
-            expect(error).to.be.instanceof(RangeError)
+          .catch(function (err) {
+            expect(err).to.be.instanceof(RangeError)
             return storage.getHeader(2016)
           })
           .then(function () { throw new Error('Unexpected response') })
-          .catch(function (error) {
-            expect(error).to.be.instanceof(RangeError)
+          .catch(function (err) {
+            expect(err).to.be.instanceof(RangeError)
             return storage.clear()
           })
           .then(function () {
