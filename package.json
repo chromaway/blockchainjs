@@ -39,7 +39,7 @@
     "clean": "rm -f blockchainjs.js blockchainjs.min.js blockchainjs.test.js",
     "lint": "standard",
     "uglify": "uglify -s blockchainjs.js -o blockchainjs.min.js",
-    "test": "istanbul test mocha -- --reporter spec test/**/*.js test/*.js"
+    "test": "istanbul test mocha -- --reporter spec test/*.js test/**/*.js"
   },
   "dependencies": {
     "bigi": "1.4.0",
