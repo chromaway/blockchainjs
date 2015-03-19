@@ -25,10 +25,10 @@ describe('TxStateSet', function () {
     network = new blockchainjs.network.ChromaInsight({networkName: 'testnet'})
     // network = new blockchainjs.network.Chain({networkName: 'testnet'})
     network.on('error', helpers.ignoreNetworkErrors)
-    network.once('connect', done)
     network.connect()
     blockchain = new blockchainjs.blockchain.Naive(network, {networkName: 'testnet'})
     blockchain.on('error', helpers.ignoreNetworkErrors)
+    blockchain.on('newBlock', function () { done() })
   })
 
   afterEach(function (done) {
