@@ -176,6 +176,8 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 
 ## Switcher
 
+Switcher provides `Network` interface and use connected network with longest chain selected by priority.
+
   * [Events](#events)
     * [networkChanged](#networkchanged)
   * Properties

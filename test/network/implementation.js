@@ -323,13 +323,6 @@ function implementationTest (opts) {
     })
 
     it('subscribe on address and wait event', function (done) {
-      // temporary skip for chain... (testnet notification not working on March 15?)
-      if (network instanceof blockchainjs.network.Chain ||
-          network._lastNetworkValue instanceof blockchainjs.network.Chain) {
-        console.warn('skip for Chain (temporary)')
-        return done()
-      }
-
       helpers.createTx()
         .then(function (tx) {
           var cAddress = bitcoin.Address.fromOutputScript(

@@ -6,6 +6,7 @@
     * [touchAddress](#touchAddress)
   * [Methods](#methods)
     * [constructor](#constructor)
+    * [getSnapshot](#getsnapshot)
     * [getHeader](#getheader)
     * [getTx](#gettx)
     * [getTxBlockHash](#gettxblockhash)
@@ -21,6 +22,8 @@
   * Inheritance
     * [Naive](#naive)
     * [Verified](#verified)
+  * Related classes
+    * [Snapshot](#snapshot)
 
 ## Events
 
@@ -46,6 +49,10 @@
   * `Object` opts
     * `string` opts.networkName
     * `number` opts.txCacheSize
+
+### getSnapshot
+
+**return**: `Snapshot`
 
 ### getHeader
 
@@ -130,6 +137,29 @@
 #### isSyncing
 
 **return**: `boolean`
+
+## Snapshot
+
+Snapshot implement `get*` methods of `Blockchain` interface. It memorize last block hash and return `InconsistentSnapshot` error in promise if last block changed.
+
+  * [Methods](#methods)
+    * [isValid](#isvalid)
+  * Properties
+    * blockchain
+    * currentHeight
+    * currentBlockHash
+
+### Methods
+
+#### constructor
+
+  * `Blockchain` blockchain
+
+#### isValid
+
+**return**: `boolean`
+
+### Methods
 
 ## Objects
 
