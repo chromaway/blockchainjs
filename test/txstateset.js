@@ -78,7 +78,7 @@ describe('TxStateSet', function () {
   it('syncAddressUnconfirmed', function (done) {
     var state = {
       trackedAddresses: ['n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'],
-      syncMethod: 'unspent',
+      syncMethod: 'unspents',
       txRecords: [{
         status: 'unconfirmed',
         txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
@@ -97,7 +97,7 @@ describe('TxStateSet', function () {
   it('syncAddressFakeReorg', function (done) {
     var state = {
       trackedAddresses: ['n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'],
-      syncMethod: 'unspent',
+      syncMethod: 'unspents',
       txRecords: [{
         status: 'confirmed',
         // fake block hash should be detected and changed to the real one
@@ -119,7 +119,7 @@ describe('TxStateSet', function () {
   it('syncAddressInvalid', function (done) {
     var state = {
       trackedAddresses: ['n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'],
-      syncMethod: 'unspent',
+      syncMethod: 'unspents',
       txRecords: [
         { // this invalid transaction should be detected
           status: 'confirmed',
