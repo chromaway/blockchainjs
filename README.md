@@ -11,7 +11,7 @@ A pure JavaScript library for node.js and browsers for easy data exchange betwee
 
 blockchainjs have two abstraction level: Network and Blockchain
 
-Network implements a common interface for remote service. For now available only two providers: [chain.com](http://chain.com/) and [electrum (socket.io)](https://github.com/fanatid/electrumjs-server). Also blockchainjs has special network -- Switcher which allow use several networks at one time.
+Network implements a common interface for remote service. For now available only two providers: [chain.com](http://chain.com/) and [insight (with patches)](https://github.com/chromaway/insight-api). Also blockchainjs has special network -- Switcher which allow use several networks at one time.
 
 Blockchain implements a common interface between network and your wallet. You can use Naive (trust all data from the network) or Verified (SPV implementation).
 
