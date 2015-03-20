@@ -19,16 +19,16 @@ In addition to Verified blockchainjs has Storage interface for store headers. Me
 
 ## API
 
-  * [Network](https://github.com/chromaway/blockchainjs/blob/master/docs/networkapi.md)
-    * [Chain](https://github.com/chromaway/blockchainjs/blob/master/docs/networkapi.md#chain)
-    * [ChromaInsight](https://github.com/chromaway/blockchainjs/blob/master/docs/networkapi.md#chromainsight)
-    * [Switcher](https://github.com/chromaway/blockchainjs/blob/master/docs/networkapi.md#switcher)
-  * [Blockchain](https://github.com/chromaway/blockchainjs/blob/master/docs/blockchainapi.md)
-    * [Naive](https://github.com/chromaway/blockchainjs/blob/master/docs/blockchainapi.md#naive)
-    * [Verified](https://github.com/chromaway/blockchainjs/blob/master/docs/blockchainapi.md#verified)
-  * [Storage](https://github.com/chromaway/blockchainjs/blob/master/docs/storageapi.md)
-    * [Memory](https://github.com/chromaway/blockchainjs/blob/master/docs/storageapi.md#memory)
-    * [LocalStorage](https://github.com/chromaway/blockchainjs/blob/master/docs/storageapi.md#localstorage)
+  * [Network](docs/networkapi.md)
+    * [Chain](docs/networkapi.md#chain)
+    * [ChromaInsight](docs/networkapi.md#chromainsight)
+    * [Switcher](docs/networkapi.md#switcher)
+  * [Blockchain](docs/blockchainapi.md)
+    * [Naive](docs/blockchainapi.md#naive)
+    * [Verified](docs/blockchainapi.md#verified)
+  * [Storage](docs/storageapi.md)
+    * [Memory](docs/storageapi.md#memory)
+    * [LocalStorage](docs/storageapi.md#localstorage)
 
 ## Examples
 
@@ -89,6 +89,6 @@ blockchain.on('syncStop', blockchainjs.util.makeSerial(function () {
 
 ## License
 
-Code released under [the MIT license](https://github.com/chromaway/blockchainjs/blob/master/LICENSE).
+Code released under [the MIT license](LICENSE).
 
 Copyright 2015 Chromaway AB
