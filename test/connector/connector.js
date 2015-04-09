@@ -13,20 +13,19 @@ var notImplementedMethods = [
   'getCurrentActiveRequests',
   'getTimeFromLastResponse',
   'getHeader',
-  'getHeaders',
+  'headersQuery',
   'getTx',
-  'getTxBlockHash',
+  'getTxBlockId',
   'sendTx',
-  'getUnspents',
-  'getHistory',
+  'addressesQuery',
   'subscribe'
 ]
 
-describe('network.Network', function () {
+describe.only('network.Connector', function () {
   var network
 
   beforeEach(function () {
-    network = new blockchainjs.network.Network()
+    network = new blockchainjs.connector.Connector()
   })
 
   afterEach(function () {
@@ -35,11 +34,7 @@ describe('network.Network', function () {
 
   it('inherits events.EventEmitter', function () {
     expect(network).to.be.instanceof(EventEmitter)
-    expect(network).to.be.instanceof(blockchainjs.network.Network)
-  })
-
-  it('supportsSPV', function () {
-    expect(network.supportsSPV()).to.be.false
+    expect(network).to.be.instanceof(blockchainjs.connector.Connector)
   })
 
   it('isConnected', function () {

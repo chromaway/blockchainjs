@@ -82,13 +82,17 @@
 
 ### getHeader
 
-  * `(number|string)` id blockid, height or special keyword `latest` for best block
+  * `(number|string)` id `blockid`, `height` or special keyword `latest` for best block
 
 **return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
 
 **return**: `Promise<errors.Header.NotFound>` if couldn't find block
 
 ### headersQuery
+
+  \* *maximum 2016 headers (one chunk)*
+
+  \* *half-open interval for [from-to)*
 
   * `string` from
   * `string` [to]
@@ -98,6 +102,8 @@
 
 **return**: `Promise<errors.Header.NotFound>` if couldn't find block for `from` or `to`
 
+**return**: `Promise<errors.Header.InvalidCount>` if count (or distance between `to` and `from`) less than 1 or more than 2016
+
 ### getTx
 
   * `string` txid
@@ -106,11 +112,11 @@
 
 **return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txid`
 
-### getTxMerkle
+### getTxBlockId
 
   * `string` txid
 
-**return**: `Promise<Object>` [TxMerkleObject](#txmerkleobject)
+**return**: `Promise<Object>` `Object` is [TxBlockIdObject](#txblockidobject)
 
 **return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txid`
 
@@ -120,11 +126,23 @@
 
 **return**: `Promise`
 
+### addressesQuery
+
+  \* *half-close interval for (from-to]*
+
+  * `string[]` addresses
+  * `string` [source] `blocks` or `mempool`
+  * `(string|number)` [from] `blockid` or `height`
+  * `(string|number)` [to] `blockid` or `height`
+  * `string` [status] `unspent` for affected transactions with unspent outputs
+
+**return**: `Promise<Object>` `Object` is [AddressesQueryObject](#addressesqueryobject)
+
 ### subscribe
 
   * `Object` opts
-    * `string` event May be *newBlock* or *touchAddress*
-    * `string` address Only for address type
+    * `string` event May be `newBlock` or `touchAddress`
+    * `string` address Only for `touchAddress` type
 
 **return**: `Promise`
 
@@ -152,8 +170,8 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
   * `string` blockid
   * `number` height
   * `number` version
-  * `string` prevBlockid
-  * `string` merkleRoot
+  * `string` prevblockid
+  * `string` merkleroot
   * `number` time
   * `number` bits
   * `number` nonce
@@ -163,17 +181,18 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
   * `number` from
   * `string` headers Concatenated headers in raw format encoded in hex. See [Block hashing algorithm](https://en.bitcoin.it/wiki/Block_hashing_algorithm) for details.
 
-### TxMerkleObject
+### TxBlockIdObject
 
-  * `string` source *blocks* for confirmed and *mempool* for unconfirmed
-  * `(Object|undefined)` data `undefined` for unconfirmed transactions
+  * `string` source `blocks` for confirmed or `mempool` for unconfirmed
+  * `Object` [data] defined only for confirmed transactions
     * `number` height
     * `string` blockid
     * `?string[]` merkle
     * `?number` index
 
-### UnspentObject
+### AddressesQueryObject
 
-  * `string` txId
-  * `number` outIndex
-  * `number` value
+  * `Array.<{txid: string, height: number}>` transactions
+  * `Object` latest
+    * `number` height
+    * `string` blockid
