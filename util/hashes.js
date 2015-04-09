@@ -16,11 +16,11 @@ var optimist = require('optimist')
   .options('n', {
     alias: 'network',
     describe: 'cryptocurrency network',
-    default: 'bitcoin'
+    default: 'livenet'
   })
   .check(function (argv) {
     var availableNetworks = [
-      'bitcoin',
+      'livenet',
       'testnet'
     ]
 

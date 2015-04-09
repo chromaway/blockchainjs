@@ -92,3 +92,8 @@ blockchain.on('syncStop', blockchainjs.util.makeSerial(function () {
 Code released under [the MIT license](LICENSE).
 
 Copyright 2015 Chromaway AB
+
+## Todo
+
+  * fix docs
+  * add karma

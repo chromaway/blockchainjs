@@ -27,9 +27,9 @@ describe('storage.Storage', function () {
     expect(storage).to.be.instanceof(EventEmitter)
   })
 
-  it('networkName, default value is bitcoin', function () {
+  it('networkName, default value is livenet', function () {
     var storage = new Storage()
-    expect(storage.networkName).to.equal('bitcoin')
+    expect(storage.networkName).to.equal('livenet')
   })
 
   it('networkName is testnet', function () {
