@@ -8,88 +8,84 @@ var Promise = require('bluebird')
 
 var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
-var fixtures = require('../data/network.json')
+var fixtures = require('../data/connector.json')
 
 /**
  * @param {Object} [opts]
  * @param {function} [opts.describe]
  * @param {string} [opts.description]
- * @param {function} [opts.getNetworkOpts]
+ * @param {function} [opts.getConnectorOpts]
  */
 function implementationTest (opts) {
   opts = _.extend({
     describe: describe,
-    description: 'network.' + opts.class.name,
-    getNetworkOpts: _.constant({networkName: 'testnet'})
+    description: 'connector.' + opts.class.name,
+    getConnectorOpts: _.constant({networkName: 'testnet'})
   }, opts)
 
   opts.describe(opts.description, function () {
     this.timeout(30000)
 
-    var network
+    var connector
 
     beforeEach(function (done) {
-      var args = [null].concat(opts.getNetworkOpts())
-      var Network = Function.prototype.bind.apply(opts.class, args)
-      network = new Network()
-      network.on('error', helpers.ignoreNetworkErrors)
-      network.once('connect', done)
-      network.connect()
+      var args = [null].concat(opts.getConnectorOpts())
+      var Connector = Function.prototype.bind.apply(opts.class, args)
+      connector = new Connector()
+      connector.on('error', helpers.ignoreConnectorErrors)
+      connector.once('connect', done)
+      connector.connect()
     })
 
     afterEach(function (done) {
-      network.on('newReadyState', function (newState) {
-        if (newState !== network.READY_STATE.CLOSED) {
+      connector.on('newReadyState', function (newState) {
+        if (newState !== connector.READY_STATE.CLOSED) {
           return
         }
 
-        network.removeAllListeners()
-        network.on('error', function () {})
-        network = null
+        connector.removeAllListeners()
+        connector.on('error', function () {})
+        connector = null
         done()
       })
-      network.disconnect()
+      connector.disconnect()
     })
 
-    it('inherits Network', function () {
-      expect(network).to.be.instanceof(blockchainjs.network.Network)
-      expect(network).to.be.instanceof(opts.class)
+    it('inherits Connector', function () {
+      expect(connector).to.be.instanceof(blockchainjs.connector.Connector)
+      expect(connector).to.be.instanceof(opts.class)
     })
 
     it('isConnected', function () {
-      expect(network.isConnected()).to.be.true
+      expect(connector.isConnected()).to.be.true
     })
 
     it('disconnect/connect', function (done) {
-      network.once('disconnect', function () {
-        network.once('connect', done)
-        network.connect()
+      connector.once('disconnect', function () {
+        connector.once('connect', done)
+        connector.connect()
       })
-      network.disconnect()
+      connector.disconnect()
     })
 
     it('getCurrentActiveRequests', function (done) {
-      if (network instanceof blockchainjs.network.Switcher) {
-        return done()
-      }
-
-      network.getHeader('latest')
+      connector.getHeader('latest')
       setTimeout(function () {
-        expect(network.getCurrentActiveRequests()).to.equal(1)
+        expect(connector.getCurrentActiveRequests()).to.equal(1)
         done()
       }, 5)
     })
 
     it('getTimeFromLastResponse', function (done) {
-      network.getHeader('latest')
+      connector.getHeader('latest')
         .then(function () {
-          expect(network.getTimeFromLastResponse()).to.be.below(50)
+          expect(connector.getTimeFromLastResponse()).to.be.below(50)
         })
         .done(done, done)
     })
 
     it('getHeader 0 by height', function (done) {
-      network.getHeader(fixtures.headers[0].height)
+      connector.getHeader(fixtures.headers[0].height)
         .then(function (header) {
           expect(header).to.deep.equal(fixtures.headers[0])
         })
@@ -97,7 +93,7 @@ function implementationTest (opts) {
     })
 
     it('getHeader 0 by hash', function (done) {
-      network.getHeader(fixtures.headers[0].hash)
+      connector.getHeader(fixtures.headers[0].blockid)
         .then(function (header) {
           expect(header).to.deep.equal(fixtures.headers[0])
         })
@@ -105,7 +101,7 @@ function implementationTest (opts) {
     })
 
     it('getHeader 300000 by height', function (done) {
-      network.getHeader(fixtures.headers[300000].height)
+      connector.getHeader(fixtures.headers[300000].height)
         .then(function (header) {
           expect(header).to.deep.equal(fixtures.headers[300000])
         })
@@ -113,178 +109,157 @@ function implementationTest (opts) {
     })
 
     it('getHeader (latest keyword)', function (done) {
-      network.getHeader('latest')
+      connector.getHeader('latest')
         .then(function (header) {
           expect(header).to.be.a('Object')
+          var rawHeader = blockchainjs.util.header2buffer(header)
+          var headerHash = blockchainjs.util.sha256x2(rawHeader)
+          var blockid = blockchainjs.util.hashEncode(headerHash)
+          expect(header.blockid).to.equal(blockid)
+          expect(header.height).to.be.a('number')
+          expect(header.height).to.be.at.least(300000)
         })
         .done(done, done)
     })
 
     it('getHeader (not-exists -- wrong height)', function (done) {
-      network.getHeader(987654)
+      connector.getHeader(987654)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
-          expect(err).to.be.instanceof(blockchainjs.errors.Header.NotFound)
+          expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
           expect(err.message).to.match(/987654/)
         })
         .done(done, done)
     })
 
-    it('getHeader (not-exists -- wrong blockHash)', function (done) {
-      var blockHash = '000000008c0c4d9f3f1365dc028875bebd0344307d63feae16ec2160a50dce23'
+    it('getHeader (not-exists -- wrong blockid)', function (done) {
+      var blockid = '000000008c0c4d9f3f1365dc028875bebd0344307d63feae16ec2160a50dce23'
 
-      network.getHeader(blockHash)
+      connector.getHeader(blockid)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
-          expect(err).to.be.instanceof(blockchainjs.errors.Header.NotFound)
-          expect(err.message).to.match(new RegExp(blockHash))
+          expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
+          expect(err.message).to.match(new RegExp(blockid))
         })
         .done(done, done)
     })
 
     it('getHeaders (first chunk)', function (done) {
-      if (!network.supportsSPV()) {
-        return done()
-      }
-
       var from = '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943'
-      network.getHeaders(from)
-        .then(function (headers) {
+      connector.getHeaders(from)
+        .then(function (res) {
+          expect(res).to.be.an('object')
+          expect(res.count).to.equal(2016)
+          expect(res.from).to.equal(0)
           var headersHash = blockchainjs.util.hashEncode(
-            blockchainjs.util.sha256x2(new Buffer(headers, 'hex')))
+            blockchainjs.util.sha256x2(new Buffer(res.headers, 'hex')))
           expect(headersHash).to.equal('9b9a9a4d1d72d4ca173a7c659119bb6d756458d1624b7035eb63bf2f893befda')
         })
         .done(done, done)
     })
 
     it('getHeaders (only latest)', function (done) {
-      if (!network.supportsSPV()) {
-        return done()
-      }
-
-      network.getHeader('latest')
-        .then(function (lastHeader) {
-          return Promise.all([lastHeader.hash, network.getHeaders(lastHeader.hash)])
+      connector.getHeader('latest')
+        .then(function (latest) {
+          return Promise.all([latest, connector.getHeaders(latest.blockid)])
         })
-        .spread(function (hash, headers) {
-          var headersHash = blockchainjs.util.hashEncode(
-            blockchainjs.util.sha256x2(new Buffer(headers, 'hex')))
-          expect(headersHash).to.equal(hash)
+        .spread(function (latest, res) {
+          expect(res).to.be.an('object')
+          expect(res.count).to.equal(1)
+          expect(res.from).to.equal(latest.height)
+          var rawHeader = blockchainjs.util.header2buffer(latest)
+          expect(res.headers).to.equal(rawHeader.toString('hex'))
         })
         .done(done, done)
     })
 
     it('getHeaders (not found)', function (done) {
-      if (!network.supportsSPV()) {
-        return done()
-      }
-
       var from = '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4944'
-      network.getHeaders(from)
+      connector.getHeaders(from)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
-          expect(err).to.be.instanceof(blockchainjs.errors.Header.NotFound)
+          expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
           expect(err.message).to.match(new RegExp(from))
         })
         .done(done, done)
     })
 
     it('getTx (confirmed tx)', function (done) {
-      var txId = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
+      var txid = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
 
-      network.getTx(txId)
+      connector.getTx(txid)
         .then(function (txHex) {
           var responseTxId = blockchainjs.util.hashEncode(
             blockchainjs.util.sha256x2(new Buffer(txHex, 'hex')))
-          expect(responseTxId).to.equal(txId)
+          expect(responseTxId).to.equal(txid)
         })
         .done(done, done)
     })
 
     it('getTx (unconfirmed tx)', function (done) {
       helpers.getUnconfirmedTxId()
-        .then(function (txId) {
-          return network.getTx(txId)
+        .then(function (txid) {
+          return connector.getTx(txid)
             .then(function (txHex) {
               var responseTxId = blockchainjs.util.hashEncode(
                 blockchainjs.util.sha256x2(new Buffer(txHex, 'hex')))
-              expect(responseTxId).to.equal(txId)
+              expect(responseTxId).to.equal(txid)
             })
         })
         .done(done, done)
     })
 
     it('getTx (not-exists tx)', function (done) {
-      var txId = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
+      var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-      network.getTx(txId)
+      connector.getTx(txid)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
-          expect(err).to.be.instanceof(blockchainjs.errors.Transaction.NotFound)
-          expect(err.message).to.match(new RegExp(txId))
+          expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)
+          expect(err.message).to.match(new RegExp(txid))
         })
         .done(done, done)
     })
 
-    it('getTxBlockHash (confirmed tx)', function (done) {
-      var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[0].result)
-      if (!network.supportsSPV()) {
-        delete expected.data.index
-        delete expected.data.merkle
-      }
+    it('getTxBlockId (confirmed tx)', function (done) {
+      var expected = _.cloneDeep(fixtures.txBlockId.confirmed[0].result)
 
-      network.getTxBlockHash(fixtures.txBlockHash.confirmed[0].txId)
+      connector.getTxBlockId(fixtures.txBlockId.confirmed[0].txid)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
         .done(done, done)
     })
 
-    it('getTxBlockHash (confirmed tx, coinbase)', function (done) {
-      var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[1].result)
-      if (!network.supportsSPV()) {
-        delete expected.data.index
-        delete expected.data.merkle
-      }
+    it('getTxBlockId (confirmed tx, coinbase)', function (done) {
+      var expected = _.cloneDeep(fixtures.txBlockId.confirmed[1].result)
 
-      network.getTxBlockHash(fixtures.txBlockHash.confirmed[1].txId)
+      connector.getTxBlockId(fixtures.txBlockId.confirmed[1].txid)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
         .done(done, done)
     })
 
-    it('getTxBlockHash (unconfirmed tx)', function (done) {
+    it('getTxBlockId (unconfirmed tx)', function (done) {
       helpers.getUnconfirmedTxId()
-        .then(function (txId) {
-          return network.getTxBlockHash(txId)
+        .then(function (txid) {
+          return connector.getTxBlockId(txid)
         })
         .then(function (response) {
-          expect(response).to.deep.equal({status: 'unconfirmed', data: null})
+          expect(response).to.deep.equal({source: 'mempool'})
         })
         .done(done, done)
     })
 
-    /** @todo Find tx in orphaned block */
-    it.skip('getTxBlockHash (invalid tx)', function (done) {
-      var txId = 'ea9ed2900c8548d3eaf44d147fec5097f62ac52866cd5f1f8d640ab72d20c028'
-      var expected = {status: 'invalid', data: null}
+    it('getTxBlockId (non-exists tx)', function (done) {
+      var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-      network.getTxBlockHash(txId)
-        .then(function (response) {
-          expect(response).to.deep.equal(expected)
-        })
-        .done(done, done)
-    })
-
-    it('getTxBlockHash (non-exists tx)', function (done) {
-      var txId = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
-
-      network.getTxBlockHash(txId)
+      connector.getTxBlockId(txid)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
-          expect(err).to.be.instanceof(blockchainjs.errors.Transaction.NotFound)
-          expect(err.message).to.match(new RegExp(txId))
+          expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)
+          expect(err.message).to.match(new RegExp(txid))
         })
         .done(done, done)
     })
@@ -292,32 +267,36 @@ function implementationTest (opts) {
     it('sendTx', function (done) {
       helpers.createTx()
         .then(function (tx) {
-          return network.sendTx(tx.toHex())
-            .then(function (txId) { expect(txId).to.equal(tx.getId()) })
+          return connector.sendTx(tx.toHex())
         })
         .done(done, done)
     })
 
-    it('getUnspents', function (done) {
-      network.getUnspents(fixtures.unspents[0].address)
+    /* @todo */
+    it.skip('getUnspents', function (done) {
+      connector.getUnspents(fixtures.unspents[0].address)
         .then(function (unspents) {
           var expected = _.cloneDeep(fixtures.unspents[0].result)
-          expect(_.sortBy(unspents, 'txId')).to.deep.equal(_.sortBy(expected, 'txId'))
+          expect(_.sortBy(unspents, 'txid')).to.deep.equal(_.sortBy(expected, 'txid'))
         })
         .done(done, done)
     })
 
     it('getHistory', function (done) {
-      network.getHistory(fixtures.history[0].address)
-        .then(function (transactions) {
-          var expected = _.cloneDeep(fixtures.history[0].result)
-          expect(transactions.sort()).to.deep.equal(expected.sort())
+      var fixture = fixtures.history[0]
+      connector.addressesQuery(fixture.addresses)
+        .then(function (res) {
+          expect(res).to.be.an('object')
+          expect(res.transactions).to.deep.equal(fixture.transactions)
+          expect(res.latest).to.be.an('object')
+          expect(res.latest.height).to.be.at.least(300000)
+          expect(res.latest.blockid).to.have.length(64)
         })
         .done(done, done)
     })
 
     it('subscribe on new blocks', function (done) {
-      network.subscribe({event: 'newBlock'})
+      connector.subscribe({event: 'newBlock'})
         .then(function () {})
         .done(done, done)
     })
@@ -331,19 +310,16 @@ function implementationTest (opts) {
 
           var deferred = Promise.defer()
           deferred.promise.done(done, done)
-          network.on('touchAddress', function (touchedAddress, txId) {
-            if (touchedAddress === address && txId === tx.getId()) {
+          connector.on('touchAddress', function (touchedAddress, txid) {
+            if (touchedAddress === address && txid === tx.getId()) {
               deferred.resolve()
             }
           })
 
-          network.subscribe({event: 'touchAddress', address: address})
+          connector.subscribe({event: 'touchAddress', address: address})
             .then(function () { return Promise.delay(1000) })
             .then(function () {
-              return network.sendTx(tx.toHex())
-            })
-            .then(function (txId) {
-              expect(txId).to.equal(tx.getId())
+              return connector.sendTx(tx.toHex())
             })
             .catch(function () { deferred.reject() })
         })

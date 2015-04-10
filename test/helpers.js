@@ -60,7 +60,7 @@ function getUnconfirmedTxId () {
   return new Promise(function (resolve) {
     function tryGet () {
       var data = _.chain(lastUnconfirmedTxIds)
-        .filter(function (data) { return Date.now() - data.time > 2000 })
+        .filter(function (data) { return Date.now() - data.time > 10000 })
         .sortBy('time')
         .last()
         .value()
@@ -79,9 +79,9 @@ function getUnconfirmedTxId () {
  * @param {Error} error
  * @throws {Error}
  */
-function ignoreNetworkErrors (err) {
-  if (err instanceof errors.Network.NotConnected ||
-      err instanceof errors.Network.Unreachable) {
+function ignoreConnectorErrors (err) {
+  if (err instanceof errors.Connector.NotConnected ||
+      err instanceof errors.Connector.Unreachable) {
     return
   }
 
@@ -91,5 +91,5 @@ function ignoreNetworkErrors (err) {
 module.exports = {
   createTx: createTx,
   getUnconfirmedTxId: getUnconfirmedTxId,
-  ignoreNetworkErrors: ignoreNetworkErrors
+  ignoreConnectorErrors: ignoreConnectorErrors
 }

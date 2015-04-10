@@ -1,35 +1,35 @@
 {
   "headers": {
     "0": {
-      "hash": "000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943",
+      "blockid": "000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943",
       "height": 0,
       "version": 1,
-      "hashPrevBlock": "0000000000000000000000000000000000000000000000000000000000000000",
-      "hashMerkleRoot": "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b",
+      "prevblockid": "0000000000000000000000000000000000000000000000000000000000000000",
+      "merkleroot": "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b",
       "time": 1296688602,
       "bits": 486604799,
       "nonce": 414098458
     },
     "300000": {
-      "hash": "000000000000226f7618566e70a2b5e020e29579b46743f05348427239bf41a1",
+      "blockid": "000000000000226f7618566e70a2b5e020e29579b46743f05348427239bf41a1",
       "height": 300000,
       "version": 2,
-      "hashPrevBlock": "00000000dfe970844d1bf983d0745f709368b5c66224837a17ed633f0dabd300",
-      "hashMerkleRoot": "ca7c7b64204eaa4b0a1632a7d326d4d8255bfd0fa1f5d66f8def8fa72e5b2f32",
+      "prevblockid": "00000000dfe970844d1bf983d0745f709368b5c66224837a17ed633f0dabd300",
+      "merkleroot": "ca7c7b64204eaa4b0a1632a7d326d4d8255bfd0fa1f5d66f8def8fa72e5b2f32",
       "time": 1412899877,
       "bits": 453050367,
       "nonce": 733842077
     }
   },
-  "txBlockHash": {
+  "txBlockId": {
     "confirmed": [
       {
         "txId": "9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8",
         "result": {
-          "status": "confirmed",
+          "source": "blocks",
           "data": {
-            "blockHeight": 279774,
-            "blockHash": "00000000ba81453dd2839b8f91b61be98ee82bee5b7697f6dab1f6149885f1ff",
+            "height": 279774,
+            "blockid": "00000000ba81453dd2839b8f91b61be98ee82bee5b7697f6dab1f6149885f1ff",
             "index": 4,
             "merkle": [
               "289eb5dab9aad256a7f508377f8cec7df4c3eae07572a8d7273e303a81313e03",
@@ -45,10 +45,10 @@
       {
         "txId": "8acc4825f5563dc2969b81661acc6b65f3cb0e1649a7d4ee91d4acfc613d8bf2",
         "result": {
-          "status": "confirmed",
+          "source": "blocks",
           "data": {
-            "blockHeight": 5432,
-            "blockHash": "000000002697b6db85bb0748f47212e0c1eb1f4bccfe89379b07f98033a9282f",
+            "height": 5432,
+            "blockid": "000000002697b6db85bb0748f47212e0c1eb1f4bccfe89379b07f98033a9282f",
             "index": 0,
             "merkle": []
           }
@@ -58,11 +58,14 @@
   },
   "history": [
     {
-      "address": "miASVwyhoeFqoLodXUdbDC5YjrdJPwxyXE",
-      "result": [
-        "1bd6a31671e9cc767d75980d4dbffc5cd5029f17d44dd32dcf949267e3f04631",
-        "9ea76cd53be261b320d8479d432aad98c61aa5945416d85ab15bed62030ce6e4"
-      ]
+      "addresses": ["miASVwyhoeFqoLodXUdbDC5YjrdJPwxyXE"],
+      "transactions": [{
+        "txid": "1bd6a31671e9cc767d75980d4dbffc5cd5029f17d44dd32dcf949267e3f04631",
+        "height": 12740
+      }, {
+        "txid": "9ea76cd53be261b320d8479d432aad98c61aa5945416d85ab15bed62030ce6e4",
+        "height": 16349
+      }]
     }
   ],
   "unspents": [

@@ -86,7 +86,7 @@
 
 **return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
 
-**return**: `Promise<errors.Header.NotFound>` if couldn't find block
+**return**: `Promise<errors.Connector.HeaderNotFound>` if couldn't find block
 
 ### headersQuery
 
@@ -95,14 +95,13 @@
   \* *half-open interval for [from-to)*
 
   * `string` from
-  * `string` [to]
-  * `number` [count]
+  * `Object` [opts]
+    * `string` [to]
+    * `number` [count]
 
-**return**: `Promise<Object>` `Object` is [HeadersQueryObject](#headersqueryobject)
+**return**: `Promise<{from: number, headers: string}>`
 
-**return**: `Promise<errors.Header.NotFound>` if couldn't find block for `from` or `to`
-
-**return**: `Promise<errors.Header.InvalidCount>` if count (or distance between `to` and `from`) less than 1 or more than 2016
+**return**: `Promise<errors.Connector.HeaderNotFound>` if couldn't find block for `from` or `to`
 
 ### getTx
 
@@ -110,7 +109,7 @@
 
 **return**: `Promise<string>` Raw transaction as hex string
 
-**return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txid`
+**return**: `Promise<errors.Connector.TxNotFound>` if couldn't find transaction for `txid`
 
 ### getTxBlockId
 
@@ -118,7 +117,7 @@
 
 **return**: `Promise<Object>` `Object` is [TxBlockIdObject](#txblockidobject)
 
-**return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txid`
+**return**: `Promise<errors.Connector.TxNotFound>` if couldn't find transaction for `txid`
 
 ### sendTx
 
@@ -131,10 +130,11 @@
   \* *half-close interval for (from-to]*
 
   * `string[]` addresses
-  * `string` [source] `blocks` or `mempool`
-  * `(string|number)` [from] `blockid` or `height`
-  * `(string|number)` [to] `blockid` or `height`
-  * `string` [status] `unspent` for affected transactions with unspent outputs
+  * `Object` [opts]
+    * `string` [source] `blocks` or `mempool`
+    * `(string|number)` [from] `blockid` or `height`
+    * `(string|number)` [to] `blockid` or `height`
+    * `string` [status] `unspent` for affected transactions with unspent outputs
 
 **return**: `Promise<Object>` `Object` is [AddressesQueryObject](#addressesqueryobject)
 
@@ -175,11 +175,6 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
   * `number` time
   * `number` bits
   * `number` nonce
-
-### HeadersQueryObject
-
-  * `number` from
-  * `string` headers Concatenated headers in raw format encoded in hex. See [Block hashing algorithm](https://en.bitcoin.it/wiki/Block_hashing_algorithm) for details.
 
 ### TxBlockIdObject
 

@@ -21,7 +21,7 @@ var notImplementedMethods = [
   'subscribe'
 ]
 
-describe.only('network.Connector', function () {
+describe('network.Connector', function () {
   var network
 
   beforeEach(function () {

@@ -9,7 +9,7 @@ var Promise = require('bluebird')
 
 var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
-var fixtures = require('../data/network.json')
+var fixtures = require('../data/connector.json')
 
 describe('blockchain.Verified', function () {
   var network
