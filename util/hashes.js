@@ -8,7 +8,7 @@ var ProgressBar = require('progress')
 var Promise = require('bluebird')
 
 var blockchainjs = require('../lib')
-var ChromaInsight = blockchainjs.network.ChromaInsight
+var Chromanode = blockchainjs.connector.Chromanode
 var util = blockchainjs.util
 
 var optimist = require('optimist')
@@ -52,54 +52,44 @@ if (argv.help) {
   process.exit(0)
 }
 
-var network = new ChromaInsight({networkName: argv.network, requestTimeout: 30000})
-new Promise(function (resolve) { network.once('connect', resolve) })
-.then(function () { return network.getHeader('latest') })
+var connector = new Chromanode({networkName: argv.network, requestTimeout: 30000})
+new Promise(function (resolve) { connector.once('connect', resolve) })
+.then(function () { return connector.getHeader('latest') })
 .then(function (header) {
   var height = header.height
   var chunksTotal = Math.floor(height / 2016)
   var barFmt = 'Progress: :percent (:current/:total), :elapseds elapsed, eta :etas'
   var bar = new ProgressBar(barFmt, {total: chunksTotal})
 
-  var lastHash
-  var hashes = []
-
-  var promise = Promise.resolve()
-  _.range(chunksTotal).forEach(function (chunkIndex) {
-    promise = promise
-      .then(function () {
-        var first = network.getHeader(chunkIndex * 2016)
-        var last = network.getHeader(chunkIndex * 2016 + 2015)
-        return Promise.all([first, last])
-      })
-      .spread(function (firstHeader, lastHeader) {
-        return network.getHeaders(firstHeader.hash, lastHeader.hash)
-      })
-      .then(function (headers) {
-        var rawChunk = new Buffer(headers, 'hex')
+  var lastBlockId
+  Promise.map(_.range(chunksTotal), function (chunkIndex) {
+    return connector.getHeaders(chunkIndex * 2016, {count: 2016})
+      .then(function (result) {
+        var rawChunk = new Buffer(result.headers, 'hex')
 
         if (chunkIndex === chunksTotal - 1) {
-          lastHash = util.hashEncode(util.sha256x2(rawChunk.slice(-80)))
+          lastBlockId = util.hashEncode(util.sha256x2(rawChunk.slice(-80)))
         }
 
-        hashes.push(util.hashEncode(util.sha256x2(rawChunk)))
         bar.tick()
+        return util.hashEncode(util.sha256x2(rawChunk))
       })
+
+  }, {concurrency: 3})
+  .finally(function () {
+    connector.disconnect()
   })
+  .then(function (hashes) {
+    var data = {lastBlockId: lastBlockId, chunkHashes: hashes}
+    var content = [
+      '// Network: ' + argv.network,
+      '// ' + new Date().toUTCString(),
+      'module.exports = ' + JSON.stringify(data, null, 2).replace(/"/g, '\'')
+    ].join('\n') + '\n'
 
-  promise
-    .finally(network.disconnect.bind(network))
-    .then(function () {
-      var data = {lastHash: lastHash, chunkHashes: hashes}
-      var content = [
-        '// Network: ' + argv.network,
-        '// ' + new Date().toUTCString(),
-        'module.exports = ' + JSON.stringify(data, null, 2).replace(/"/g, '\'')
-      ].join('\n') + '\n'
-
-      fs.writeFileSync(argv.out, content)
-      process.exit(0)
-    })
+    fs.writeFileSync(argv.out, content)
+    process.exit(0)
+  })
 })
 
-network.connect()
+connector.connect()
