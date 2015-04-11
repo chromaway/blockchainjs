@@ -34,9 +34,8 @@ describe('blockchain.Blockchain', function () {
   })
 
   it('latest', function () {
-    expect(blockchain.latest.height).to.equal(-1)
-    var expectedBlockId = blockchainjs.util.zfill('', 64)
-    expect(blockchain.latest.blockid).to.equal(expectedBlockId)
+    var expected = {blockid: blockchainjs.util.zfill('', 64), height: -1}
+    expect(blockchain.latest).to.deep.equal(expected)
   })
 
   notImplementedMethods.forEach(function (method) {

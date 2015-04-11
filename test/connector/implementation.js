@@ -272,7 +272,7 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    /* @todo */
+    /* @todo
     it.skip('getUnspents', function (done) {
       connector.getUnspents(fixtures.unspents[0].address)
         .then(function (unspents) {
@@ -281,8 +281,9 @@ function implementationTest (opts) {
         })
         .done(done, done)
     })
+    */
 
-    it('getHistory', function (done) {
+    it('addressesQuery (history)', function (done) {
       var fixture = fixtures.history[0]
       connector.addressesQuery(fixture.addresses)
         .then(function (res) {

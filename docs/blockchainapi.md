@@ -60,7 +60,7 @@
 
 **return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
 
-**return**: `Promise<errors.Blockchain.HeaderNotFound>` if couldn't find block
+**return**: `Promise<errors.Connector.HeaderNotFound>` if couldn't find block
 
 ### getTx
 
@@ -68,7 +68,7 @@
 
 **return**: `Promise<string>` Raw transaction as hex string
 
-**return**: `Promise<errors.Blockchain.TxNotFound>` if couldn't find transaction for `txid`
+**return**: `Promise<errors.Connector.TxNotFound>` if couldn't find transaction for `txid`
 
 ### getTxBlockId
 
@@ -76,7 +76,7 @@
 
 **return**: `Promise<Object>` `Object` is [TxBlockIdObject](#txblockidobject)
 
-**return**: `Promise<errors.Blockchain.TxNotFound>` if couldn't find transaction for `txid`
+**return**: `Promise<errors.Connector.TxNotFound>` if couldn't find transaction for `txid`
 
 ### sendTx
 
