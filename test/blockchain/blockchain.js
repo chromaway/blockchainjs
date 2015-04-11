@@ -8,24 +8,23 @@ var blockchainjs = require('../../lib')
 var notImplementedMethods = [
   'getHeader',
   'getTx',
-  'getTxBlockHash',
+  'getTxBlockId',
   'sendTx',
-  'getUnspents',
-  'getHistory',
+  'addressesQuery',
   'subscribeAddress'
 ]
 
 describe('blockchain.Blockchain', function () {
-  var network
+  var connector
   var blockchain
 
   beforeEach(function () {
-    network = new blockchainjs.network.Network()
-    blockchain = new blockchainjs.blockchain.Blockchain(network)
+    connector = new blockchainjs.connector.Connector()
+    blockchain = new blockchainjs.blockchain.Blockchain(connector)
   })
 
   afterEach(function () {
-    network = null
+    connector = null
     blockchain = null
   })
 
@@ -34,13 +33,10 @@ describe('blockchain.Blockchain', function () {
     expect(blockchain).to.be.instanceof(blockchainjs.blockchain.Blockchain)
   })
 
-  it('getCurrentHeight', function () {
-    expect(blockchain.currentHeight).to.equal(-1)
-  })
-
-  it('getCurrentBlockHash', function () {
-    var expectedBlockHash = blockchainjs.util.zfill('', 64)
-    expect(blockchain.currentBlockHash).to.equal(expectedBlockHash)
+  it('latest', function () {
+    expect(blockchain.latest.height).to.equal(-1)
+    var expectedBlockId = blockchainjs.util.zfill('', 64)
+    expect(blockchain.latest.blockid).to.equal(expectedBlockId)
   })
 
   notImplementedMethods.forEach(function (method) {

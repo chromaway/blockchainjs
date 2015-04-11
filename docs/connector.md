@@ -180,8 +180,8 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 
   * `string` source `blocks` for confirmed or `mempool` for unconfirmed
   * `Object` [data] defined only for confirmed transactions
-    * `number` height
     * `string` blockid
+    * `number` height
     * `?string[]` merkle
     * `?number` index
 
@@ -189,5 +189,5 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 
   * `Array.<{txid: string, height: number}>` transactions
   * `Object` latest
-    * `number` height
     * `string` blockid
+    * `number` height

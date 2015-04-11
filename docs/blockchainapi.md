@@ -9,16 +9,16 @@
     * [getSnapshot](#getsnapshot)
     * [getHeader](#getheader)
     * [getTx](#gettx)
-    * [getTxBlockHash](#gettxblockhash)
+    * [getTxBlockId](#gettxblockid)
     * [sendTx](#sendtx)
-    * [getUnspents](#getUnspents)
-    * [getHistory](#gethistory)
+    * [addressesQuery](#addressesquery)
     * [subscribeAddress](#subscribeaddress)
   * Properties
-    * network
+    * connector
     * networkName
-    * currentHeight
-    * currentBlockHash
+    * latest
+      * blockid
+      * height
   * Inheritance
     * [Naive](#naive)
     * [Verified](#verified)
@@ -33,68 +33,69 @@
 
 ### newBlock
 
-  * `string` blockHash
+  * `string` blockid
   * `number` height
 
 ### touchAddress
 
   * `string` address
-  * `string` txId
+  * `string` txid
 
 ## Methods
 
 ### constructor
 
-  * `Network` network
+  * `Connector` connector
   * `Object` opts
     * `string` opts.networkName
     * `number` opts.txCacheSize
 
 ### getSnapshot
 
-**return**: `Snapshot`
+**return**: `Promise<Snapshot>`
 
 ### getHeader
 
-  * `(number|string)` id Height or blockHash
+  * `(number|string)` id `blockid`, `height`
 
 **return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
 
-**return**: `Promise<errors.Header.NotFound>` if couldn't find block
+**return**: `Promise<errors.Blockchain.HeaderNotFound>` if couldn't find block
 
 ### getTx
 
-  * `string` txId
+  * `string` txid
 
 **return**: `Promise<string>` Raw transaction as hex string
 
-**return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txId`
+**return**: `Promise<errors.Blockchain.TxNotFound>` if couldn't find transaction for `txid`
 
-### getTxBlockHash
+### getTxBlockId
 
-  * `string` txId
+  * `string` txid
 
-**return**: `Promise<Object>` [TxBlockHashObject](#txblockhashobject)
+**return**: `Promise<Object>` `Object` is [TxBlockIdObject](#txblockidobject)
 
-**return**: `Promise<errors.Transaction.NotFound>` if couldn't find transaction for `txId`
+**return**: `Promise<errors.Blockchain.TxNotFound>` if couldn't find transaction for `txid`
 
 ### sendTx
 
-  * `string` txHex
+  * `string` rawtx
 
-**return**: `Promise<string>` txId
+**return**: `Promise`
 
-### getUnspents
+### addressesQuery
 
-  * `string` address
+  \* *half-close interval for (from-to]*
 
-**return**: `Promise<Object[]>` Array of [UnspentObject](#unspentobject)'s
+  * `string[]` addresses
+  * `Object` [opts]
+    * `string` [source] `blocks` or `mempool`
+    * `(string|number)` [from] `blockid` or `height`
+    * `(string|number)` [to] `blockid` or `height`
+    * `string` [status] `unspent` for affected transactions with unspent outputs
 
-### getHistory
-
-  * `string` address
-
-**return**: `Promise<string[]>` Array of txIds
+**return**: `Promise<Object>` `Object` is [AddressesQueryObject](#addressesqueryobject)
 
 ### subscribeAddress
 
@@ -125,7 +126,7 @@
 
 #### constructor
 
-  * `Network` network
+  * `Connector` connector
   * `Object` opts
     * `string` networkName
     * `Storage` storage
@@ -140,14 +141,15 @@
 
 ## Snapshot
 
-Snapshot implement `get*` methods of `Blockchain` interface. It memorize last block hash and return `InconsistentSnapshot` error in promise if last block changed.
+Snapshot is a proxy object. It memorize latest block and return `InconsistentSnapshot` error in promise if latest block was changed.
 
   * [Methods](#methods)
     * [isValid](#isvalid)
   * Properties
     * blockchain
-    * currentHeight
-    * currentBlockHash
+    * latest
+      * blockid
+      * height
 
 ### Methods
 
@@ -165,24 +167,25 @@ Snapshot implement `get*` methods of `Blockchain` interface. It memorize last bl
 
 ### HeaderObject
 
+  * `string` blockid
   * `number` height
-  * `string` hash
   * `number` version
-  * `string` hashPrevBlock
-  * `string` hashMerkleRoot
+  * `string` prevblockid
+  * `string` merkleroot
   * `number` time
   * `number` bits
   * `number` nonce
 
-### TxBlockHashObject
+### TxBlockIdObject
 
-  * `string` status May be confirmed (in main chain), unconfirmed (in mempool) or invalid (in orphaned blocks)
-  * `?Object` data `null` for unconfirmed and invalid transactions
-    * `number` blockHeight
-    * `string` blockHash
+  * `string` source `blocks` or `mempool`
+  * `Object` [data] defined only for confirmed transactions (source is `blocks`)
+    * `string` blockid
+    * `number` height
 
-### UnspentObject
+### AddressesQueryObject
 
-  * `string` txId
-  * `number` outIndex
-  * `number` value
+  * `Array.<{txid: string, height: number}>` transactions
+  * `Object` latest
+    * `string` blockid
+    * `number` height
