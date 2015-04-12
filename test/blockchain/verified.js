@@ -148,7 +148,7 @@ describe('blockchain.Verified', function () {
           return blockchain.getTxBlockId(txId)
             .then(function () { throw new Error('Unexpected behavior') })
             .catch(function (err) {
-              expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)
+              expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.TxNotFound)
               expect(err.message).to.match(new RegExp(txId))
             })
         })

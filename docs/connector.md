@@ -125,6 +125,8 @@
 
 **return**: `Promise`
 
+**return**: `Promise<errors.Connector.TxSendError>`
+
 ### addressesQuery
 
   \* *half-close interval for (from-to]*
@@ -137,6 +139,8 @@
     * `string` [status] `unspent` for affected transactions with unspent outputs
 
 **return**: `Promise<Object>` `Object` is [AddressesQueryObject](#addressesqueryobject)
+
+**return**: `Promise<errors.Connector.HeaderNotFound>`
 
 ### subscribe
 

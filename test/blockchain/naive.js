@@ -81,7 +81,7 @@ describe('blockchain.Naive', function () {
     blockchain.getHeader(987654)
       .then(function () { throw new Error('Unexpected Behavior') })
       .catch(function (err) {
-        expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
+        expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.HeaderNotFound)
         expect(err.message).to.match(/987654/)
       })
       .done(done, done)
@@ -93,7 +93,7 @@ describe('blockchain.Naive', function () {
     blockchain.getHeader(blockHash)
       .then(function () { throw new Error('Unexpected Behavior') })
       .catch(function (err) {
-        expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
+        expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.HeaderNotFound)
         expect(err.message).to.match(new RegExp(blockHash))
       })
       .done(done, done)
@@ -130,7 +130,7 @@ describe('blockchain.Naive', function () {
     blockchain.getTx(txId)
       .then(function () { throw new Error('Unexpected Behavior') })
       .catch(function (err) {
-        expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)
+        expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.TxNotFound)
         expect(err.message).to.match(new RegExp(txId))
       })
       .done(done, done)
@@ -170,7 +170,7 @@ describe('blockchain.Naive', function () {
     blockchain.getTxBlockId(txId)
       .then(function () { throw new Error('Unexpected Behavior') })
       .catch(function (err) {
-        expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)
+        expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.TxNotFound)
         expect(err.message).to.match(new RegExp(txId))
       })
       .done(done, done)
