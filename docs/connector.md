@@ -49,7 +49,7 @@
 
 ### newBlock
 
-  * `string` blockid
+  * `string` hash
   * `number` height
 
 ### touchAddress
@@ -82,7 +82,7 @@
 
 ### getHeader
 
-  * `(number|string)` id `blockid`, `height` or special keyword `latest` for best block
+  * `(number|string)` id `hash`, `height` or special keyword `latest` for best block
 
 **return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
 
@@ -111,11 +111,11 @@
 
 **return**: `Promise<errors.Connector.TxNotFound>` if couldn't find transaction for `txid`
 
-### getTxBlockId
+### getTxBlockHash
 
   * `string` txid
 
-**return**: `Promise<Object>` `Object` is [TxBlockIdObject](#txblockidobject)
+**return**: `Promise<Object>` `Object` is [TxBlockHashObject](#txblockhashobject)
 
 **return**: `Promise<errors.Connector.TxNotFound>` if couldn't find transaction for `txid`
 
@@ -134,8 +134,8 @@
   * `string[]` addresses
   * `Object` [opts]
     * `string` [source] `blocks` or `mempool`
-    * `(string|number)` [from] `blockid` or `height`
-    * `(string|number)` [to] `blockid` or `height`
+    * `(string|number)` [from] `hash` or `height`
+    * `(string|number)` [to] `hash` or `height`
     * `string` [status] `unspent` for affected transactions with unspent outputs
 
 **return**: `Promise<Object>` `Object` is [AddressesQueryObject](#addressesqueryobject)
@@ -171,20 +171,20 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 
 ### HeaderObject
 
-  * `string` blockid
+  * `string` hash
   * `number` height
   * `number` version
-  * `string` prevblockid
-  * `string` merkleroot
+  * `string` hashPrevBlock
+  * `string` hashMerkleRoot
   * `number` time
   * `number` bits
   * `number` nonce
 
-### TxBlockIdObject
+### TxBlockHashObject
 
   * `string` source `blocks` for confirmed or `mempool` for unconfirmed
-  * `Object` [data] defined only for confirmed transactions
-    * `string` blockid
+  * `Object` [block] defined only for confirmed transactions
+    * `string` hash
     * `number` height
     * `?string[]` merkle
     * `?number` index
@@ -193,5 +193,5 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 
   * `Array.<{txid: string, height: number}>` transactions
   * `Object` latest
-    * `string` blockid
+    * `string` hash
     * `number` height

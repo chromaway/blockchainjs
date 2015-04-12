@@ -96,4 +96,6 @@ Copyright 2015 Chromaway AB
 ## Todo
 
   * fix docs
+  * migrate to bitcore (in tests)
   * add karma
+  * add https://github.com/visionmedia/debug

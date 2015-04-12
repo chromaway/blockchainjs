@@ -8,7 +8,7 @@ var blockchainjs = require('../../lib')
 var notImplementedMethods = [
   'getHeader',
   'getTx',
-  'getTxBlockId',
+  'getTxBlockHash',
   'sendTx',
   'addressesQuery',
   'subscribeAddress'
@@ -34,7 +34,7 @@ describe('blockchain.Blockchain', function () {
   })
 
   it('latest', function () {
-    var expected = {blockid: blockchainjs.util.zfill('', 64), height: -1}
+    var expected = {hash: blockchainjs.util.zfill('', 64), height: -1}
     expect(blockchain.latest).to.deep.equal(expected)
   })
 

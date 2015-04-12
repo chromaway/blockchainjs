@@ -61,14 +61,14 @@ new Promise(function (resolve) { connector.once('connect', resolve) })
   var barFmt = 'Progress: :percent (:current/:total), :elapseds elapsed, eta :etas'
   var bar = new ProgressBar(barFmt, {total: chunksTotal})
 
-  var lastBlockId
+  var lastBlockHash
   Promise.map(_.range(chunksTotal), function (chunkIndex) {
     return connector.getHeaders(chunkIndex * 2016, {count: 2016})
       .then(function (result) {
         var rawChunk = new Buffer(result.headers, 'hex')
 
         if (chunkIndex === chunksTotal - 1) {
-          lastBlockId = util.hashEncode(util.sha256x2(rawChunk.slice(-80)))
+          lastBlockHash = util.hashEncode(util.sha256x2(rawChunk.slice(-80)))
         }
 
         bar.tick()
@@ -80,7 +80,7 @@ new Promise(function (resolve) { connector.once('connect', resolve) })
     connector.disconnect()
   })
   .then(function (hashes) {
-    var data = {lastBlockId: lastBlockId, chunkHashes: hashes}
+    var data = {lastBlockHash: lastBlockHash, chunkHashes: hashes}
     var content = [
       '// Network: ' + argv.network,
       '// ' + new Date().toUTCString(),

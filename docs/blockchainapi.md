@@ -9,7 +9,7 @@
     * [getSnapshot](#getsnapshot)
     * [getHeader](#getheader)
     * [getTx](#gettx)
-    * [getTxBlockId](#gettxblockid)
+    * [getTxBlockHash](#gettxblockhash)
     * [sendTx](#sendtx)
     * [addressesQuery](#addressesquery)
     * [subscribeAddress](#subscribeaddress)
@@ -17,7 +17,7 @@
     * connector
     * networkName
     * latest
-      * blockid
+      * hash
       * height
   * Inheritance
     * [Naive](#naive)
@@ -33,7 +33,7 @@
 
 ### newBlock
 
-  * `string` blockid
+  * `string` hash
   * `number` height
 
 ### touchAddress
@@ -56,7 +56,7 @@
 
 ### getHeader
 
-  * `(number|string)` id `blockid`, `height`
+  * `(number|string)` id `hash`, `height`
 
 **return**: `Promise<Object>` `Object` is [HeaderObject](#headerobject)
 
@@ -70,11 +70,11 @@
 
 **return**: `Promise<errors.Blockchain.TxNotFound>` if couldn't find transaction for `txid`
 
-### getTxBlockId
+### getTxBlockHash
 
   * `string` txid
 
-**return**: `Promise<Object>` `Object` is [TxBlockIdObject](#txblockidobject)
+**return**: `Promise<Object>` `Object` is [TxBlockHashObject](#txblockhashobject)
 
 **return**: `Promise<errors.Blockchain.TxNotFound>` if couldn't find transaction for `txid`
 
@@ -93,8 +93,8 @@
   * `string[]` addresses
   * `Object` [opts]
     * `string` [source] `blocks` or `mempool`
-    * `(string|number)` [from] `blockid` or `height`
-    * `(string|number)` [to] `blockid` or `height`
+    * `(string|number)` [from] `hash` or `height`
+    * `(string|number)` [to] `hash` or `height`
     * `string` [status] `unspent` for affected transactions with unspent outputs
 
 **return**: `Promise<Object>` `Object` is [AddressesQueryObject](#addressesqueryobject)
@@ -152,7 +152,7 @@ Snapshot is a proxy object. It memorize latest block and return `InconsistentSna
   * Properties
     * blockchain
     * latest
-      * blockid
+      * hash
       * height
 
 ### Methods
@@ -171,25 +171,25 @@ Snapshot is a proxy object. It memorize latest block and return `InconsistentSna
 
 ### HeaderObject
 
-  * `string` blockid
+  * `string` hash
   * `number` height
   * `number` version
-  * `string` prevblockid
-  * `string` merkleroot
+  * `string` hashPrevBlock
+  * `string` hashMerkleRoot
   * `number` time
   * `number` bits
   * `number` nonce
 
-### TxBlockIdObject
+### TxBlockHashObject
 
   * `string` source `blocks` or `mempool`
-  * `Object` [data] defined only for confirmed transactions (source is `blocks`)
-    * `string` blockid
+  * `Object` [block] defined only for confirmed transactions (source is `blocks`)
+    * `string` hash
     * `number` height
 
 ### AddressesQueryObject
 
   * `Array.<{txid: string, height: number}>` transactions
   * `Object` latest
-    * `string` blockid
+    * `string` hash
     * `number` height

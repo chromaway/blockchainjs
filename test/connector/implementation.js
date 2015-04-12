@@ -93,7 +93,7 @@ function implementationTest (opts) {
     })
 
     it('getHeader 0 by hash', function (done) {
-      connector.getHeader(fixtures.headers[0].blockid)
+      connector.getHeader(fixtures.headers[0].hash)
         .then(function (header) {
           expect(header).to.deep.equal(fixtures.headers[0])
         })
@@ -114,8 +114,7 @@ function implementationTest (opts) {
           expect(header).to.be.a('Object')
           var rawHeader = blockchainjs.util.header2buffer(header)
           var headerHash = blockchainjs.util.sha256x2(rawHeader)
-          var blockid = blockchainjs.util.hashEncode(headerHash)
-          expect(header.blockid).to.equal(blockid)
+          expect(header.hash).to.equal(blockchainjs.util.hashEncode(headerHash))
           expect(header.height).to.be.a('number')
           expect(header.height).to.be.at.least(300000)
         })
@@ -132,14 +131,14 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getHeader (not-exists -- wrong blockid)', function (done) {
-      var blockid = '000000008c0c4d9f3f1365dc028875bebd0344307d63feae16ec2160a50dce23'
+    it('getHeader (not-exists -- wrong hash)', function (done) {
+      var hash = '000000008c0c4d9f3f1365dc028875bebd0344307d63feae16ec2160a50dce23'
 
-      connector.getHeader(blockid)
+      connector.getHeader(hash)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
-          expect(err.message).to.match(new RegExp(blockid))
+          expect(err.message).to.match(new RegExp(hash))
         })
         .done(done, done)
     })
@@ -161,7 +160,7 @@ function implementationTest (opts) {
     it('getHeaders (only latest)', function (done) {
       connector.getHeader('latest')
         .then(function (latest) {
-          return Promise.all([latest, connector.getHeaders(latest.blockid)])
+          return Promise.all([latest, connector.getHeaders(latest.hash)])
         })
         .spread(function (latest, res) {
           expect(res).to.be.an('object')
@@ -221,30 +220,30 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getTxBlockId (confirmed tx)', function (done) {
-      var expected = _.cloneDeep(fixtures.txBlockId.confirmed[0].result)
+    it('getTxBlockHash (confirmed tx)', function (done) {
+      var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[0].result)
 
-      connector.getTxBlockId(fixtures.txBlockId.confirmed[0].txid)
+      connector.getTxBlockHash(fixtures.txBlockHash.confirmed[0].txid)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
         .done(done, done)
     })
 
-    it('getTxBlockId (confirmed tx, coinbase)', function (done) {
-      var expected = _.cloneDeep(fixtures.txBlockId.confirmed[1].result)
+    it('getTxBlockHash (confirmed tx, coinbase)', function (done) {
+      var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[1].result)
 
-      connector.getTxBlockId(fixtures.txBlockId.confirmed[1].txid)
+      connector.getTxBlockHash(fixtures.txBlockHash.confirmed[1].txid)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
         .done(done, done)
     })
 
-    it('getTxBlockId (unconfirmed tx)', function (done) {
+    it('getTxBlockHash (unconfirmed tx)', function (done) {
       helpers.getUnconfirmedTxId()
         .then(function (txid) {
-          return connector.getTxBlockId(txid)
+          return connector.getTxBlockHash(txid)
         })
         .then(function (response) {
           expect(response).to.deep.equal({source: 'mempool'})
@@ -252,10 +251,10 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getTxBlockId (non-exists tx)', function (done) {
+    it('getTxBlockHash (non-exists tx)', function (done) {
       var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-      connector.getTxBlockId(txid)
+      connector.getTxBlockHash(txid)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)
@@ -291,7 +290,7 @@ function implementationTest (opts) {
           expect(res.transactions).to.deep.equal(fixture.transactions)
           expect(res.latest).to.be.an('object')
           expect(res.latest.height).to.be.at.least(300000)
-          expect(res.latest.blockid).to.have.length(64)
+          expect(res.latest.hash).to.have.length(64)
         })
         .done(done, done)
     })

@@ -53,7 +53,7 @@ describe('blockchain.Naive', function () {
   })
 
   it('latest', function (done) {
-    var expected = {blockid: blockchainjs.util.zfill('', 64), height: -1}
+    var expected = {hash: blockchainjs.util.zfill('', 64), height: -1}
     expect(blockchain.latest).to.deep.equal(expected)
     blockchain.once('newBlock', function () {
       expect(blockchain.latest.height).to.at.least(300000)
@@ -70,7 +70,7 @@ describe('blockchain.Naive', function () {
   })
 
   it('getHeader 300000 by id', function (done) {
-    blockchain.getHeader(fixtures.headers[300000].blockid)
+    blockchain.getHeader(fixtures.headers[300000].hash)
       .then(function (header) {
         expect(header).to.deep.equal(fixtures.headers[300000])
       })
@@ -136,27 +136,27 @@ describe('blockchain.Naive', function () {
       .done(done, done)
   })
 
-  it('getTxBlockId (confirmed tx)', function (done) {
+  it('getTxBlockHash (confirmed tx)', function (done) {
     var txId = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
     var expected = {
       source: 'blocks',
-      data: {
-        blockid: '00000000ba81453dd2839b8f91b61be98ee82bee5b7697f6dab1f6149885f1ff',
+      block: {
+        hash: '00000000ba81453dd2839b8f91b61be98ee82bee5b7697f6dab1f6149885f1ff',
         height: 279774
       }
     }
 
-    blockchain.getTxBlockId(txId)
+    blockchain.getTxBlockHash(txId)
       .then(function (response) {
         expect(response).to.deep.equal(expected)
       })
       .done(done, done)
   })
 
-  it('getTxBlockId (unconfirmed tx)', function (done) {
+  it('getTxBlockHash (unconfirmed tx)', function (done) {
     helpers.getUnconfirmedTxId()
       .then(function (txId) {
-        return blockchain.getTxBlockId(txId)
+        return blockchain.getTxBlockHash(txId)
       })
       .then(function (response) {
         expect(response).to.deep.equal({source: 'mempool'})
@@ -164,10 +164,10 @@ describe('blockchain.Naive', function () {
       .done(done, done)
   })
 
-  it('getTxBlockId (non-exists tx)', function (done) {
+  it('getTxBlockHash (non-exists tx)', function (done) {
     var txId = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-    blockchain.getTxBlockId(txId)
+    blockchain.getTxBlockHash(txId)
       .then(function () { throw new Error('Unexpected Behavior') })
       .catch(function (err) {
         expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.TxNotFound)
@@ -192,7 +192,7 @@ describe('blockchain.Naive', function () {
         expect(res.transactions).to.deep.equal(fixture.transactions)
         expect(res.latest).to.be.an('object')
         expect(res.latest.height).to.be.at.least(300000)
-        expect(res.latest.blockid).to.have.length(64)
+        expect(res.latest.hash).to.have.length(64)
       })
       .done(done, done)
   })
