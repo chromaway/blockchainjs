@@ -9,20 +9,18 @@ A pure JavaScript library for node.js and browsers for easy data exchange betwee
 
 ## What is include blockchainjs?
 
-blockchainjs have two abstraction level: Network and Blockchain
+blockchainjs have two abstraction level: Connector and Blockchain
 
-Network implements a common interface for remote service. For now available only two providers: [chain.com](http://chain.com/) and [insight (with patches)](https://github.com/chromaway/insight-api). Also blockchainjs has special network -- Switcher which allow use several networks at one time.
+Connector implements a common interface for remote service. For now available only one provider: [chromanode](https://github.com/chromaway/chromanode).
 
-Blockchain implements a common interface between network and your wallet. You can use Naive (trust all data from the network) or Verified (SPV implementation).
+Blockchain implements a common interface between connector and your wallet. You can use Naive (trust all data from remove service) or Verified (SPV implementation).
 
 In addition to Verified blockchainjs has Storage interface for store headers. Memory and LocalStorage available for now.
 
 ## API
 
-  * [Network](docs/networkapi.md)
-    * [Chain](docs/networkapi.md#chain)
-    * [ChromaInsight](docs/networkapi.md#chromainsight)
-    * [Switcher](docs/networkapi.md#switcher)
+  * [Connector](docs/connector.md)
+    * [Chromanode](docs/connector.md#chromanode)
   * [Blockchain](docs/blockchainapi.md)
     * [Naive](docs/blockchainapi.md#naive)
     * [Verified](docs/blockchainapi.md#verified)
@@ -35,27 +33,29 @@ In addition to Verified blockchainjs has Storage interface for store headers. Me
 ### Show UTXO on address touched
 ```js
 var blockchainjs = require('blockchainjs')
-var network = new blockchainjs.network.Chain({networkName: 'testnet'})
+var connector = new blockchainjs.connector.Chromanode({networkName: 'testnet'})
 var address = 'mp8XoMWnJzQwovninMdChQutPuhyHokJNc'
 
 function showUTXO(address) {
-  network.getUnspents(address)
-    .then(function (utxo) {
+  connector.addressesQuery([address], {status: 'unspent'})
+    .then(function (result) {
       console.log('UTXO for ' + address + ':')
-      utxo.forEach(function (unspent) {
-        var txOut = unspent.txId + ':' + unspent.outIndex
-        console.log(txOut + ' has ' + unspent.value + ' satoshi')
+      result.transactions.forEach(function (unspent) {
+        // var txOut = unspent.txid + ':' + unspent.outIndex
+        // console.log(txOut + ' has ' + unspent.value + ' satoshi')
+        // sorry, only txid and height available now
+        console.log('Unspent in txid: ' + unspent.txid)
       })
-      if (utxo.length === 0) {
+      if (result.transactions.length === 0) {
         console.log('nothing...')
       }
       console.log('')
     })
 }
 
-network.on('touchAddress', showUTXO)
-network.connect()
-network.subscribe({event: 'touchAddress', address: address})
+connector.on(address, showUTXO)
+connector.connect()
+connector.subscribe({event: 'touchAddress', address: address})
 showUTXO(address)
 ```
 
@@ -63,24 +63,24 @@ showUTXO(address)
 ```js
 var blockchainjs = require('blockchainjs')
 
-var network = new blockchainjs.network.ElectrumWS({networkName: 'testnet'})
-network.connect()
+var connector = new blockchainjs.connector.Chromanode({networkName: 'testnet'})
+connector.connect()
 
 var storage = new blockchainjs.storage.Memory({
   networkName: 'testnet',
-  useCompactMode: true
+  compactMode: true
 })
 
-var blockchain = new blockchainjs.blockchain.Verified(network, {
+var blockchain = new blockchainjs.blockchain.Verified(connector, {
   storage: storage,
   networkName: 'testnet',
   testnet: true,
-  useCompactMode: true,
-  usePreSavedChunkHashes: true
+  compactMode: true,
+  chunkHashes: blockchainjs.chunkHashes.testnet
 })
 
 blockchain.on('syncStop', blockchainjs.util.makeSerial(function () {
-  return blockchain.getHeader(blockchain.currentHeight)
+  return blockchain.getHeader(blockchain.latest.hash)
     .then(function (header) {
       console.log('Current header: ', header)
     })
@@ -95,9 +95,6 @@ Copyright 2015 Chromaway AB
 
 ## Todo
 
-  * change storage interface? (names?)
-  * notify about new transactions in connector
-  * fix docs
   * migrate to bitcore (in tests)
   * add karma
   * add https://github.com/visionmedia/debug
