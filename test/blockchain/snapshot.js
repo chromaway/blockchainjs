@@ -11,23 +11,21 @@ var methods = [
   'getHeader',
   'getTx',
   'getTxBlockHash',
-  'getUnspents',
-  'getHistory'
+  'addressesQuery'
 ]
 
 describe('blockchain.Snapshot', function () {
-  var network
+  var connector
   var blockchain
   var snapshot
 
   function setCurrentBlock (block) {
-    blockchain.currentHeight = block.height
-    blockchain.currentBlockHash = block.hash
+    blockchain.latest = {hash: block.hash, height: block.height}
   }
 
   beforeEach(function (done) {
-    network = new blockchainjs.network.Network()
-    blockchain = new blockchainjs.blockchain.Blockchain(network)
+    connector = new blockchainjs.connector.Connector()
+    blockchain = new blockchainjs.blockchain.Blockchain(connector)
     setCurrentBlock(block1)
     blockchain.getSnapshot()
       .then(function (newSnapshot) {
@@ -37,7 +35,7 @@ describe('blockchain.Snapshot', function () {
   })
 
   afterEach(function () {
-    network = blockchain = snapshot = null
+    connector = blockchain = snapshot = null
   })
 
   describe('block is not changed', function () {
