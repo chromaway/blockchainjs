@@ -95,6 +95,9 @@ Copyright 2015 Chromaway AB
 
 ## Todo
 
+  * change storage interface? (names?)
+  * update txstateset
+  * notify about new transactions in connector
   * fix docs
   * migrate to bitcore (in tests)
   * add karma

@@ -35,11 +35,10 @@ function createTx () {
 
 var lastUnconfirmedTxIds = []
 
-/* @todo get tx from chromanode server */
-var socket = io('https://test-insight.bitpay.com/', {forceNew: true})
-socket.emit('subscribe', 'inv')
-socket.on('tx', function (data) {
-  lastUnconfirmedTxIds.push({txid: data.txid, time: Date.now()})
+var socket = io('http://devel.hz.udoidio.info:5001/', {forceNew: true})
+socket.emit('subscribe', 'new-tx')
+socket.on('new-tx', function (txid) {
+  lastUnconfirmedTxIds.push({txid: txid, time: Date.now()})
   if (lastUnconfirmedTxIds.length > 100) {
     lastUnconfirmedTxIds.shift()
   }
@@ -61,7 +60,7 @@ function getUnconfirmedTxId () {
   return new Promise(function (resolve) {
     function tryGet () {
       var data = _.chain(lastUnconfirmedTxIds)
-        .filter(function (data) { return Date.now() - data.time > 20000 })
+        .filter(function (data) { return Date.now() - data.time > 10000 })
         .sortBy('time')
         .last()
         .value()
