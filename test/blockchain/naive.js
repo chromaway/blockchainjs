@@ -100,44 +100,44 @@ describe('blockchain.Naive', function () {
   })
 
   it('getTx (confirmed tx)', function (done) {
-    var txId = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
+    var txid = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
 
-    blockchain.getTx(txId)
+    blockchain.getTx(txid)
       .then(function (txHex) {
         var responseTxId = blockchainjs.util.hashEncode(
           blockchainjs.util.sha256x2(new Buffer(txHex, 'hex')))
-        expect(responseTxId).to.equal(txId)
+        expect(responseTxId).to.equal(txid)
       })
       .done(done, done)
   })
 
   it('getTx (unconfirmed tx)', function (done) {
     helpers.getUnconfirmedTxId()
-      .then(function (txId) {
-        return blockchain.getTx(txId)
+      .then(function (txid) {
+        return blockchain.getTx(txid)
           .then(function (txHex) {
             var responseTxId = blockchainjs.util.hashEncode(
               blockchainjs.util.sha256x2(new Buffer(txHex, 'hex')))
-            expect(responseTxId).to.equal(txId)
+            expect(responseTxId).to.equal(txid)
           })
       })
       .done(done, done)
   })
 
   it('getTx (not-exists tx)', function (done) {
-    var txId = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
+    var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-    blockchain.getTx(txId)
+    blockchain.getTx(txid)
       .then(function () { throw new Error('Unexpected Behavior') })
       .catch(function (err) {
         expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.TxNotFound)
-        expect(err.message).to.match(new RegExp(txId))
+        expect(err.message).to.match(new RegExp(txid))
       })
       .done(done, done)
   })
 
   it('getTxBlockHash (confirmed tx)', function (done) {
-    var txId = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
+    var txid = '9854bf4761024a1075ebede93d968ce1ba98d240ba282fb1f0170e555d8fdbd8'
     var expected = {
       source: 'blocks',
       block: {
@@ -146,7 +146,7 @@ describe('blockchain.Naive', function () {
       }
     }
 
-    blockchain.getTxBlockHash(txId)
+    blockchain.getTxBlockHash(txid)
       .then(function (response) {
         expect(response).to.deep.equal(expected)
       })
@@ -155,8 +155,8 @@ describe('blockchain.Naive', function () {
 
   it('getTxBlockHash (unconfirmed tx)', function (done) {
     helpers.getUnconfirmedTxId()
-      .then(function (txId) {
-        return blockchain.getTxBlockHash(txId)
+      .then(function (txid) {
+        return blockchain.getTxBlockHash(txid)
       })
       .then(function (response) {
         expect(response).to.deep.equal({source: 'mempool'})
@@ -165,13 +165,13 @@ describe('blockchain.Naive', function () {
   })
 
   it('getTxBlockHash (non-exists tx)', function (done) {
-    var txId = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
+    var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-    blockchain.getTxBlockHash(txId)
+    blockchain.getTxBlockHash(txid)
       .then(function () { throw new Error('Unexpected Behavior') })
       .catch(function (err) {
         expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.TxNotFound)
-        expect(err.message).to.match(new RegExp(txId))
+        expect(err.message).to.match(new RegExp(txid))
       })
       .done(done, done)
   })
@@ -202,7 +202,7 @@ describe('blockchain.Naive', function () {
     var address = 'n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'
     var addressCoins = [
       {
-        txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e',
+        txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e',
         outIndex: 0,
         value: 5000000000
       }
@@ -223,8 +223,8 @@ describe('blockchain.Naive', function () {
           var address = bitcoin.Address.fromOutputScript(
             tx.outs[0].script, bitcoin.networks.testnet).toBase58Check()
 
-          blockchain.on('touchAddress', function (touchedAddress, txId) {
-            if (touchedAddress === address && txId === tx.getId()) {
+          blockchain.on('touchAddress', function (touchedAddress, txid) {
+            if (touchedAddress === address && txid === tx.getId()) {
               resolve()
             }
           })
