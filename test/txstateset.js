@@ -12,38 +12,37 @@ var testTxRs = [{
   status: 'confirmed',
   blockHeight: 159233,
   blockHash: '0000000010e57aa253fbeead71e9a9dfc7e16e67643653902453367d1d0ad8ec',
-  txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
+  txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
 }]
 
 describe('TxStateSet', function () {
   this.timeout(30 * 1000)
 
-  var network
+  var connector
   var blockchain
 
   beforeEach(function (done) {
-    network = new blockchainjs.network.ChromaInsight({networkName: 'testnet'})
-    // network = new blockchainjs.network.Chain({networkName: 'testnet'})
-    network.on('error', helpers.ignoreNetworkErrors)
-    network.connect()
-    blockchain = new blockchainjs.blockchain.Naive(network, {networkName: 'testnet'})
-    blockchain.on('error', helpers.ignoreNetworkErrors)
+    connector = new blockchainjs.connector.Chromanode({networkName: 'testnet'})
+    connector.on('error', helpers.ignoreConnectorErrors)
+    connector.connect()
+    blockchain = new blockchainjs.blockchain.Naive(connector, {networkName: 'testnet'})
+    blockchain.on('error', helpers.ignoreConnectorErrors)
     blockchain.on('newBlock', function () { done() })
   })
 
   afterEach(function (done) {
-    network.once('disconnect', function () {
-      network.removeAllListeners()
-      network.on('error', function () {})
+    connector.once('disconnect', function () {
+      connector.removeAllListeners()
+      connector.on('error', function () {})
 
       blockchain.removeAllListeners()
       blockchain.on('error', function () {})
 
-      network = blockchain = null
+      connector = blockchain = null
 
       done()
     })
-    network.disconnect()
+    connector.disconnect()
   })
 
   it('syncEmpty', function (done) {
@@ -81,7 +80,7 @@ describe('TxStateSet', function () {
       syncMethod: 'unspents',
       txRecords: [{
         status: 'unconfirmed',
-        txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
+        txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
       }],
       stateVersion: 1
     }
@@ -103,7 +102,7 @@ describe('TxStateSet', function () {
         // fake block hash should be detected and changed to the real one
         blockHeight: 159233,
         blockHash: '0000000011111111111111111111111111111111111111111111111111111111',
-        txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
+        txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
       }],
       stateVersion: 1
     }
@@ -125,20 +124,20 @@ describe('TxStateSet', function () {
           status: 'confirmed',
           blockHeight: 159234,
           blockHash: '0000000077777777777777777777777777777777777777777777777777777777',
-          txId: '7777777777777777777777777777777777777777777777777777777777777777'
+          txid: '7777777777777777777777777777777777777777777777777777777777777777'
         },
         {
           status: 'confirmed',
           blockHeight: 159233,
           blockHash: '0000000010e57aa253fbeead71e9a9dfc7e16e67643653902453367d1d0ad8ec',
-          txId: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
+          txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
         },
         // but this one should remain because we assume that everything below block 159233 remains unchanged
         {
           status: 'confirmed',
           blockHeight: 159232,
           blockHash: '000000002222222222222222222222222222222222222222222222222222222222',
-          txId: '2222222222222222222222222222222222222222222222222222222222222222'
+          txid: '2222222222222222222222222222222222222222222222222222222222222222'
         }
       ],
       stateVersion: 1
