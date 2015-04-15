@@ -24,7 +24,7 @@ function createTx () {
         txb.addInput(unspent.txHash, unspent.index)
       })
       // send all satoshi (exclude 10000) to faucet.xeno-genesis.com
-      txb.addOutput('mp8XoMWnJzQwovninMdChQutPuhyHokJNc', total - 10000)
+      txb.addOutput('mp8XoMWnJzQwovninMdChQutPuhyHokJNc', total - 8000)
       _.range(data.unspents.length).forEach(function (index) {
         txb.sign(index, privKey)
       })

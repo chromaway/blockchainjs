@@ -220,30 +220,30 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getTxBlockHash (confirmed tx)', function (done) {
-      var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[0].result)
+    it('getTxMerkle (confirmed tx)', function (done) {
+      var expected = _.cloneDeep(fixtures.txMerkle.confirmed[0].result)
 
-      connector.getTxBlockHash(fixtures.txBlockHash.confirmed[0].txid)
+      connector.getTxMerkle(fixtures.txMerkle.confirmed[0].txid)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
         .done(done, done)
     })
 
-    it('getTxBlockHash (confirmed tx, coinbase)', function (done) {
-      var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[1].result)
+    it('getTxMerkle (confirmed tx, coinbase)', function (done) {
+      var expected = _.cloneDeep(fixtures.txMerkle.confirmed[1].result)
 
-      connector.getTxBlockHash(fixtures.txBlockHash.confirmed[1].txid)
+      connector.getTxMerkle(fixtures.txMerkle.confirmed[1].txid)
         .then(function (response) {
           expect(response).to.deep.equal(expected)
         })
         .done(done, done)
     })
 
-    it('getTxBlockHash (unconfirmed tx)', function (done) {
+    it('getTxMerkle (unconfirmed tx)', function (done) {
       helpers.getUnconfirmedTxId()
         .then(function (txid) {
-          return connector.getTxBlockHash(txid)
+          return connector.getTxMerkle(txid)
         })
         .then(function (response) {
           expect(response).to.deep.equal({source: 'mempool'})
@@ -251,10 +251,10 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getTxBlockHash (non-exists tx)', function (done) {
+    it('getTxMerkle (non-exists tx)', function (done) {
       var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
-      connector.getTxBlockHash(txid)
+      connector.getTxMerkle(txid)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)

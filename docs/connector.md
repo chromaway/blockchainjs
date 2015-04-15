@@ -111,11 +111,11 @@
 
 **return**: `Promise<errors.Connector.TxNotFound>` if couldn't find transaction for `txid`
 
-### getTxBlockHash
+### getTxMerkle
 
   * `string` txid
 
-**return**: `Promise<Object>` `Object` is [TxBlockHashObject](#txblockhashobject)
+**return**: `Promise<Object>` `Object` is [TxMerkleObject](#txmerkleobject)
 
 **return**: `Promise<errors.Connector.TxNotFound>` if couldn't find transaction for `txid`
 
@@ -180,7 +180,7 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
   * `number` bits
   * `number` nonce
 
-### TxBlockHashObject
+### TxMerkleObject
 
   * `string` source `blocks` for confirmed or `mempool` for unconfirmed
   * `Object` [block] defined only for confirmed transactions

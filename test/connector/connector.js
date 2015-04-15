@@ -15,7 +15,7 @@ var notImplementedMethods = [
   'getHeader',
   'headersQuery',
   'getTx',
-  'getTxBlockHash',
+  'getTxMerkle',
   'sendTx',
   'addressesQuery',
   'subscribe'

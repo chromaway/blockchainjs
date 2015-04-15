@@ -131,10 +131,10 @@ describe('blockchain.Verified', function () {
         })
         .then(function (header) {
           expect(header).to.deep.equal(fixtures.headers[300000])
-          return blockchain.getTxBlockHash(fixtures.txBlockHash.confirmed[0].txid)
+          return blockchain.getTxBlockHash(fixtures.txMerkle.confirmed[0].txid)
         })
         .then(function (txBlockHash) {
-          var expected = _.cloneDeep(fixtures.txBlockHash.confirmed[0].result)
+          var expected = _.cloneDeep(fixtures.txMerkle.confirmed[0].result)
           delete expected.block.index
           delete expected.block.merkle
           expect(txBlockHash).to.deep.equal(expected)
