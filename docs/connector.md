@@ -191,7 +191,7 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 
 ### AddressesQueryObject
 
-  * `Array.<{txid: string, height: number}>` transactions
+  * `Array.<{txid: string, height: ?number}>` transactions
   * `Object` latest
     * `string` hash
     * `number` height

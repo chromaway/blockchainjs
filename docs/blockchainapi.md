@@ -149,6 +149,7 @@ Snapshot is a proxy object. It memorize latest block and return `InconsistentSna
 
   * [Methods](#methods)
     * [isValid](#isvalid)
+    * [destroy](#destroy)
   * Properties
     * blockchain
     * latest
@@ -165,7 +166,9 @@ Snapshot is a proxy object. It memorize latest block and return `InconsistentSna
 
 **return**: `boolean`
 
-### Methods
+#### destroy
+
+remove newBlock listener from snapshot
 
 ## Objects
 
@@ -189,7 +192,7 @@ Snapshot is a proxy object. It memorize latest block and return `InconsistentSna
 
 ### AddressesQueryObject
 
-  * `Array.<{txid: string, height: number}>` transactions
+  * `Array.<{txid: string, height: ?number}>` transactions
   * `Object` latest
     * `string` hash
     * `number` height
