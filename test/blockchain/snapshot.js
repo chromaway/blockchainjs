@@ -6,7 +6,7 @@ var crypto = require('crypto')
 var blockchainjs = require('../../lib')
 
 var block1 = {height: 10, hash: crypto.randomBytes(32).toString('hex')}
-var block2 = {height: 11, hash: crypto.randomBytes(32).toString('hex')}
+var block2 = {height: 10, hash: crypto.randomBytes(32).toString('hex')}
 var methods = [
   'getHeader',
   'getTx',
@@ -21,6 +21,7 @@ describe('blockchain.Snapshot', function () {
 
   function setCurrentBlock (block) {
     blockchain.latest = {hash: block.hash, height: block.height}
+    blockchain.emit('newBlock', block.hash, block.height)
   }
 
   beforeEach(function (done) {

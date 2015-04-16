@@ -2,10 +2,13 @@
 
   * [Events](#events)
     * [error](#error)
+    * [syncStart](#syncstart)
+    * [syncStop](#syncstop)
     * [newBlock](#newblock)
     * [touchAddress](#touchAddress)
   * [Methods](#methods)
     * [constructor](#constructor)
+    * [isSyncing](#issyncing)
     * [getSnapshot](#getsnapshot)
     * [getHeader](#getheader)
     * [getTx](#gettx)
@@ -31,6 +34,10 @@
 
   * `Error` error
 
+### syncStart
+
+### syncStop
+
 ### newBlock
 
   * `string` hash
@@ -49,6 +56,10 @@
   * `Object` opts
     * `string` opts.networkName
     * `number` opts.txCacheSize
+
+### isSyncing
+
+**return**: `boolean`
 
 ### getSnapshot
 
@@ -111,22 +122,9 @@
 
 ## Verified
 
-  * [Events](#events)
-    * [syncStart](#syncstart)
-    * [syncStop](#syncstop)
-  * [Methods](#methods)
-    * [isSyncing](#issyncing)
   * Properties
     * compactMode
     * storage
-
-### Events
-
-#### syncStart
-
-#### syncStop
-
-### Methods
 
 #### constructor
 
@@ -138,10 +136,6 @@
     * `boolean` isTestnet
     * `boolean` compactMode
     * `boolean` chunkHashes
-
-#### isSyncing
-
-**return**: `boolean`
 
 ## Snapshot
 
