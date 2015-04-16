@@ -23,6 +23,7 @@
     * [subscribe](#subscribe)
   * Properties
     * networkName
+    * concurrency
     * READY_STATE
       * CONNECTING
       * OPEN
@@ -63,6 +64,7 @@
 
   * `Object` opts
     * `string` networkName
+    * `number` concurrency request count in one time, zero is unlimited
 
 ### connect
 
@@ -164,6 +166,7 @@ export NODE_TLS_REJECT_UNAUTHORIZED=0 // for self-signed cert.
 
   * `Object` opts
     * `string` networkName
+    * `number` concurrency
     * `string` url
     * `number` requestTimeout
 
