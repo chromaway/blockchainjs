@@ -43,6 +43,8 @@
   * `string` hash
   * `number` height
 
+  \* may be emitted only between *syncStart* and *syncStop* events
+
 ### touchAddress
 
   * `string` address
