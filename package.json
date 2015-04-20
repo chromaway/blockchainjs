@@ -26,6 +26,7 @@
     "testnet3"
   ],
   "files": [
+    "docs",
     "lib",
     "LICENSE",
     "README.md"
