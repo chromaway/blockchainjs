@@ -143,9 +143,9 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getHeaders (first chunk)', function (done) {
+    it('headersQuery (first chunk)', function (done) {
       var from = '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943'
-      connector.getHeaders(from)
+      connector.headersQuery(from)
         .then(function (res) {
           expect(res).to.be.an('object')
           expect(res.count).to.equal(2016)
@@ -157,10 +157,10 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getHeaders (only latest)', function (done) {
+    it('headersQuery (only latest)', function (done) {
       connector.getHeader('latest')
         .then(function (latest) {
-          return Promise.all([latest, connector.getHeaders(latest.hash)])
+          return Promise.all([latest, connector.headersQuery(latest.hash)])
         })
         .spread(function (latest, res) {
           expect(res).to.be.an('object')
@@ -172,9 +172,9 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getHeaders (not found)', function (done) {
+    it('headersQuery (not found)', function (done) {
       var from = '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4944'
-      connector.getHeaders(from)
+      connector.headersQuery(from)
         .then(function () { throw new Error('Unexpected Behavior') })
         .catch(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
