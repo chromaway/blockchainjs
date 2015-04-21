@@ -82,7 +82,7 @@ describe('TxStateSet', function () {
         status: 'unconfirmed',
         txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
       }],
-      stateVersion: 1
+      stateVersion: 2
     }
     var tSS = new TxStateSet(state)
     tSS.autoSync(blockchain, [testAddress])
@@ -104,7 +104,7 @@ describe('TxStateSet', function () {
         blockHash: '0000000011111111111111111111111111111111111111111111111111111111',
         txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
       }],
-      stateVersion: 1
+      stateVersion: 2
     }
     var tSS = new TxStateSet(state)
     tSS.autoSync(blockchain, [testAddress])
@@ -140,7 +140,7 @@ describe('TxStateSet', function () {
           txid: '2222222222222222222222222222222222222222222222222222222222222222'
         }
       ],
-      stateVersion: 1
+      stateVersion: 2
     }
     var tSS = new TxStateSet(state)
     tSS.autoSync(blockchain, [testAddress])
