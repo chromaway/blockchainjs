@@ -247,7 +247,7 @@ describe('blockchain.Verified', function () {
   })
 
   describe('compact mode with pre-saved data (memory storage)', function () {
-    this.timeout(30 * 1000)
+    this.timeout(60 * 1000)
 
     beforeEach(createBeforeEachFunction(
       blockchainjs.storage.Memory,
