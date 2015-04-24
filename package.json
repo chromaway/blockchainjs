@@ -12,7 +12,7 @@
   "main": "lib/index.js",
   "repository": {
     "type": "git",
-    "url": "git@github.com:chromaway/blockchainjs.git"
+    "url": "git://github.com/chromaway/blockchainjs.git"
   },
   "bugs": {
     "url": "https://github.com/chromaway/blockchainjs/issues"
