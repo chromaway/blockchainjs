@@ -1,6 +1,6 @@
 {
   "name": "blockchainjs",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Bitcoin blockchain for wallets.",
   "author": "Fomichev Kirill <fanatid@ya.ru>",
   "contributors": [
