@@ -31,7 +31,7 @@
     "url": "git://github.com/chromaway/blockchainjs.git", 
     "type": "git"
   }, 
-  "version": "0.3.5", 
+  "version": "0.3.6", 
   "dependencies": {
     "socket.io-client": "1.3.5", 
     "lodash": "3.4.0", 
