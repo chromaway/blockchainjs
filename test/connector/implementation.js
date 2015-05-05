@@ -69,7 +69,7 @@ function implementationTest (opts) {
     })
 
     it('getCurrentActiveRequests', function (done) {
-      connector.getHeader('latest')
+      connector.getHeader('latest').catch(helpers.ignoreConnectorErrors)
       setTimeout(function () {
         expect(connector.getCurrentActiveRequests()).to.equal(1)
         done()
