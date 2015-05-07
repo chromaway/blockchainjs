@@ -53,7 +53,7 @@ describe('blockchain.Naive', function () {
   })
 
   it('latest', function (done) {
-    var expected = {hash: blockchainjs.util.zfill('', 64), height: -1}
+    var expected = {hash: blockchainjs.util.ZERO_HASH, height: -1}
     expect(blockchain.latest).to.deep.equal(expected)
     blockchain.once('newBlock', function () {
       expect(blockchain.latest.height).to.at.least(300000)

@@ -34,7 +34,7 @@ describe('blockchain.Blockchain', function () {
   })
 
   it('latest', function () {
-    var expected = {hash: blockchainjs.util.zfill('', 64), height: -1}
+    var expected = {hash: blockchainjs.util.ZERO_HASH, height: -1}
     expect(blockchain.latest).to.deep.equal(expected)
   })
 

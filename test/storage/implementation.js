@@ -3,11 +3,11 @@
 
 var _ = require('lodash')
 var expect = require('chai').expect
+var crypto = require('crypto')
 var Promise = require('bluebird')
 
 var blockchainjs = require('../../lib')
 var errors = blockchainjs.errors
-var zfill = blockchainjs.util.zfill
 
 /**
  * @param {Object} opts
@@ -22,6 +22,10 @@ function implementationTest (opts) {
     description: opts.class.name,
     skipFullMode: false
   }, opts)
+
+  if (!opts.class.isAvailable()) {
+    opts.describe = describe.skip
+  }
 
   opts.describe(opts.description, function () {
     var Storage = opts.class
@@ -55,10 +59,10 @@ function implementationTest (opts) {
       })
 
       it('setLastHash/getLastHash', function (done) {
-        var newHash = zfill('1', 64)
+        var newHash = crypto.pseudoRandomBytes(32).toString('hex')
         storage.getLastHash()
           .then(function (lastHash) {
-            expect(lastHash).to.equal(zfill('', 64))
+            expect(lastHash).to.equal(blockchainjs.util.ZERO_HASH)
             return storage.setLastHash(newHash)
           })
           .then(function () {
@@ -72,19 +76,20 @@ function implementationTest (opts) {
             return storage.getLastHash()
           })
           .then(function (lastHash) {
-            expect(lastHash).to.equal(zfill('', 64))
+            expect(lastHash).to.equal(blockchainjs.util.ZERO_HASH)
           })
           .done(done, done)
       })
 
       it('chunkHashes', function (done) {
+        var hash1 = crypto.pseudoRandomBytes(32).toString('hex')
         storage.getChunkHashesCount()
           .then(function (chunkHashesCount) {
             expect(chunkHashesCount).to.equal(0)
             return storage.putChunkHashes([
-              zfill('0', 64),
-              zfill('1', 64),
-              zfill('2', 64)
+              crypto.pseudoRandomBytes(32).toString('hex'),
+              hash1,
+              crypto.pseudoRandomBytes(32).toString('hex')
             ])
           })
           .then(function () {
@@ -102,7 +107,7 @@ function implementationTest (opts) {
             return storage.getChunkHash(1)
           })
           .then(function (chunkHash) {
-            expect(chunkHash).to.equal(zfill('1', 64))
+            expect(chunkHash).to.equal(hash1)
             return storage.getChunkHash(-1)
           })
           .then(function () { throw new Error('Unexpected response') })
@@ -125,13 +130,14 @@ function implementationTest (opts) {
       })
 
       it('headers', function (done) {
+        var hash1 = crypto.pseudoRandomBytes(80).toString('hex')
         storage.getHeadersCount()
           .then(function (headersCount) {
             expect(headersCount).to.equal(0)
             return storage.putHeaders([
-              zfill('0', 160),
-              zfill('1', 160),
-              zfill('2', 160)
+              crypto.pseudoRandomBytes(80).toString('hex'),
+              hash1,
+              crypto.pseudoRandomBytes(80).toString('hex')
             ])
           })
           .then(function () {
@@ -149,8 +155,10 @@ function implementationTest (opts) {
             return storage.getHeader(1)
           })
           .then(function (header) {
-            expect(header).to.equal(zfill('1', 160))
-            var headers = _.range(2014).map(function () { return zfill('', 160) })
+            expect(header).to.equal(hash1)
+            var headers = _.range(2014).map(function () {
+              return crypto.pseudoRandomBytes(80).toString('hex')
+            })
             return storage.putHeaders(headers)
           })
           .then(function () { throw new Error('Unexpected response') })
@@ -199,10 +207,10 @@ function implementationTest (opts) {
       })
 
       it('setLastHash/getLastHash', function (done) {
-        var newHash = zfill('1', 64)
+        var newHash = crypto.pseudoRandomBytes(32).toString('hex')
         storage.getLastHash()
           .then(function (lastHash) {
-            expect(lastHash).to.equal(zfill('', 64))
+            expect(lastHash).to.equal(blockchainjs.util.ZERO_HASH)
             return storage.setLastHash(newHash)
           })
           .then(function () {
@@ -216,7 +224,7 @@ function implementationTest (opts) {
             return storage.getLastHash()
           })
           .then(function (lastHash) {
-            expect(lastHash).to.equal(zfill('', 64))
+            expect(lastHash).to.equal(blockchainjs.util.ZERO_HASH)
           })
           .done(done, done)
       })
@@ -243,13 +251,14 @@ function implementationTest (opts) {
       })
 
       it('headers', function (done) {
+        var hash1 = crypto.pseudoRandomBytes(80).toString('hex')
         storage.getHeadersCount()
           .then(function (headersCount) {
             expect(headersCount).to.equal(0)
             return storage.putHeaders([
-              zfill('0', 160),
-              zfill('1', 160),
-              zfill('2', 160)
+              crypto.pseudoRandomBytes(80).toString('hex'),
+              hash1,
+              crypto.pseudoRandomBytes(80).toString('hex')
             ])
           })
           .then(function () {
@@ -267,8 +276,10 @@ function implementationTest (opts) {
             return storage.getHeader(1)
           })
           .then(function (header) {
-            expect(header).to.equal(zfill('1', 160))
-            var headers = _.range(2014).map(function () { return zfill('', 160) })
+            expect(header).to.equal(hash1)
+            var headers = _.range(2014).map(function () {
+              return crypto.pseudoRandomBytes(80).toString('hex')
+            })
             return storage.putHeaders(headers)
           })
           .then(function () {

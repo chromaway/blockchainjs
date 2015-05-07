@@ -3,6 +3,9 @@
   * [Events](#events)
     * [error](#error)
     * [ready](#ready)
+  * [Static](#static)
+    * [isAvailable](#isavailable)
+    * [isFullModeSupported](#isfullmodesupported)
   * [Methods](#methods)
     * [constructor](#constructor)
     * [isReady](#isready)
@@ -31,6 +34,16 @@
   * `Error` error
 
 ### ready
+
+## Static
+
+### isAvailable
+
+**return**: `boolean`
+
+### isFullModeSupported
+
+**return**: `boolean`
 
 ## Methods
 
