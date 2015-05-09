@@ -26,6 +26,7 @@
   * Inheritance
     * [Memory](#memory)
     * [LocalStorage](#localstorage)
+    * [WebSQL](#websql)
 
 ## Events
 
@@ -125,3 +126,13 @@
     * `string` networkName
     * `boolean` compactMode
     * `string` keyName
+
+## WebSQL
+
+### constructor
+
+  * `Object` opts
+    * `string` networkName
+    * `boolean` compactMode
+    * `string` dbName
+
