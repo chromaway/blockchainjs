@@ -15,6 +15,7 @@ var errors = blockchainjs.errors
  * @param {function} [opts.describe]
  * @param {string} [opts.description] By default opts.class.name
  * @param {boolean} [opts.skipFullMode=false]
+ * @param {Object} [opts.storageOpts]
  */
 function implementationTest (opts) {
   opts = _.extend({
@@ -41,7 +42,9 @@ function implementationTest (opts) {
 
     describe('compact mode', function () {
       beforeEach(function (done) {
-        storage = new Storage({compactMode: true})
+        var storageOpts = _.defaults({compactMode: true}, opts.storageOpts)
+
+        storage = new Storage(storageOpts)
         storage.once('ready', done)
       })
 
@@ -189,7 +192,9 @@ function implementationTest (opts) {
     var describeFn = opts.skipFullMode ? describe.skip : describe
     describeFn('full mode', function () {
       beforeEach(function (done) {
-        storage = new Storage({compactMode: false})
+        var storageOpts = _.defaults({compactMode: false}, opts.storageOpts)
+
+        storage = new Storage(storageOpts)
         storage.once('ready', done)
       })
 
