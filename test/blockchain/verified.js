@@ -138,12 +138,14 @@ describe('blockchain.Verified', function () {
           delete expected.block.index
           delete expected.block.merkle
           expect(txBlockHash).to.deep.equal(expected)
+          /*
           return helpers.getUnconfirmedTxId()
         }).then(function (txid) {
           return blockchain.getTxBlockHash(txid)
         })
         .then(function (txBlockHash) {
           expect(txBlockHash).to.deep.equal({source: 'mempool'})
+          */
           var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
           return blockchain.getTxBlockHash(txid)
             .then(function () { throw new Error('Unexpected behavior') })
@@ -155,7 +157,7 @@ describe('blockchain.Verified', function () {
         .done(done, done)
     })
 
-    it('getTx (unconfirmed)', function (done) {
+    it.skip('getTx (unconfirmed)', function (done) {
       helpers.getUnconfirmedTxId()
         .then(function (txid) {
           return blockchain.getTx(txid)
@@ -168,7 +170,7 @@ describe('blockchain.Verified', function () {
         .done(done, done)
     })
 
-    it('sendTx', function (done) {
+    it.skip('sendTx', function (done) {
       helpers.createTx()
         .then(function (tx) {
           return blockchain.sendTx(tx.toHex())
@@ -200,7 +202,7 @@ describe('blockchain.Verified', function () {
     })
     */
 
-    it('subscribeAddress', function (done) {
+    it.skip('subscribeAddress', function (done) {
       new Promise(function (resolve, reject) {
         helpers.createTx()
           .then(function (tx) {
@@ -246,16 +248,25 @@ describe('blockchain.Verified', function () {
     runTests()
   })
 
-  describe('compact mode with pre-saved data (memory storage)', function () {
-    this.timeout(60 * 1000)
-
-    beforeEach(createBeforeEachFunction(
-      blockchainjs.storage.Memory,
-      {compactMode: true},
-      {compactMode: true, chunkHashes: blockchainjs.chunkHashes.testnet}))
-
-    runTests()
-  })
-
   /* @todo compact mode with pre-saved wrong hashes */
+
+  function runWithStorage (Storage) {
+    var desc = 'compact mode with pre-saved data (' + Storage.name + ' storage)'
+    var describeFn = Storage.isAvailable() ? describe : describe.skip
+    describeFn(desc, function () {
+      this.timeout(60 * 1000)
+
+      beforeEach(createBeforeEachFunction(
+        Storage,
+        {compactMode: true, filename: ':memory:'},
+        {compactMode: true, chunkHashes: blockchainjs.chunkHashes.testnet}))
+
+      runTests()
+    })
+  }
+
+  runWithStorage(blockchainjs.storage.Memory)
+  runWithStorage(blockchainjs.storage.SQLite)
+  runWithStorage(blockchainjs.storage.WebSQL)
+  runWithStorage(blockchainjs.storage.LocalStorage)
 })
