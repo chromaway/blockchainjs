@@ -1,4 +1,4 @@
-/* globals Promise:true */
+'use strict'
 
 var _ = require('lodash')
 var bitcoin = require('bitcoinjs-lib')
@@ -7,7 +7,7 @@ var io = require('socket.io-client')
 var request = Promise.promisify(require('request'))
 var getUnspents = Promise.promisify(require('helloblock-faucet').getUnspents)
 
-var blockchainjs = require('../lib')
+var blockchainjs = require('../')
 var errors = blockchainjs.errors
 
 /**

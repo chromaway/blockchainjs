@@ -1,9 +1,10 @@
 /* global describe, it, afterEach, beforeEach */
+'use strict'
 
 var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
 
-var blockchainjs = require('../../lib')
+var blockchainjs = require('../../')
 
 var notImplementedMethods = [
   'getHeader',

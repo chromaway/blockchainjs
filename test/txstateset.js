@@ -1,9 +1,8 @@
 /* global describe, it, afterEach, beforeEach */
-/* globals Promise:true */
+'use strict'
 
-var TxStateSet = require('../lib/txstateset')
 var helpers = require('./helpers')
-var blockchainjs = require('../lib')
+var blockchainjs = require('../')
 var expect = require('chai').expect
 
 var testAddress = 'n1YYm9uXWTsjd6xwSEiys7aezJovh6xKbj'
@@ -46,16 +45,16 @@ describe.skip('TxStateSet', function () {
   })
 
   it('syncEmpty', function (done) {
-    var tSS = new TxStateSet()
+    var tSS = new blockchainjs.TxStateSet()
     tSS.autoSync(blockchain, [], [])
       .then(function (newTSS) {
-        expect(newTSS).to.be.instanceof(TxStateSet)
+        expect(newTSS).to.be.instanceof(blockchainjs.TxStateSet)
       })
       .done(done, done)
   })
 
   it('syncAddressFromEmpty', function (done) {
-    var tSS = new TxStateSet()
+    var tSS = new blockchainjs.TxStateSet()
     tSS.autoSync(blockchain, [testAddress])
       .then(function (newTSS) {
         expect(newTSS.getTxRecords()).to.deep.equal(testTxRs)
@@ -65,7 +64,7 @@ describe.skip('TxStateSet', function () {
   })
 
   it('syncTxIdFromEmpty', function (done) {
-    var tSS = new TxStateSet()
+    var tSS = new blockchainjs.TxStateSet()
     tSS.autoSync(blockchain, [], [testTxId])
       .then(function (newTSS) {
         expect(newTSS.getTxRecords()).to.deep.equal(testTxRs)
@@ -84,7 +83,7 @@ describe.skip('TxStateSet', function () {
       }],
       stateVersion: 2
     }
-    var tSS = new TxStateSet(state)
+    var tSS = new blockchainjs.TxStateSet(state)
     tSS.autoSync(blockchain, [testAddress])
       .then(function (newTSS) {
         expect(newTSS.getTxRecords()).to.deep.equal(testTxRs)
@@ -106,7 +105,7 @@ describe.skip('TxStateSet', function () {
       }],
       stateVersion: 2
     }
-    var tSS = new TxStateSet(state)
+    var tSS = new blockchainjs.TxStateSet(state)
     tSS.autoSync(blockchain, [testAddress])
       .then(function (newTSS) {
         expect(newTSS.getTxRecords()).to.deep.equal(testTxRs)

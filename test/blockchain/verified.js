@@ -1,5 +1,5 @@
 /* global describe, it, afterEach, beforeEach */
-/* globals Promise:true */
+'use strict'
 
 var expect = require('chai').expect
 var _ = require('lodash')
@@ -7,7 +7,7 @@ var ProgressBar = require('progress')
 var bitcoin = require('bitcoinjs-lib')
 var Promise = require('bluebird')
 
-var blockchainjs = require('../../lib')
+var blockchainjs = require('../../')
 var helpers = require('../helpers')
 var fixtures = require('../data/connector.json')
 

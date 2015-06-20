@@ -57,6 +57,7 @@
     "error-system": "^0.1.0",
     "lodash": "^3.9.3",
     "lru-cache": "^2.6.4",
+    "make-concurrent": "0.0.4",
     "odd-storage": "^0.1.0",
     "ready-mixin": "0.0.5",
     "request": "=2.53.0",

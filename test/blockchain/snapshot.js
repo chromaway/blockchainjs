@@ -1,9 +1,10 @@
 /* global describe, it, afterEach, beforeEach */
+'use strict'
 
 var expect = require('chai').expect
 var crypto = require('crypto')
 
-var blockchainjs = require('../../lib')
+var blockchainjs = require('../../')
 
 var block1 = {height: 10, hash: crypto.randomBytes(32).toString('hex')}
 var block2 = {height: 10, hash: crypto.randomBytes(32).toString('hex')}

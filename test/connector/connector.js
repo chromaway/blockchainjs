@@ -1,11 +1,11 @@
 /* global describe, it, afterEach, beforeEach */
-/* globals Promise:true */
+'use strict'
 
 var EventEmitter = require('events').EventEmitter
 var expect = require('chai').expect
 var Promise = require('bluebird')
 
-var blockchainjs = require('../../lib')
+var blockchainjs = require('../../')
 
 var notImplementedMethods = [
   '_doOpen',
