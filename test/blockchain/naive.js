@@ -9,7 +9,7 @@ var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
 var fixtures = require('../data/connector.json')
 
-describe('blockchain.Naive', function () {
+describe.skip('blockchain.Naive', function () {
   this.timeout(30000)
 
   var connector

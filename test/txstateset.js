@@ -15,7 +15,7 @@ var testTxRs = [{
   txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
 }]
 
-describe('TxStateSet', function () {
+describe.skip('TxStateSet', function () {
   this.timeout(30 * 1000)
 
   var connector

@@ -21,7 +21,7 @@ var notImplementedMethods = [
   'subscribe'
 ]
 
-describe('network.Connector', function () {
+describe.skip('network.Connector', function () {
   var network
 
   beforeEach(function () {

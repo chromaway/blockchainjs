@@ -1,56 +1,45 @@
-/* global describe, it, afterEach, beforeEach */
-/* globals Promise:true */
+/* global describe, xdescribe, it, afterEach, beforeEach */
+'use strict'
 
 var _ = require('lodash')
 var expect = require('chai').expect
 var crypto = require('crypto')
 var Promise = require('bluebird')
 
-var blockchainjs = require('../../lib')
+var blockchainjs = require('../../')
 var errors = blockchainjs.errors
 
 /**
  * @param {Object} opts
- * @param {function} opts.class
  * @param {function} [opts.describe]
- * @param {string} [opts.description] By default opts.class.name
+ * @param {function} opts.clsName
+ * @param {Object} [opts.clsOpts]
  * @param {boolean} [opts.skipFullMode=false]
- * @param {Object} [opts.storageOpts]
  */
-function implementationTest (opts) {
-  opts = _.extend({
-    describe: describe,
-    description: opts.class.name,
-    skipFullMode: false
-  }, opts)
-
-  if (!opts.class.isAvailable()) {
-    opts.describe = describe.skip
+module.exports = function (opts) {
+  var StorageCls = blockchainjs.storage[opts.clsName]
+  if (StorageCls === undefined) {
+    return
   }
 
-  opts.describe(opts.description, function () {
-    var Storage = opts.class
+  var ndescribe = opts.describe || describe
+  if (!StorageCls.isAvailable()) {
+    ndescribe = xdescribe
+  }
+
+  ndescribe(StorageCls.name, function () {
     var storage
 
-    afterEach(function () {
-      if (storage instanceof blockchainjs.storage.Storage) {
-        storage.clear()
-      }
-
-      storage = null
+    afterEach(function (done) {
+      storage.clear().done(done, done)
     })
 
     describe('compact mode', function () {
       beforeEach(function (done) {
-        var storageOpts = _.defaults({compactMode: true}, opts.storageOpts)
+        var storageOpts = _.defaults({compactMode: true}, opts.clsOpts)
 
-        storage = new Storage(storageOpts)
-        storage.once('ready', done)
-      })
-
-      it('inherits Storage', function () {
-        expect(storage).to.be.instanceof(blockchainjs.storage.Storage)
-        expect(storage).to.be.instanceof(opts.class)
+        storage = new StorageCls(storageOpts)
+        storage.ready.done(done, done)
       })
 
       it('compact mode is true', function () {
@@ -113,12 +102,12 @@ function implementationTest (opts) {
             expect(chunkHash).to.equal(hash1)
             return storage.getChunkHash(-1)
           })
-          .then(function () { throw new Error('Unexpected response') })
+          .then(function () { throw new Error() })
           .catch(function (err) {
             expect(err).to.be.instanceof(RangeError)
             return storage.getChunkHash(2)
           })
-          .then(function () { throw new Error('Unexpected response') })
+          .then(function () { throw new Error() })
           .catch(function (err) {
             expect(err).to.be.instanceof(RangeError)
             return storage.clear()
@@ -164,17 +153,17 @@ function implementationTest (opts) {
             })
             return storage.putHeaders(headers)
           })
-          .then(function () { throw new Error('Unexpected response') })
+          .then(function () { throw new Error() })
           .catch(function (err) {
             expect(err).to.be.instanceof(errors.Storage.CompactMode.Limitation)
             return storage.getHeader(-1)
           })
-          .then(function () { throw new Error('Unexpected response') })
+          .then(function () { throw new Error() })
           .catch(function (err) {
             expect(err).to.be.instanceof(RangeError)
             return storage.getHeader(2)
           })
-          .then(function () { throw new Error('Unexpected response') })
+          .then(function () { throw new Error() })
           .catch(function (err) {
             expect(err).to.be.instanceof(RangeError)
             return storage.clear()
@@ -189,18 +178,17 @@ function implementationTest (opts) {
       })
     })
 
-    var describeFn = opts.skipFullMode ? describe.skip : describe
-    describeFn('full mode', function () {
+    var fullModeDescribe = opts.skipFullMode ? xdescribe : describe
+    if (!StorageCls.isFullModeSupported()) {
+      fullModeDescribe = xdescribe
+    }
+
+    fullModeDescribe('full mode', function () {
       beforeEach(function (done) {
-        var storageOpts = _.defaults({compactMode: false}, opts.storageOpts)
+        var storageOpts = _.defaults({compactMode: false}, opts.clsOpts)
 
-        storage = new Storage(storageOpts)
-        storage.once('ready', done)
-      })
-
-      it('inherits Storage', function () {
-        expect(storage).to.be.instanceof(blockchainjs.storage.Storage)
-        expect(storage).to.be.instanceof(opts.class)
+        storage = new StorageCls(storageOpts)
+        storage.ready.done(done, done)
       })
 
       it('compact mode is false', function () {
@@ -242,20 +230,21 @@ function implementationTest (opts) {
           'truncateChunkHashes'
         ]
 
-        var promises = chunkMethods.map(function (method) {
+        Promise.map(chunkMethods, function (method) {
           return storage[method].call(storage)
             .then(function () { throw new Error('Unexpected response') })
             .catch(function (err) {
               expect(err).to.be.instanceof(errors.Storage.CompactMode.Forbidden)
             })
         })
-
-        Promise.all(promises)
-          .then(function () { done() })
-          .catch(done)
+        .done(function () { done() }, done)
       })
 
       it('headers', function (done) {
+        if (opts.clsName === 'WebSQL') {
+          this.timeout(15 * 1000)
+        }
+
         var hash1 = crypto.pseudoRandomBytes(80).toString('hex')
         storage.getHeadersCount()
           .then(function (headersCount) {
@@ -315,5 +304,3 @@ function implementationTest (opts) {
     })
   })
 }
-
-module.exports = implementationTest

@@ -1,7 +1,11 @@
-var blockchainjs = require('../../lib')
-var implementationTest = require('./implementation')
+/* global describe */
+'use strict'
 
-implementationTest({
-  class: blockchainjs.storage.SQLite,
-  storageOpts: {filename: ':memory:'}
+require('./implementation')({
+  describe: describe,
+  clsName: 'SQLite',
+  clsOpts: {
+    filename: ':memory:'
+  },
+  skipFullMode: false
 })

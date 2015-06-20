@@ -14,7 +14,7 @@ var methods = [
   'addressesQuery'
 ]
 
-describe('blockchain.Snapshot', function () {
+describe.skip('blockchain.Snapshot', function () {
   var connector
   var blockchain
   var snapshot

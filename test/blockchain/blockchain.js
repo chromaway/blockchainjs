@@ -14,7 +14,7 @@ var notImplementedMethods = [
   'subscribeAddress'
 ]
 
-describe('blockchain.Blockchain', function () {
+describe.skip('blockchain.Blockchain', function () {
   var connector
   var blockchain
 

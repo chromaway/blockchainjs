@@ -23,7 +23,7 @@ function implementationTest (opts) {
     getConnectorOpts: _.constant({networkName: 'testnet'})
   }, opts)
 
-  opts.describe(opts.description, function () {
+  opts.describe.skip(opts.description, function () {
     this.timeout(30000)
 
     var connector

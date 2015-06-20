@@ -1,7 +1,11 @@
-var blockchainjs = require('../../lib')
-var implementationTest = require('./implementation')
+/* global describe */
+'use strict'
 
-implementationTest({
-  class: blockchainjs.storage.LocalStorage,
+require('./implementation')({
+  describe: describe,
+  clsName: 'LocalStorage',
+  clsOpts: {
+    prefix: require('crypto').randomBytes(10).toString('hex')
+  },
   skipFullMode: true
 })

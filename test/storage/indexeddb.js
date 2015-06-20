@@ -3,7 +3,7 @@
 
 require('./implementation')({
   describe: describe,
-  clsName: 'WebSQL',
+  clsName: 'IndexedDB',
   clsOpts: {
     dbName: require('crypto').randomBytes(10).toString('hex')
   },

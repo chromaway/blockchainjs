@@ -11,7 +11,7 @@ var blockchainjs = require('../../lib')
 var helpers = require('../helpers')
 var fixtures = require('../data/connector.json')
 
-describe('blockchain.Verified', function () {
+describe.skip('blockchain.Verified', function () {
   var connector
   var storage
   var blockchain
@@ -265,8 +265,8 @@ describe('blockchain.Verified', function () {
     })
   }
 
-  runWithStorage(blockchainjs.storage.Memory)
-  runWithStorage(blockchainjs.storage.SQLite)
-  runWithStorage(blockchainjs.storage.WebSQL)
-  runWithStorage(blockchainjs.storage.LocalStorage)
+  // runWithStorage(blockchainjs.storage.Memory)
+  // runWithStorage(blockchainjs.storage.SQLite)
+  // runWithStorage(blockchainjs.storage.WebSQL)
+  // runWithStorage(blockchainjs.storage.LocalStorage)
 })
