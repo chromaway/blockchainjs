@@ -1,15 +1,16 @@
 /* global describe, it, afterEach, beforeEach */
 'use strict'
 
+var _ = require('lodash')
 var expect = require('chai').expect
 var bitcoin = require('bitcoinjs-lib')
 var Promise = require('bluebird')
 
 var blockchainjs = require('../../')
 var helpers = require('../helpers')
-var fixtures = require('../data/connector.json')
+var fixtures = require('../fixtures/connector.json')
 
-describe.skip('blockchain.Naive', function () {
+describe('blockchain.Naive', function () {
   this.timeout(30000)
 
   var connector
@@ -19,9 +20,10 @@ describe.skip('blockchain.Naive', function () {
     connector = new blockchainjs.connector.Chromanode({networkName: 'testnet'})
     connector.on('error', helpers.ignoreConnectorErrors)
     connector.once('connect', done)
-    connector.connect()
     blockchain = new blockchainjs.blockchain.Naive(connector, {networkName: 'testnet'})
     blockchain.on('error', helpers.ignoreConnectorErrors)
+
+    connector.connect()
   })
 
   afterEach(function (done) {
@@ -40,6 +42,7 @@ describe.skip('blockchain.Naive', function () {
 
       done()
     })
+
     connector.disconnect()
   })
 
@@ -79,24 +82,24 @@ describe.skip('blockchain.Naive', function () {
 
   it('getHeader (not-exists -- wrong height)', function (done) {
     blockchain.getHeader(987654)
-      .then(function () { throw new Error('Unexpected Behavior') })
-      .catch(function (err) {
+      .asCallback(function (err) {
         expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.HeaderNotFound)
         expect(err.message).to.match(/987654/)
+        done()
       })
-      .done(done, done)
+      .done(_.noop, _.noop)
   })
 
   it('getHeader (not-exists -- wrong blockHash)', function (done) {
     var blockHash = '000000008c0c4d9f3f1365dc028875bebd0344307d63feae16ec2160a50dce23'
 
     blockchain.getHeader(blockHash)
-      .then(function () { throw new Error('Unexpected Behavior') })
-      .catch(function (err) {
+      .asCallback(function (err) {
         expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.HeaderNotFound)
         expect(err.message).to.match(new RegExp(blockHash))
+        done()
       })
-      .done(done, done)
+      .done(_.noop, _.noop)
   })
 
   it('getTx (confirmed tx)', function (done) {
@@ -111,7 +114,7 @@ describe.skip('blockchain.Naive', function () {
       .done(done, done)
   })
 
-  it('getTx (unconfirmed tx)', function (done) {
+  it.skip('getTx (unconfirmed tx)', function (done) {
     helpers.getUnconfirmedTxId()
       .then(function (txid) {
         return blockchain.getTx(txid)
@@ -128,12 +131,12 @@ describe.skip('blockchain.Naive', function () {
     var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
     blockchain.getTx(txid)
-      .then(function () { throw new Error('Unexpected Behavior') })
-      .catch(function (err) {
+      .asCallback(function (err) {
         expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.TxNotFound)
         expect(err.message).to.match(new RegExp(txid))
+        done()
       })
-      .done(done, done)
+      .done(_.noop, _.noop)
   })
 
   it('getTxBlockHash (confirmed tx)', function (done) {
@@ -153,7 +156,7 @@ describe.skip('blockchain.Naive', function () {
       .done(done, done)
   })
 
-  it('getTxBlockHash (unconfirmed tx)', function (done) {
+  it.skip('getTxBlockHash (unconfirmed tx)', function (done) {
     helpers.getUnconfirmedTxId()
       .then(function (txid) {
         return blockchain.getTxBlockHash(txid)
@@ -168,12 +171,12 @@ describe.skip('blockchain.Naive', function () {
     var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
     blockchain.getTxBlockHash(txid)
-      .then(function () { throw new Error('Unexpected Behavior') })
-      .catch(function (err) {
+      .asCallback(function (err) {
         expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.TxNotFound)
         expect(err.message).to.match(new RegExp(txid))
+        done()
       })
-      .done(done, done)
+      .done(_.noop, _.noop)
   })
 
   it('sendTx', function (done) {

@@ -1,17 +1,18 @@
 /* global describe, it, afterEach, beforeEach */
 'use strict'
 
-var expect = require('chai').expect
 var _ = require('lodash')
+var expect = require('chai').expect
+var crypto = require('crypto')
 var ProgressBar = require('progress')
 var bitcoin = require('bitcoinjs-lib')
 var Promise = require('bluebird')
 
 var blockchainjs = require('../../')
 var helpers = require('../helpers')
-var fixtures = require('../data/connector.json')
+var fixtures = require('../fixtures/connector.json')
 
-describe.skip('blockchain.Verified', function () {
+describe('blockchain.Verified', function () {
   var connector
   var storage
   var blockchain
@@ -63,10 +64,6 @@ describe.skip('blockchain.Verified', function () {
     connector.once('disconnect', function () {
       connector.removeAllListeners()
       connector.on('error', function () {})
-
-      storage.removeAllListeners()
-      storage.on('error', function () {})
-      storage.clear()
 
       blockchain.removeAllListeners()
       blockchain.on('error', function () {})
@@ -226,8 +223,8 @@ describe.skip('blockchain.Verified', function () {
     })
   }
 
-  describe('full mode (memory storage)', function () {
-    this.timeout(15 * 60 * 1000)
+  describe.skip('full mode (memory storage)', function () {
+    this.timeout(30 * 60 * 1000)
 
     beforeEach(createBeforeEachFunction(
       blockchainjs.storage.Memory,
@@ -237,8 +234,8 @@ describe.skip('blockchain.Verified', function () {
     runTests()
   })
 
-  describe('compact mode without pre-saved data (memory storage)', function () {
-    this.timeout(15 * 60 * 1000)
+  describe.skip('compact mode without pre-saved data (memory storage)', function () {
+    this.timeout(30 * 60 * 1000)
 
     beforeEach(createBeforeEachFunction(
       blockchainjs.storage.Memory,
@@ -251,6 +248,10 @@ describe.skip('blockchain.Verified', function () {
   /* @todo compact mode with pre-saved wrong hashes */
 
   function runWithStorage (Storage) {
+    if (Storage === undefined) {
+      return
+    }
+
     var desc = 'compact mode with pre-saved data (' + Storage.name + ' storage)'
     var describeFn = Storage.isAvailable() ? describe : describe.skip
     describeFn(desc, function () {
@@ -258,15 +259,24 @@ describe.skip('blockchain.Verified', function () {
 
       beforeEach(createBeforeEachFunction(
         Storage,
-        {compactMode: true, filename: ':memory:'},
-        {compactMode: true, chunkHashes: blockchainjs.chunkHashes.testnet}))
+        {
+          compactMode: true,
+          filename: ':memory:',
+          prefix: crypto.pseudoRandomBytes(10).toString('hex'),
+          dbName: crypto.pseudoRandomBytes(10).toString('hex')
+        },
+        {
+          compactMode: true,
+          chunkHashes: blockchainjs.chunkHashes.testnet
+        }))
 
       runTests()
     })
   }
 
-  // runWithStorage(blockchainjs.storage.Memory)
-  // runWithStorage(blockchainjs.storage.SQLite)
-  // runWithStorage(blockchainjs.storage.WebSQL)
-  // runWithStorage(blockchainjs.storage.LocalStorage)
+  runWithStorage(blockchainjs.storage.Memory)
+  runWithStorage(blockchainjs.storage.SQLite)
+  runWithStorage(blockchainjs.storage.WebSQL)
+  runWithStorage(blockchainjs.storage.LocalStorage)
+  runWithStorage(blockchainjs.storage.IndexedDB)
 })

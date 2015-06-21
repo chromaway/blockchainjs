@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* globals Promise: true */
+'use strict'
 
 var fs = require('fs')
 
@@ -7,7 +7,7 @@ var _ = require('lodash')
 var ProgressBar = require('progress')
 var Promise = require('bluebird')
 
-var blockchainjs = require('../lib')
+var blockchainjs = require('../')
 var Chromanode = blockchainjs.connector.Chromanode
 var util = blockchainjs.util
 

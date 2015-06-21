@@ -1,8 +1,9 @@
 /* global describe, it, afterEach, beforeEach */
 'use strict'
 
-var EventEmitter = require('events').EventEmitter
+var _ = require('lodash')
 var expect = require('chai').expect
+var EventEmitter = require('events').EventEmitter
 
 var blockchainjs = require('../../')
 
@@ -15,7 +16,7 @@ var notImplementedMethods = [
   'subscribeAddress'
 ]
 
-describe.skip('blockchain.Blockchain', function () {
+describe('blockchain.Blockchain', function () {
   var connector
   var blockchain
 
@@ -30,8 +31,8 @@ describe.skip('blockchain.Blockchain', function () {
   })
 
   it('inherits EventEmitter', function () {
-    expect(blockchain).to.be.instanceof(EventEmitter)
     expect(blockchain).to.be.instanceof(blockchainjs.blockchain.Blockchain)
+    expect(blockchain).to.be.instanceof(EventEmitter)
   })
 
   it('latest', function () {
@@ -42,11 +43,11 @@ describe.skip('blockchain.Blockchain', function () {
   notImplementedMethods.forEach(function (method) {
     it(method, function (done) {
       blockchain[method]()
-        .then(function () { throw new Error('Unexpected behavior') })
-        .catch(function (err) {
+        .asCallback(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.NotImplemented)
+          done()
         })
-        .done(done, done)
+        .done(_.noop, _.noop)
     })
   })
 })

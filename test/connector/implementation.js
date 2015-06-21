@@ -8,30 +8,27 @@ var Promise = require('bluebird')
 
 var blockchainjs = require('../../')
 var helpers = require('../helpers')
-var fixtures = require('../data/connector.json')
+var fixtures = require('../fixtures/connector.json')
 
 /**
  * @param {Object} [opts]
  * @param {function} [opts.describe]
- * @param {string} [opts.description]
- * @param {function} [opts.getConnectorOpts]
+ * @param {string} [opts.clsName]
+ * @param {Object} [opts.clsOpts]
  */
-function implementationTest (opts) {
-  opts = _.extend({
-    describe: describe,
-    description: 'connector.' + opts.class.name,
-    getConnectorOpts: _.constant({networkName: 'testnet'})
-  }, opts)
+module.exports = function (opts) {
+  var ConnectorCls = blockchainjs.connector[opts.clsName]
 
-  opts.describe.skip(opts.description, function () {
+  var ndescribe = opts.describe || describe
+  var clsOpts = _.extend({networkName: 'testnet'}, opts.clsOpts)
+
+  ndescribe(opts.clsName, function () {
     this.timeout(30000)
 
     var connector
 
     beforeEach(function (done) {
-      var args = [null].concat(opts.getConnectorOpts())
-      var Connector = Function.prototype.bind.apply(opts.class, args)
-      connector = new Connector()
+      connector = new ConnectorCls(clsOpts)
       connector.on('error', helpers.ignoreConnectorErrors)
       connector.once('connect', done)
       connector.connect()
@@ -53,7 +50,7 @@ function implementationTest (opts) {
 
     it('inherits Connector', function () {
       expect(connector).to.be.instanceof(blockchainjs.connector.Connector)
-      expect(connector).to.be.instanceof(opts.class)
+      expect(connector).to.be.instanceof(ConnectorCls)
     })
 
     it('isConnected', function () {
@@ -123,24 +120,24 @@ function implementationTest (opts) {
 
     it('getHeader (not-exists -- wrong height)', function (done) {
       connector.getHeader(987654)
-        .then(function () { throw new Error('Unexpected Behavior') })
-        .catch(function (err) {
+        .asCallback(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
           expect(err.message).to.match(/987654/)
+          done()
         })
-        .done(done, done)
+        .done(_.noop, _.noop)
     })
 
     it('getHeader (not-exists -- wrong hash)', function (done) {
       var hash = '000000008c0c4d9f3f1365dc028875bebd0344307d63feae16ec2160a50dce23'
 
       connector.getHeader(hash)
-        .then(function () { throw new Error('Unexpected Behavior') })
-        .catch(function (err) {
+        .asCallback(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
           expect(err.message).to.match(new RegExp(hash))
+          done()
         })
-        .done(done, done)
+        .done(_.noop, _.noop)
     })
 
     it('headersQuery (first chunk)', function (done) {
@@ -175,12 +172,12 @@ function implementationTest (opts) {
     it('headersQuery (not found)', function (done) {
       var from = '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4944'
       connector.headersQuery(from)
-        .then(function () { throw new Error('Unexpected Behavior') })
-        .catch(function (err) {
+        .asCallback(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.HeaderNotFound)
           expect(err.message).to.match(new RegExp(from))
+          done()
         })
-        .done(done, done)
+        .done(_.noop, _.noop)
     })
 
     it('getTx (confirmed tx)', function (done) {
@@ -195,7 +192,7 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getTx (unconfirmed tx)', function (done) {
+    it.skip('getTx (unconfirmed tx)', function (done) {
       helpers.getUnconfirmedTxId()
         .then(function (txid) {
           return connector.getTx(txid)
@@ -212,12 +209,12 @@ function implementationTest (opts) {
       var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
       connector.getTx(txid)
-        .then(function () { throw new Error('Unexpected Behavior') })
-        .catch(function (err) {
+        .asCallback(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)
           expect(err.message).to.match(new RegExp(txid))
+          done()
         })
-        .done(done, done)
+        .done(_.noop, _.noop)
     })
 
     it('getTxMerkle (confirmed tx)', function (done) {
@@ -240,7 +237,7 @@ function implementationTest (opts) {
         .done(done, done)
     })
 
-    it('getTxMerkle (unconfirmed tx)', function (done) {
+    it.skip('getTxMerkle (unconfirmed tx)', function (done) {
       helpers.getUnconfirmedTxId()
         .then(function (txid) {
           return connector.getTxMerkle(txid)
@@ -255,12 +252,12 @@ function implementationTest (opts) {
       var txid = '74335585dadf14f35eaf34ec72a134cd22bde390134e0f92cb7326f2a336b2bb'
 
       connector.getTxMerkle(txid)
-        .then(function () { throw new Error('Unexpected Behavior') })
-        .catch(function (err) {
+        .asCallback(function (err) {
           expect(err).to.be.instanceof(blockchainjs.errors.Connector.TxNotFound)
           expect(err.message).to.match(new RegExp(txid))
+          done()
         })
-        .done(done, done)
+        .done(_.noop, _.noop)
     })
 
     it('sendTx', function (done) {
@@ -297,7 +294,7 @@ function implementationTest (opts) {
 
     it('subscribe on new blocks', function (done) {
       connector.subscribe({event: 'newBlock'})
-        .then(function () {})
+        .then(_.noop)
         .done(done, done)
     })
 
@@ -308,24 +305,25 @@ function implementationTest (opts) {
             tx.outs[0].script, bitcoin.networks.testnet)
           var address = cAddress.toBase58Check()
 
-          var deferred = Promise.defer()
-          deferred.promise.done(done, done)
-          connector.on('touchAddress', function (touchedAddress, txid) {
-            if (touchedAddress === address && txid === tx.getId()) {
-              deferred.resolve()
-            }
-          })
-
-          connector.subscribe({event: 'touchAddress', address: address})
-            .then(function () { return Promise.delay(1000) })
-            .then(function () {
-              return connector.sendTx(tx.toHex())
+          new Promise(function (resolve, reject) {
+            connector.on('touchAddress', function (touchedAddress, txid) {
+              if (touchedAddress === address && txid === tx.getId()) {
+                resolve()
+              }
             })
-            .catch(function () { deferred.reject() })
+
+            connector.subscribe({event: 'touchAddress', address: address})
+              .then(function () {
+                return Promise.delay(1000)
+              })
+              .then(function () {
+                return connector.sendTx(tx.toHex())
+              })
+              .catch(reject)
+          })
+          .done(done, done)
         })
         .catch(done)
     })
   })
 }
-
-module.exports = implementationTest

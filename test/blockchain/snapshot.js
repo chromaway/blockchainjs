@@ -1,6 +1,7 @@
 /* global describe, it, afterEach, beforeEach */
 'use strict'
 
+var _ = require('lodash')
 var expect = require('chai').expect
 var crypto = require('crypto')
 
@@ -15,13 +16,13 @@ var methods = [
   'addressesQuery'
 ]
 
-describe.skip('blockchain.Snapshot', function () {
+describe('blockchain.Snapshot', function () {
   var connector
   var blockchain
   var snapshot
 
   function setCurrentBlock (block) {
-    blockchain.latest = {hash: block.hash, height: block.height}
+    blockchain._latest = {hash: block.hash, height: block.height}
     blockchain.emit('newBlock', block.hash, block.height)
   }
 
@@ -48,11 +49,12 @@ describe.skip('blockchain.Snapshot', function () {
     methods.forEach(function (method) {
       it(method, function (done) {
         snapshot[method]()
-          .then(function () { throw new Error('Unxpected behavior') })
-          .catch(function (err) {
-            expect(err).to.be.instanceof(blockchainjs.errors.NotImplemented)
+          .asCallback(function (err) {
+            expect(err).to.be.instanceof(
+              blockchainjs.errors.NotImplemented)
+            done()
           })
-          .done(done, done)
+          .done(_.noop, _.noop)
       })
     })
   })
@@ -69,11 +71,12 @@ describe.skip('blockchain.Snapshot', function () {
     methods.forEach(function (method) {
       it(method, function (done) {
         snapshot[method]()
-          .then(function () { throw new Error('Unxpected behavior') })
-          .catch(function (err) {
-            expect(err).to.be.instanceof(blockchainjs.errors.Blockchain.InconsistentSnapshot)
+          .asCallback(function (err) {
+            expect(err).to.be.instanceof(
+              blockchainjs.errors.Blockchain.InconsistentSnapshot)
+            done()
           })
-          .done(done, done)
+          .done(_.noop, _.noop)
       })
     })
   })

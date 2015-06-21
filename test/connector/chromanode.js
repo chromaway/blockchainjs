@@ -1,8 +1,8 @@
+/* global describe */
 'use strict'
 
-var blockchainjs = require('../../')
-var implementationTest = require('./implementation.js')
-
-implementationTest({
-  class: blockchainjs.connector.Chromanode
+require('./implementation')({
+  describe: describe,
+  clsName: 'Chromanode',
+  clsOpts: {}
 })

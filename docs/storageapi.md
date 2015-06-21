@@ -26,7 +26,9 @@
   * Inheritance
     * [Memory](#memory)
     * [LocalStorage](#localstorage)
+    * [IndexedDB](#indexeddb)
     * [WebSQL](#websql)
+    * [SQLite](#sqlite)
 
 ## Events
 
@@ -125,7 +127,16 @@
   * `Object` opts
     * `string` networkName
     * `boolean` compactMode
-    * `string` keyName
+    * `string` prefix
+
+## IndexedDB
+
+### constructor
+
+  * `Object` opts
+    * `string` networkName
+    * `boolean` compactMode
+    * `string` dbName
 
 ## WebSQL
 
@@ -136,3 +147,11 @@
     * `boolean` compactMode
     * `string` dbName
 
+## SQLite
+
+### constructor
+
+  * `Object` opts
+    * `string` networkName
+    * `boolean` compactMode
+    * `string` filename

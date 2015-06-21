@@ -14,7 +14,7 @@ var testTxRs = [{
   txid: '75a22bdb38352ba6deb7495631335616a308a2db8eb1aa596296d3be5f34f01e'
 }]
 
-describe.skip('TxStateSet', function () {
+describe('TxStateSet', function () {
   this.timeout(30 * 1000)
 
   var connector
@@ -23,10 +23,11 @@ describe.skip('TxStateSet', function () {
   beforeEach(function (done) {
     connector = new blockchainjs.connector.Chromanode({networkName: 'testnet'})
     connector.on('error', helpers.ignoreConnectorErrors)
-    connector.connect()
     blockchain = new blockchainjs.blockchain.Naive(connector, {networkName: 'testnet'})
     blockchain.on('error', helpers.ignoreConnectorErrors)
     blockchain.on('newBlock', function () { done() })
+
+    connector.connect()
   })
 
   afterEach(function (done) {
@@ -41,6 +42,7 @@ describe.skip('TxStateSet', function () {
 
       done()
     })
+
     connector.disconnect()
   })
 
@@ -141,7 +143,7 @@ describe.skip('TxStateSet', function () {
       ],
       stateVersion: 2
     }
-    var tSS = new TxStateSet(state)
+    var tSS = new blockchainjs.TxStateSet(state)
     tSS.autoSync(blockchain, [testAddress])
       .then(function (newTSS) {
         var txrs = newTSS.getTxRecords()

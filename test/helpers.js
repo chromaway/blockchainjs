@@ -56,6 +56,7 @@ createTx()
 /**
  * @return {Promise<string>}
  */
+/* @todo */
 function getUnconfirmedTxId () {
   return new Promise(function (resolve) {
     function tryGet () {
