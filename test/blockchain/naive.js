@@ -59,7 +59,7 @@ describe('blockchain.Naive', function () {
     var expected = {hash: blockchainjs.util.ZERO_HASH, height: -1}
     expect(blockchain.latest).to.deep.equal(expected)
     blockchain.once('newBlock', function () {
-      expect(blockchain.latest.height).to.at.least(300000)
+      expect(blockchain.latest.height).to.at.least(480000)
       done()
     })
   })
@@ -72,10 +72,10 @@ describe('blockchain.Naive', function () {
       .done(done, done)
   })
 
-  it('getHeader 300000 by id', function (done) {
-    blockchain.getHeader(fixtures.headers[300000].hash)
+  it('getHeader 30000 by id', function (done) {
+    blockchain.getHeader(fixtures.headers[30000].hash)
       .then(function (header) {
-        expect(header).to.deep.equal(fixtures.headers[300000])
+        expect(header).to.deep.equal(fixtures.headers[30000])
       })
       .done(done, done)
   })
@@ -194,7 +194,7 @@ describe('blockchain.Naive', function () {
         expect(res).to.be.an('object')
         expect(res.transactions).to.deep.equal(fixture.transactions)
         expect(res.latest).to.be.an('object')
-        expect(res.latest.height).to.be.at.least(300000)
+        expect(res.latest.height).to.be.at.least(480000)
         expect(res.latest.hash).to.have.length(64)
       })
       .done(done, done)

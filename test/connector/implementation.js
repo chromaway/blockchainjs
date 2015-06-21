@@ -97,10 +97,10 @@ module.exports = function (opts) {
         .done(done, done)
     })
 
-    it('getHeader 300000 by height', function (done) {
-      connector.getHeader(fixtures.headers[300000].height)
+    it('getHeader 30000 by height', function (done) {
+      connector.getHeader(fixtures.headers[30000].height)
         .then(function (header) {
-          expect(header).to.deep.equal(fixtures.headers[300000])
+          expect(header).to.deep.equal(fixtures.headers[30000])
         })
         .done(done, done)
     })
@@ -113,7 +113,7 @@ module.exports = function (opts) {
           var headerHash = blockchainjs.util.sha256x2(rawHeader)
           expect(header.hash).to.equal(blockchainjs.util.hashEncode(headerHash))
           expect(header.height).to.be.a('number')
-          expect(header.height).to.be.at.least(300000)
+          expect(header.height).to.be.at.least(480000)
         })
         .done(done, done)
     })
@@ -286,7 +286,7 @@ module.exports = function (opts) {
           expect(res).to.be.an('object')
           expect(res.transactions).to.deep.equal(fixture.transactions)
           expect(res.latest).to.be.an('object')
-          expect(res.latest.height).to.be.at.least(300000)
+          expect(res.latest.height).to.be.at.least(480000)
           expect(res.latest.hash).to.have.length(64)
         })
         .done(done, done)
