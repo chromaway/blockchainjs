@@ -1,4 +1,3 @@
-/* global describe, xdescribe, it, afterEach, beforeEach */
 'use strict'
 
 var _ = require('lodash')
@@ -71,7 +70,7 @@ describe('blockchain.Verified', function () {
         }
 
         connector.getHeader('latest')
-          .done(function (header) {
+          .then(function (header) {
             connector.emit('newBlock', header.hash, header.height)
           }, _.noop)
       }, 2500)
@@ -175,7 +174,7 @@ describe('blockchain.Verified', function () {
               expect(err.message).to.match(new RegExp(txid))
             })
         })
-        .done(done, done)
+        .then(done, done)
     })
 
     it.skip('getTx (unconfirmed)', function (done) {
@@ -188,7 +187,7 @@ describe('blockchain.Verified', function () {
               expect(responseTxId).to.equal(txid)
             })
         })
-        .done(done, done)
+        .then(done, done)
     })
 
     it.skip('sendTx', function (done) {
@@ -196,7 +195,7 @@ describe('blockchain.Verified', function () {
         .then(function (tx) {
           return blockchain.sendTx(tx.toHex())
         })
-        .done(done, done)
+        .then(done, done)
     })
 
     it('addressesQuery (history)', function (done) {
@@ -209,7 +208,7 @@ describe('blockchain.Verified', function () {
           expect(res.latest.height).to.be.at.least(480000)
           expect(res.latest.hash).to.have.length(64)
         })
-        .done(done, done)
+        .then(done, done)
     })
 
     /* @todo
@@ -219,7 +218,7 @@ describe('blockchain.Verified', function () {
           var expected = _.cloneDeep(fixtures.unspents[0].result)
           expect(_.sortBy(unspents, 'txid')).to.deep.equal(_.sortBy(expected, 'txid'))
         })
-        .done(done, done)
+        .then(done, done)
     })
     */
 
@@ -243,7 +242,7 @@ describe('blockchain.Verified', function () {
           })
           .catch(reject)
       })
-      .done(done, done)
+      .then(done, done)
     })
   }
 

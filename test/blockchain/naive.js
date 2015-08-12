@@ -1,4 +1,3 @@
-/* global describe, it, afterEach, beforeEach */
 'use strict'
 
 var _ = require('lodash')
@@ -179,7 +178,7 @@ describe('blockchain.Naive', function () {
       .done(_.noop, _.noop)
   })
 
-  it('sendTx', function (done) {
+  it.skip('sendTx', function (done) {
     helpers.createTx()
       .then(function (tx) {
         return blockchain.sendTx(tx.toHex())
@@ -219,7 +218,7 @@ describe('blockchain.Naive', function () {
   })
   */
 
-  it('subscribeAddress', function (done) {
+  it.skip('subscribeAddress', function (done) {
     new Promise(function (resolve, reject) {
       helpers.createTx()
         .then(function (tx) {

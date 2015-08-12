@@ -1,7 +1,4 @@
 coverage
 node_modules
 
-blockchainjs.js
-blockchainjs.min.js
-blockchainjs.test.js
 npm-debug.log

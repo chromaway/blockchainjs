@@ -1,4 +1,3 @@
-/* global describe, it, afterEach, beforeEach */
 'use strict'
 
 var helpers = require('./helpers')

@@ -1,4 +1,3 @@
-/* global describe, it, afterEach, beforeEach */
 'use strict'
 
 var _ = require('lodash')
@@ -45,7 +44,7 @@ describe('network.Connector', function () {
   notImplementedMethods.forEach(function (method) {
     it(method, function (done) {
       Promise.try(function () {
-        return network[method].call(network)
+        return network[method]()
       })
       .asCallback(function (err) {
         expect(err).to.be.instanceof(blockchainjs.errors.NotImplemented)

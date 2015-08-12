@@ -1,4 +1,3 @@
-/* global describe, it, afterEach, beforeEach */
 'use strict'
 
 var expect = require('chai').expect
@@ -260,7 +259,7 @@ module.exports = function (opts) {
         .done(_.noop, _.noop)
     })
 
-    it('sendTx', function (done) {
+    it.skip('sendTx', function (done) {
       helpers.createTx()
         .then(function (tx) {
           return connector.sendTx(tx.toHex())
@@ -298,7 +297,7 @@ module.exports = function (opts) {
         .done(done, done)
     })
 
-    it('subscribe on address and wait event', function (done) {
+    it.skip('subscribe on address and wait event', function (done) {
       helpers.createTx()
         .then(function (tx) {
           var cAddress = bitcoin.Address.fromOutputScript(

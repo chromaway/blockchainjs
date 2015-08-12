@@ -1,4 +1,3 @@
-/* global describe, xdescribe, it, afterEach, beforeEach */
 'use strict'
 
 var _ = require('lodash')
@@ -31,7 +30,7 @@ module.exports = function (opts) {
     var storage
 
     afterEach(function (done) {
-      storage.clear().done(done, done)
+      storage.clear().then(done, done)
     })
 
     describe('compact mode', function () {
@@ -39,7 +38,7 @@ module.exports = function (opts) {
         var storageOpts = _.defaults({compactMode: true}, opts.clsOpts)
 
         storage = new StorageCls(storageOpts)
-        storage.ready.done(done, done)
+        storage.ready.then(done, done)
       })
 
       it('compact mode is true', function () {
@@ -70,7 +69,7 @@ module.exports = function (opts) {
           .then(function (lastHash) {
             expect(lastHash).to.equal(blockchainjs.util.ZERO_HASH)
           })
-          .done(done, done)
+          .then(done, done)
       })
 
       it('chunkHashes', function (done) {
@@ -118,7 +117,7 @@ module.exports = function (opts) {
           .then(function (chunkHashesCount) {
             expect(chunkHashesCount).to.equal(0)
           })
-          .done(done, done)
+          .then(done, done)
       })
 
       it('headers', function (done) {
@@ -174,7 +173,7 @@ module.exports = function (opts) {
           .then(function (headersCount) {
             expect(headersCount).to.equal(0)
           })
-          .done(done, done)
+          .then(done, done)
       })
     })
 
@@ -188,7 +187,7 @@ module.exports = function (opts) {
         var storageOpts = _.defaults({compactMode: false}, opts.clsOpts)
 
         storage = new StorageCls(storageOpts)
-        storage.ready.done(done, done)
+        storage.ready.then(done, done)
       })
 
       it('compact mode is false', function () {
@@ -219,7 +218,7 @@ module.exports = function (opts) {
           .then(function (lastHash) {
             expect(lastHash).to.equal(blockchainjs.util.ZERO_HASH)
           })
-          .done(done, done)
+          .then(done, done)
       })
 
       it('chunkHashes', function (done) {
@@ -231,13 +230,13 @@ module.exports = function (opts) {
         ]
 
         Promise.map(chunkMethods, function (method) {
-          return storage[method].call(storage)
+          return storage[method]()
             .then(function () { throw new Error('Unexpected response') })
             .catch(function (err) {
               expect(err).to.be.instanceof(errors.Storage.CompactMode.Forbidden)
             })
         })
-        .done(function () { done() }, done)
+        .then(function () { done() }, done)
       })
 
       it('headers', function (done) {
@@ -299,7 +298,7 @@ module.exports = function (opts) {
           .then(function (headersCount) {
             expect(headersCount).to.equal(0)
           })
-          .done(done, done)
+          .then(done, done)
       })
     })
   })

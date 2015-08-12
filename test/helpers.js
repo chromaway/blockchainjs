@@ -4,7 +4,7 @@ var _ = require('lodash')
 var bitcoin = require('bitcoinjs-lib')
 var Promise = require('bluebird')
 var io = require('socket.io-client')
-var request = Promise.promisify(require('request'))
+// var request = Promise.promisify(require('request'))
 var getUnspents = Promise.promisify(require('helloblock-faucet').getUnspents)
 
 var blockchainjs = require('../')
@@ -44,6 +44,7 @@ socket.on('new-tx', function (txid) {
   }
 })
 
+/*
 createTx()
   .then(function (tx) {
     return request({
@@ -52,6 +53,7 @@ createTx()
       json: {rawTxHex: tx.toHex()}
     })
   })
+*/
 
 /**
  * @return {Promise<string>}
