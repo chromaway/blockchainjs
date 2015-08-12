@@ -47,11 +47,11 @@ describe('TxStateSet', function () {
 
   it('syncEmpty', function (done) {
     var tSS = new blockchainjs.TxStateSet()
-    tSS.autoSync(blockchain, [], [])
+    tSS.autoSync(blockchain, [])
       .then(function (newTSS) {
         expect(newTSS).to.be.instanceof(blockchainjs.TxStateSet)
       })
-      .done(done, done)
+      .then(done, done)
   })
 
   it('syncAddressFromEmpty', function (done) {
@@ -61,17 +61,18 @@ describe('TxStateSet', function () {
         expect(newTSS.getTxRecords()).to.deep.equal(testTxRs)
         expect(newTSS.getChanges()).to.deep.equal(testTxRs)
       })
-      .done(done, done)
+      .then(done, done)
   })
 
-  it('syncTxIdFromEmpty', function (done) {
+  // no extraTxIds anymore
+  it.skip('syncTxIdFromEmpty', function (done) {
     var tSS = new blockchainjs.TxStateSet()
     tSS.autoSync(blockchain, [], [testTxId])
       .then(function (newTSS) {
         expect(newTSS.getTxRecords()).to.deep.equal(testTxRs)
         expect(newTSS.getChanges()).to.deep.equal(testTxRs)
       })
-      .done(done, done)
+      .then(done, done)
   })
 
   it('syncAddressUnconfirmed', function (done) {
@@ -90,7 +91,7 @@ describe('TxStateSet', function () {
         expect(newTSS.getTxRecords()).to.deep.equal(testTxRs)
         expect(newTSS.getChanges()).to.deep.equal(testTxRs)
       })
-      .done(done, done)
+      .then(done, done)
   })
 
   it('syncAddressFakeReorg', function (done) {
@@ -112,7 +113,7 @@ describe('TxStateSet', function () {
         expect(newTSS.getTxRecords()).to.deep.equal(testTxRs)
         expect(newTSS.getChanges()).to.deep.equal(testTxRs)
       })
-      .done(done, done)
+      .then(done, done)
   })
 
   it('syncAddressInvalid', function (done) {
@@ -154,6 +155,6 @@ describe('TxStateSet', function () {
         expect(changes.length).to.equal(1)
         expect(changes[0]).to.deep.equal(txrs[0])
       })
-      .done(done, done)
+      .then(done, done)
   })
 })
