@@ -63,7 +63,7 @@ new Promise(function (resolve) { connector.once('connect', resolve) })
 
   var lastBlockHash
   Promise.map(_.range(chunksTotal), function (chunkIndex) {
-    return connector.getHeaders(chunkIndex * 2016, {count: 2016})
+    return connector.headersQuery(chunkIndex * 2016, {count: 2016})
       .then(function (result) {
         var rawChunk = new Buffer(result.headers, 'hex')
 
