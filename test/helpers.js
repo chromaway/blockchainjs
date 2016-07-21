@@ -5,7 +5,7 @@ var bitcoin = require('bitcoinjs-lib')
 var Promise = require('bluebird')
 var io = require('socket.io-client')
 var request = Promise.promisify(require('request'))
-var getUnspents = Promise.promisify(require('helloblock-faucet').getUnspents)
+var getUnspents = require('test-faucet').getUnspents
 
 var blockchainjs = require('../lib')
 var errors = blockchainjs.errors
