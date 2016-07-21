@@ -35,9 +35,9 @@ function createTx () {
 
 var lastUnconfirmedTxIds = []
 
-var socket = io('http://devel.hz.udoidio.info:5001/', {forceNew: true})
-socket.emit('subscribe', 'new-tx')
-socket.on('new-tx', function (txid) {
+var socket = io('https://test-insight.bitpay.com/', { forceNew: true })
+socket.emit('subscribe', 'inv')
+socket.on('tx', function (txid) {
   lastUnconfirmedTxIds.push({txid: txid, time: Date.now()})
   if (lastUnconfirmedTxIds.length > 100) {
     lastUnconfirmedTxIds.shift()
@@ -47,9 +47,9 @@ socket.on('new-tx', function (txid) {
 createTx()
   .then(function (tx) {
     return request({
-      uri: 'https://testnet.helloblock.io/v1/transactions',
+      uri: 'https://test-insight.bitpay.com/insight-api/tx/send',
       method: 'POST',
-      json: {rawTxHex: tx.toHex()}
+      json: {rawtx: tx.toHex()}
     })
   })
 
